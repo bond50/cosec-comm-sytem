@@ -1,0 +1,673 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//
+// ENUMS
+//
+
+enum UserRole {
+  SUPER_ADMIN
+  ORG_ADMIN
+  REGISTRY_OFFICER
+  REVIEWING_OFFICER
+  DEPARTMENT_USER
+  MANAGEMENT
+  USER
+}
+
+enum OrganizationType {
+  COUNTY
+  MINISTRY
+  AGENCY
+  NGO
+  PRIVATE
+  OTHER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+  INACTIVE
+}
+
+enum DepartmentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CorrespondenceType {
+  INCOMING
+  OUTGOING
+}
+
+enum CorrespondencePriority {
+  NORMAL
+  URGENT
+  VERY_URGENT
+  CRITICAL
+}
+
+enum CorrespondenceConfidentiality {
+  PUBLIC
+  INTERNAL
+  CONFIDENTIAL
+  HIGHLY_CONFIDENTIAL
+}
+
+enum CorrespondenceStatus {
+  NEW
+  UNDER_REVIEW
+  DISPATCHED
+  IN_PROGRESS
+  AWAITING_FEEDBACK
+  COMPLETED
+  CANCELLED
+  CLOSED
+}
+
+enum DeliveryMethod {
+  HAND
+  EMAIL
+  COURIER
+  POST
+  INTERNAL_MAIL
+  PHONE
+  SYSTEM
+  OTHER
+}
+
+enum DispatchStatus {
+  SENT
+  ACKNOWLEDGED
+  IN_PROGRESS
+  FEEDBACK_RECEIVED
+  CLOSED
+  OVERDUE
+}
+
+enum DocumentStatus {
+  RECEIVED
+  UNDER_REVIEW
+  DISPATCHED
+  PENDING_ACTION
+  RESPONDED
+  ARCHIVED
+  DRAFT
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  HELD
+  POSTPONED
+  CANCELLED
+  COMPLETED
+}
+
+enum ActionPointStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  OVERDUE
+}
+
+enum AttachmentOwnerType {
+  CORRESPONDENCE
+  DOCUMENT
+  MEETING
+  ACTION_POINT
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  REVIEW
+  DISPATCH
+  ACKNOWLEDGE
+  COMPLETE
+  CLOSE
+}
+
+//
+// AUTH / SECURITY
+//
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+  @@map("verification_tokens")
+}
+
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+  @@map("password_reset_tokens")
+}
+
+model TwoFactorToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+  @@map("two_factor_tokens")
+}
+
+model TwoFactorConfirmation {
+  id     String @id @default(cuid())
+  userId String @unique @map("user_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("two_factor_confirmations")
+}
+
+model RateLimiterFlexible {
+  key    String    @id
+  points Int
+  expire DateTime?
+
+  @@map("rate_limiter_flexible")
+}
+
+model LoginRateLimitLock {
+  accountKey  String   @id @map("account_key")
+  step        Int
+  lockedUntil DateTime @map("locked_until")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("login_rate_limit_locks")
+}
+
+//
+// ORGANIZATIONS / USERS / DEPARTMENTS
+//
+
+model Organization {
+  id        String           @id @default(cuid())
+  name      String
+  slug      String           @unique
+  type      OrganizationType @default(COUNTY)
+  isActive  Boolean          @default(true) @map("is_active")
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  memberships         OrganizationMembership[]
+  departments         Department[]
+  correspondences     Correspondence[]
+  dispatches          CorrespondenceDispatch[]
+  movements           CorrespondenceMovement[]
+  documentCategories  DocumentCategory[]
+  documents           Document[]
+  attachments         Attachment[]
+  meetings            Meeting[]
+  meetingActionPoints MeetingActionPoint[]
+  auditLogs           AuditLog[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String?   @unique
+  emailVerified  DateTime? @map("email_verified")
+  password       String?
+  image          String?
+  isActive       Boolean   @default(true) @map("is_active")
+  isTwoFAEnabled Boolean   @default(false) @map("is_two_fa_enabled")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  accounts          Account[]
+  sessions          Session[]
+  memberships       OrganizationMembership[]
+  departmentsHeaded Department[]             @relation("DepartmentHead")
+
+  receivedCorrespondences   Correspondence[] @relation("CorrespondenceReceivedBy")
+  reviewedCorrespondences   Correspondence[] @relation("CorrespondenceReviewedBy")
+  assignedCorrespondences   Correspondence[] @relation("CorrespondenceAssignedToUser")
+  assignedByCorrespondences Correspondence[] @relation("CorrespondenceAssignedByUser")
+
+  createdDispatches      CorrespondenceDispatch[] @relation("DispatchCreatedByUser")
+  acknowledgedDispatches CorrespondenceDispatch[] @relation("DispatchAcknowledgedByUser")
+  targetDispatches       CorrespondenceDispatch[] @relation("DispatchToUser")
+
+  movementFromUser  CorrespondenceMovement[] @relation("MovementFromUser")
+  movementToUser    CorrespondenceMovement[] @relation("MovementToUser")
+  movementCreatedBy CorrespondenceMovement[] @relation("MovementCreatedByUser")
+
+  createdDocuments     Document[] @relation("DocumentCreatedByUser")
+  currentHeldDocuments Document[] @relation("DocumentCurrentHolder")
+  archivedDocuments    Document[] @relation("DocumentArchivedByUser")
+
+  organizedMeetings      Meeting[]            @relation("MeetingOrganizer")
+  chairedMeetings        Meeting[]            @relation("MeetingChairperson")
+  assignedMeetingActions MeetingActionPoint[] @relation("MeetingActionAssignedTo")
+  createdMeetingActions  MeetingActionPoint[] @relation("MeetingActionCreatedBy")
+
+  attachmentsUploaded Attachment[] @relation("AttachmentUploadedBy")
+  auditLogs           AuditLog[]   @relation("AuditActor")
+
+  twoFactorConfirmation TwoFactorConfirmation?
+
+  @@map("users")
+}
+
+model OrganizationMembership {
+  id             String           @id @default(cuid())
+  organizationId String           @map("organization_id")
+  userId         String           @map("user_id")
+  departmentId   String?          @map("department_id")
+  role           UserRole
+  status         MembershipStatus @default(ACTIVE)
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId, role])
+  @@index([organizationId, departmentId])
+  @@map("organization_memberships")
+}
+
+model Department {
+  id             String           @id @default(cuid())
+  organizationId String           @map("organization_id")
+  name           String
+  code           String?
+  description    String?
+  status         DepartmentStatus @default(ACTIVE)
+  headUserId     String?          @map("head_user_id")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  headUser     User?        @relation("DepartmentHead", fields: [headUserId], references: [id], onDelete: SetNull)
+
+  memberships             OrganizationMembership[]
+  assignedCorrespondences Correspondence[]         @relation("CorrespondenceAssignedToDepartment")
+  dispatchesToDepartment  CorrespondenceDispatch[] @relation("DispatchToDepartment")
+  movementFromDepartment  CorrespondenceMovement[] @relation("MovementFromDepartment")
+  movementToDepartment    CorrespondenceMovement[] @relation("MovementToDepartment")
+  meetingActionPoints     MeetingActionPoint[]     @relation("MeetingActionAssignedToDepartment")
+
+  @@unique([organizationId, name])
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@map("departments")
+}
+
+//
+// CORRESPONDENCE CORE
+//
+
+model Correspondence {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+
+  referenceNumber String             @map("reference_number")
+  type            CorrespondenceType
+
+  subject     String
+  description String?
+
+  senderName   String @map("sender_name")
+  senderOffice String @map("sender_office")
+
+  deliveredBy    String?        @map("delivered_by")
+  deliveryMethod DeliveryMethod @map("delivery_method")
+
+  receivedAt       DateTime @map("received_at")
+  receivedByUserId String?  @map("received_by_user_id")
+
+  reviewedAt       DateTime? @map("reviewed_at")
+  reviewedByUserId String?   @map("reviewed_by_user_id")
+  instructions     String?
+
+  priority        CorrespondencePriority        @default(NORMAL)
+  confidentiality CorrespondenceConfidentiality @default(INTERNAL)
+  status          CorrespondenceStatus          @default(NEW)
+
+  dueDate  DateTime? @map("due_date")
+  closedAt DateTime? @map("closed_at")
+
+  assignedToUserId       String? @map("assigned_to_user_id")
+  assignedToDepartmentId String? @map("assigned_to_department_id")
+  assignedByUserId       String? @map("assigned_by_user_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  receivedByUser       User?        @relation("CorrespondenceReceivedBy", fields: [receivedByUserId], references: [id], onDelete: SetNull)
+  reviewedByUser       User?        @relation("CorrespondenceReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+  assignedToUser       User?        @relation("CorrespondenceAssignedToUser", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  assignedToDepartment Department?  @relation("CorrespondenceAssignedToDepartment", fields: [assignedToDepartmentId], references: [id], onDelete: SetNull)
+  assignedByUser       User?        @relation("CorrespondenceAssignedByUser", fields: [assignedByUserId], references: [id], onDelete: SetNull)
+
+  dispatches  CorrespondenceDispatch[]
+  movements   CorrespondenceMovement[]
+  documents   Document[]
+  attachments Attachment[]
+  auditLogs   AuditLog[]
+
+  @@unique([organizationId, referenceNumber])
+  @@index([organizationId, type])
+  @@index([organizationId, status])
+  @@index([organizationId, priority])
+  @@index([organizationId, confidentiality])
+  @@index([organizationId, dueDate])
+  @@index([organizationId, assignedToDepartmentId])
+  @@index([organizationId, assignedToUserId])
+  @@index([organizationId, receivedAt])
+  @@map("correspondences")
+}
+
+model CorrespondenceDispatch {
+  id               String @id @default(cuid())
+  organizationId   String @map("organization_id")
+  correspondenceId String @map("correspondence_id")
+
+  dispatchedToDepartmentId String? @map("dispatched_to_department_id")
+  dispatchedToUserId       String? @map("dispatched_to_user_id")
+
+  dispatchDate DateTime       @map("dispatch_date")
+  note         String?
+  status       DispatchStatus @default(SENT)
+
+  acknowledgedAt       DateTime? @map("acknowledged_at")
+  acknowledgedByUserId String?   @map("acknowledged_by_user_id")
+  feedbackReceivedAt   DateTime? @map("feedback_received_at")
+  feedbackNote         String?   @map("feedback_note")
+
+  createdByUserId String?  @map("created_by_user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  organization           Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  correspondence         Correspondence @relation(fields: [correspondenceId], references: [id], onDelete: Cascade)
+  dispatchedToDepartment Department?    @relation("DispatchToDepartment", fields: [dispatchedToDepartmentId], references: [id], onDelete: SetNull)
+  dispatchedToUser       User?          @relation("DispatchToUser", fields: [dispatchedToUserId], references: [id], onDelete: SetNull)
+  acknowledgedByUser     User?          @relation("DispatchAcknowledgedByUser", fields: [acknowledgedByUserId], references: [id], onDelete: SetNull)
+  createdByUser          User?          @relation("DispatchCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, correspondenceId])
+  @@index([organizationId, dispatchDate])
+  @@index([organizationId, status])
+  @@index([organizationId, dispatchedToDepartmentId])
+  @@index([organizationId, dispatchedToUserId])
+  @@map("correspondence_dispatches")
+}
+
+model CorrespondenceMovement {
+  id               String @id @default(cuid())
+  organizationId   String @map("organization_id")
+  correspondenceId String @map("correspondence_id")
+
+  fromDepartmentId String? @map("from_department_id")
+  fromUserId       String? @map("from_user_id")
+  toDepartmentId   String? @map("to_department_id")
+  toUserId         String? @map("to_user_id")
+
+  status          CorrespondenceStatus
+  note            String?
+  movedAt         DateTime             @default(now()) @map("moved_at")
+  createdByUserId String?              @map("created_by_user_id")
+  createdAt       DateTime             @default(now()) @map("created_at")
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  correspondence Correspondence @relation(fields: [correspondenceId], references: [id], onDelete: Cascade)
+  fromDepartment Department?    @relation("MovementFromDepartment", fields: [fromDepartmentId], references: [id], onDelete: SetNull)
+  fromUser       User?          @relation("MovementFromUser", fields: [fromUserId], references: [id], onDelete: SetNull)
+  toDepartment   Department?    @relation("MovementToDepartment", fields: [toDepartmentId], references: [id], onDelete: SetNull)
+  toUser         User?          @relation("MovementToUser", fields: [toUserId], references: [id], onDelete: SetNull)
+  createdByUser  User?          @relation("MovementCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, correspondenceId, movedAt])
+  @@index([organizationId, status])
+  @@index([organizationId, toDepartmentId])
+  @@index([organizationId, toUserId])
+  @@map("correspondence_movements")
+}
+
+//
+// DOCUMENTS / ATTACHMENTS
+//
+
+model DocumentCategory {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  name           String
+  description    String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documents    Document[]
+
+  @@unique([organizationId, name])
+  @@map("document_categories")
+}
+
+model Document {
+  id               String  @id @default(cuid())
+  organizationId   String  @map("organization_id")
+  correspondenceId String? @map("correspondence_id")
+  categoryId       String? @map("category_id")
+
+  referenceNumber String? @map("reference_number")
+  title           String
+  description     String?
+  originOffice    String? @map("origin_office")
+  broughtBy       String? @map("brought_by")
+
+  currentHolderUserId String? @map("current_holder_user_id")
+  currentLocation     String? @map("current_location")
+
+  status           DocumentStatus @default(RECEIVED)
+  isArchived       Boolean        @default(false) @map("is_archived")
+  archivedAt       DateTime?      @map("archived_at")
+  archivedByUserId String?        @map("archived_by_user_id")
+
+  createdByUserId String?  @map("created_by_user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  correspondence    Correspondence?   @relation(fields: [correspondenceId], references: [id], onDelete: SetNull)
+  category          DocumentCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  currentHolderUser User?             @relation("DocumentCurrentHolder", fields: [currentHolderUserId], references: [id], onDelete: SetNull)
+  archivedByUser    User?             @relation("DocumentArchivedByUser", fields: [archivedByUserId], references: [id], onDelete: SetNull)
+  createdByUser     User?             @relation("DocumentCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  attachments Attachment[]
+
+  @@index([organizationId, status])
+  @@index([organizationId, isArchived])
+  @@index([organizationId, correspondenceId])
+  @@map("documents")
+}
+
+model Attachment {
+  id             String              @id @default(cuid())
+  organizationId String              @map("organization_id")
+  ownerType      AttachmentOwnerType @map("owner_type")
+
+  correspondenceId String? @map("correspondence_id")
+  documentId       String? @map("document_id")
+  meetingId        String? @map("meeting_id")
+  actionPointId    String? @map("action_point_id")
+
+  fileName     String @map("file_name")
+  originalName String @map("original_name")
+  mimeType     String @map("mime_type")
+  fileSize     Int    @map("file_size")
+  storagePath  String @map("storage_path")
+
+  uploadedByUserId String?  @map("uploaded_by_user_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  correspondence Correspondence?     @relation(fields: [correspondenceId], references: [id], onDelete: Cascade)
+  document       Document?           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  meeting        Meeting?            @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  actionPoint    MeetingActionPoint? @relation(fields: [actionPointId], references: [id], onDelete: Cascade)
+  uploadedByUser User?               @relation("AttachmentUploadedBy", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, ownerType])
+  @@index([organizationId, correspondenceId])
+  @@index([organizationId, documentId])
+  @@index([organizationId, meetingId])
+  @@index([organizationId, actionPointId])
+  @@map("attachments")
+}
+
+//
+// MEETINGS
+//
+
+model Meeting {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+
+  title             String
+  description       String?
+  agenda            String?
+  discussionSummary String? @map("discussion_summary")
+  resolutions       String?
+
+  startsAt DateTime  @map("starts_at")
+  endsAt   DateTime? @map("ends_at")
+  venue    String?
+
+  organizerUserId   String? @map("organizer_user_id")
+  chairpersonUserId String? @map("chairperson_user_id")
+
+  status    MeetingStatus @default(SCHEDULED)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizerUser   User?        @relation("MeetingOrganizer", fields: [organizerUserId], references: [id], onDelete: SetNull)
+  chairpersonUser User?        @relation("MeetingChairperson", fields: [chairpersonUserId], references: [id], onDelete: SetNull)
+
+  actionPoints MeetingActionPoint[]
+  attachments  Attachment[]
+
+  @@index([organizationId, status])
+  @@index([organizationId, startsAt])
+  @@map("meetings")
+}
+
+model MeetingActionPoint {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  meetingId      String @map("meeting_id")
+
+  actionPoint            String            @map("action_point")
+  assignedToUserId       String?           @map("assigned_to_user_id")
+  assignedToDepartmentId String?           @map("assigned_to_department_id")
+  dueDate                DateTime?         @map("due_date")
+  status                 ActionPointStatus @default(OPEN)
+  remarks                String?
+
+  createdByUserId String?  @map("created_by_user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  meeting              Meeting      @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  assignedToUser       User?        @relation("MeetingActionAssignedTo", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  assignedToDepartment Department?  @relation("MeetingActionAssignedToDepartment", fields: [assignedToDepartmentId], references: [id], onDelete: SetNull)
+  createdByUser        User?        @relation("MeetingActionCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  attachments Attachment[]
+
+  @@index([organizationId, meetingId])
+  @@index([organizationId, dueDate])
+  @@index([organizationId, status])
+  @@map("meeting_action_points")
+}
+
+//
+// AUDIT
+//
+
+model AuditLog {
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  actorUserId    String? @map("actor_user_id")
+
+  entityType String      @map("entity_type")
+  entityId   String      @map("entity_id")
+  action     AuditAction
+  message    String?
+
+  correspondenceId String? @map("correspondence_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actorUser      User?           @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  correspondence Correspondence? @relation(fields: [correspondenceId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, entityType, entityId])
+  @@index([organizationId, action])
+  @@index([organizationId, createdAt])
+  @@map("audit_logs")
+}

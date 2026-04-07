@@ -1,34 +1,37 @@
-'use server';
+"use server";
 
-import * as z from 'zod';
-import { resetSchema } from '@/features/auth/schemas/auth';
-import { getUserByEmail } from '@/features/auth/queries/user';
-import { generatePasswordResetToken } from '@/features/auth/queries/tokens';
-import { sendPasswordResetEmail } from '@/features/auth/utils/auth-email';
+import * as z from "zod";
+import { resetSchema } from "@/features/auth/schemas/auth";
+import { getUserByEmail } from "@/features/auth/queries/user";
+import { generatePasswordResetToken } from "@/features/auth/queries/tokens";
+import { sendPasswordResetEmail } from "@/features/auth/utils/auth-email";
 
-const GENERIC_SUCCESS = 'If an account exists for that email, a reset link has been sent.';
+const GENERIC_SUCCESS =
+  "If an account exists for that email, a reset link has been sent.";
 
 export type ResetPasswordActionState = {
   error?: string;
   success?: string;
-  fieldErrors?: Partial<Record<'email', string>>;
+  fieldErrors?: Partial<Record<"email", string>>;
   values?: {
     email?: string;
   };
 };
 
 function getResetFieldErrors(error: z.ZodError<z.infer<typeof resetSchema>>) {
-  const fields = error.flatten().fieldErrors;
+  const fields = z.flattenError(error).fieldErrors;
 
   return {
     email: fields.email?.[0],
-  } satisfies ResetPasswordActionState['fieldErrors'];
+  } satisfies ResetPasswordActionState["fieldErrors"];
 }
 
-export async function requestPasswordReset(values: z.infer<typeof resetSchema>) {
+export async function requestPasswordReset(
+  values: z.infer<typeof resetSchema>,
+) {
   const parsed = resetSchema.safeParse(values);
   if (!parsed.success) {
-    return { error: 'Invalid email address.' };
+    return { error: "Invalid email address." };
   }
 
   const normalizedEmail = parsed.data.email.toLowerCase();
@@ -49,13 +52,13 @@ export async function requestPasswordResetAction(
   formData: FormData,
 ): Promise<ResetPasswordActionState> {
   const values = {
-    email: String(formData.get('email') ?? ''),
+    email: String(formData.get("email") ?? ""),
   };
 
   const parsed = resetSchema.safeParse(values);
   if (!parsed.success) {
     return {
-      error: 'Please correct the highlighted fields.',
+      error: "Please correct the highlighted fields.",
       fieldErrors: getResetFieldErrors(parsed.error),
       values,
     };
@@ -66,6 +69,6 @@ export async function requestPasswordResetAction(
   return {
     error: result.error,
     success: result.success,
-    values: result.error ? values : { email: '' },
+    values: result.error ? values : { email: "" },
   };
 }

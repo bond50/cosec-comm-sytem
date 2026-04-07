@@ -1,7 +1,7 @@
 // proxy.ts
-import type { Session } from 'next-auth';
-import { auth } from '@/auth';
-import { NextResponse } from 'next/server';
+import type { Session } from "next-auth";
+import { auth } from "@/auth";
+import { NextResponse } from "next/server";
 import {
   apiAuthPrefix,
   authRoutes,
@@ -10,21 +10,11 @@ import {
   isProtectedPath,
   mfaRoute,
   unauthorizedRoute,
-} from '@/routes';
-import { assertNotRateLimitedAuthAPI } from '@/features/auth/utils/rate-limit';
-
-function requiresAdmin(pathname: string) {
-  return (
-    pathname === '/dashboard/settings' ||
-    pathname.startsWith('/dashboard/settings/') ||
-    pathname.startsWith('/dashboard/applications/') ||
-    pathname === '/dashboard/export' ||
-    pathname.startsWith('/dashboard/export/')
-  );
-}
+} from "@/routes";
+import { assertNotRateLimitedAuthAPI } from "@/features/auth/utils/rate-limit";
 
 function isSafeRedirectTarget(target: string | null): target is string {
-  return !!target && target.startsWith('/') && !target.startsWith('//');
+  return !!target && target.startsWith("/") && !target.startsWith("//");
 }
 
 export const proxy = auth(async (req) => {
@@ -35,37 +25,41 @@ export const proxy = auth(async (req) => {
 
   if (pathname.startsWith(apiAuthPrefix)) {
     const ip =
-      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-      req.headers.get('x-real-ip') ??
-      'ip:unknown';
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      req.headers.get("x-real-ip") ??
+      "ip:unknown";
     try {
       await assertNotRateLimitedAuthAPI(ip);
     } catch {
-      return new NextResponse('Too Many Requests', { status: 429 });
+      return new NextResponse("Too Many Requests", { status: 429 });
     }
     return NextResponse.next();
   }
 
-  if (pathname.startsWith('/api') || pathname.startsWith('/trpc')) {
+  if (pathname.startsWith("/api") || pathname.startsWith("/trpc")) {
     if (session?.mfaRequired && !session.mfaVerified) {
-      return NextResponse.json({ message: 'MFA required.' }, { status: 403 });
+      return NextResponse.json({ message: "MFA required." }, { status: 403 });
     }
 
     return NextResponse.next();
   }
 
-  if (pathname === '/auth/new-verification') {
+  if (pathname === "/auth/new-verification") {
     return NextResponse.next();
   }
 
   if (pathname === mfaRoute) {
     if (!isLoggedIn) {
       const cb = encodeURIComponent(`${nextUrl.pathname}${nextUrl.search}`);
-      return NextResponse.redirect(new URL(`/auth/login?callbackUrl=${cb}`, nextUrl));
+      return NextResponse.redirect(
+        new URL(`/auth/login?callbackUrl=${cb}`, nextUrl),
+      );
     }
     if (session.mfaVerified) {
-      const nextParam = nextUrl.searchParams.get('next');
-      const dest = isSafeRedirectTarget(nextParam) ? nextParam : DEFAULT_LOGIN_REDIRECT;
+      const nextParam = nextUrl.searchParams.get("next");
+      const dest = isSafeRedirectTarget(nextParam)
+        ? nextParam
+        : DEFAULT_LOGIN_REDIRECT;
       return NextResponse.redirect(new URL(dest, nextUrl));
     }
     return NextResponse.next();
@@ -82,17 +76,19 @@ export const proxy = auth(async (req) => {
       return NextResponse.redirect(new URL(`${mfaRoute}?next=${cb}`, nextUrl));
     }
 
-    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+    if (pathname !== DEFAULT_LOGIN_REDIRECT) {
+      return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+    }
+
+    return NextResponse.next();
   }
 
   if (isProtectedPath(pathname)) {
     if (!isLoggedIn) {
       const cb = encodeURIComponent(`${nextUrl.pathname}${nextUrl.search}`);
-      return NextResponse.redirect(new URL(`/auth/login?callbackUrl=${cb}`, nextUrl));
-    }
-
-    if (requiresAdmin(pathname) && session.user.role !== 'ADMIN') {
-      return NextResponse.redirect(new URL(forbiddenRoute, nextUrl));
+      return NextResponse.redirect(
+        new URL(`/auth/login?callbackUrl=${cb}`, nextUrl),
+      );
     }
 
     if (session.mfaRequired && !session.mfaVerified) {
@@ -113,7 +109,7 @@ export const proxy = auth(async (req) => {
 
 export const config = {
   matcher: [
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    '/(api|trpc)(.*)',
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
   ],
 };

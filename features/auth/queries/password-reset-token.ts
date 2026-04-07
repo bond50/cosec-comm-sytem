@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { db } from "@/lib/db";
 
 export const getPasswordResetTokenByToken = async (token: string) => {
   try {
@@ -8,7 +8,7 @@ export const getPasswordResetTokenByToken = async (token: string) => {
       },
     });
   } catch (e) {
-    console.error('Error fetching reset token:', e);
+    console.error("Error fetching reset token:", e);
     return null;
   }
 };
@@ -21,7 +21,7 @@ export const getPasswordResetTokenByEmail = async (email: string) => {
       },
     });
   } catch (e) {
-    console.error('Error fetching reset token:', e);
+    console.error("Error fetching reset token:", e);
     return null;
   }
 };

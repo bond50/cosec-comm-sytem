@@ -1,9 +1,23 @@
 // components/emails/BaseEmail.tsx
-import * as React from 'react';
-import type { CSSProperties } from 'react';
-import { Html, Head, Preview, Body, Container, Hr, Text } from '@react-email/components';
+import * as React from "react";
+import type { CSSProperties } from "react";
+import {
+  Html,
+  Head,
+  Preview,
+  Body,
+  Container,
+  Hr,
+  Text,
+} from "@react-email/components";
 
-export function BaseEmail({ preview, children }: { preview: string; children: React.ReactNode }) {
+export function BaseEmail({
+  preview,
+  children,
+}: {
+  preview: string;
+  children: React.ReactNode;
+}) {
   return (
     <Html>
       <Head />
@@ -12,7 +26,9 @@ export function BaseEmail({ preview, children }: { preview: string; children: Re
         <Container style={styles.card}>
           {children}
           <Hr style={styles.hr} />
-          <Text style={styles.footer}>© {new Date().getFullYear()} Sloya Website</Text>
+          <Text style={styles.footer}>
+            © {new Date().getFullYear()} Sloya Website
+          </Text>
         </Container>
       </Body>
     </Html>
@@ -21,18 +37,18 @@ export function BaseEmail({ preview, children }: { preview: string; children: Re
 
 const styles: Record<string, CSSProperties> = {
   body: {
-    backgroundColor: '#f6f9fc',
+    backgroundColor: "#f6f9fc",
     margin: 0,
-    padding: '24px 0',
-    fontFamily: 'Arial, sans-serif',
+    padding: "24px 0",
+    fontFamily: "Arial, sans-serif",
   },
   card: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 8,
     padding: 24,
-    margin: '0 auto',
+    margin: "0 auto",
     maxWidth: 560,
   },
-  hr: { border: 'none', borderTop: '1px solid #eee', margin: '24px 0' },
-  footer: { fontSize: 12, color: '#777' },
+  hr: { border: "none", borderTop: "1px solid #eee", margin: "24px 0" },
+  footer: { fontSize: 12, color: "#777" },
 };

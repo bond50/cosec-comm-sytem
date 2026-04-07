@@ -1,30 +1,37 @@
-import type { DefaultSession } from 'next-auth';
-import type { JWT as DefaultJWT } from 'next-auth/jwt';
-import type { UserRole } from '@/prisma/src/generated/prisma/client';
+import type { DefaultSession } from "next-auth";
+import type { JWT as DefaultJWT } from "next-auth/jwt";
+import type { UserRole } from "@prisma/client";
 
-declare module 'next-auth' {
+declare module "next-auth" {
   interface Session {
-    user: DefaultSession['user'] & {
+    user: DefaultSession["user"] & {
       id: string;
-      role: UserRole;
       isTwoFAEnabled: boolean;
       isOAuth: boolean;
     };
+    organization: {
+      id: string;
+      name: string;
+      slug: string;
+      role: UserRole;
+    } | null;
     mfaRequired: boolean;
     mfaVerified: boolean;
   }
 
   interface User {
     id?: string;
-    role?: UserRole;
     isTwoFAEnabled?: boolean;
     isOAuth?: boolean;
   }
 }
 
-declare module 'next-auth/jwt' {
+declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
-    role?: UserRole;
+    organizationId?: string;
+    organizationName?: string;
+    organizationSlug?: string;
+    organizationRole?: UserRole;
     isOAuth?: boolean;
     isTwoFAEnabled?: boolean;
     mfaRequired?: boolean;

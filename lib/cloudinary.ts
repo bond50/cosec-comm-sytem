@@ -1,9 +1,10 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from "node:crypto";
 
 const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
 const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
 const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
-const baseFolder = process.env.CLOUDINARY_BASE_FOLDER?.trim() || 'igano';
+const baseFolder =
+  process.env.CLOUDINARY_BASE_FOLDER?.trim() || "cosec-comm-system";
 
 type CloudinaryUploadResult = {
   secureUrl: string;
@@ -15,7 +16,9 @@ type CloudinaryUploadResult = {
 
 function assertCloudinaryConfigured() {
   if (!cloudName || !apiKey || !apiSecret) {
-    throw new Error('Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.');
+    throw new Error(
+      "Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.",
+    );
   }
 
   return { cloudName, apiKey, apiSecret, baseFolder };
@@ -26,9 +29,9 @@ function signUploadParams(params: Record<string, string>, secret: string) {
     .filter(([, value]) => value.length > 0)
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([key, value]) => `${key}=${value}`)
-    .join('&');
+    .join("&");
 
-  return createHash('sha1').update(`${serialized}${secret}`).digest('hex');
+  return createHash("sha1").update(`${serialized}${secret}`).digest("hex");
 }
 
 export async function uploadFileToCloudinary(
@@ -40,39 +43,52 @@ export async function uploadFileToCloudinary(
 ): Promise<CloudinaryUploadResult> {
   const config = assertCloudinaryConfigured();
   const timestamp = String(Math.floor(Date.now() / 1000));
-  const folder = [config.baseFolder, options?.folder?.trim()].filter(Boolean).join('/');
-  const publicId = [options?.publicIdPrefix?.trim() || 'file', `${Date.now()}-${randomUUID()}`].join('-');
-  const signature = signUploadParams({ folder, public_id: publicId, timestamp }, config.apiSecret);
+  const folder = [config.baseFolder, options?.folder?.trim()]
+    .filter(Boolean)
+    .join("/");
+  const publicId = [
+    options?.publicIdPrefix?.trim() || "file",
+    `${Date.now()}-${randomUUID()}`,
+  ].join("-");
+  const signature = signUploadParams(
+    { folder, public_id: publicId, timestamp },
+    config.apiSecret,
+  );
   const formData = new FormData();
   const buffer = Buffer.from(await file.arrayBuffer());
-  const blob = new Blob([buffer], { type: file.type || 'application/octet-stream' });
-
-  formData.append('file', blob, file.name);
-  formData.append('api_key', config.apiKey);
-  formData.append('timestamp', timestamp);
-  formData.append('folder', folder);
-  formData.append('public_id', publicId);
-  formData.append('signature', signature);
-
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${config.cloudName}/auto/upload`, {
-    method: 'POST',
-    body: formData,
-    cache: 'no-store',
+  const blob = new Blob([buffer], {
+    type: file.type || "application/octet-stream",
   });
 
-  const payload = (await response.json().catch(() => null)) as
-    | {
-        secure_url?: string;
-        public_id?: string;
-        original_filename?: string;
-        bytes?: number;
-        format?: string;
-        error?: { message?: string };
-      }
-    | null;
+  formData.append("file", blob, file.name);
+  formData.append("api_key", config.apiKey);
+  formData.append("timestamp", timestamp);
+  formData.append("folder", folder);
+  formData.append("public_id", publicId);
+  formData.append("signature", signature);
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${config.cloudName}/auto/upload`,
+    {
+      method: "POST",
+      body: formData,
+      cache: "no-store",
+    },
+  );
+
+  const payload = (await response.json().catch(() => null)) as {
+    secure_url?: string;
+    public_id?: string;
+    original_filename?: string;
+    bytes?: number;
+    format?: string;
+    error?: { message?: string };
+  } | null;
 
   if (!response.ok || !payload?.secure_url || !payload.public_id) {
-    throw new Error(payload?.error?.message || 'Unable to upload file to Cloudinary.');
+    throw new Error(
+      payload?.error?.message || "Unable to upload file to Cloudinary.",
+    );
   }
 
   return {

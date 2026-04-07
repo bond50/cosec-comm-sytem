@@ -1,5 +1,5 @@
 // features/auth/queries/account.ts
-import { db } from '@/lib/db';
+import { db } from "@/lib/db";
 
 export const getAccountByUserId = async (userId: string) => {
   try {

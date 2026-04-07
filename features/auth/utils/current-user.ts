@@ -1,13 +1,18 @@
 // features/auth/utils/current-user.ts
-import { auth } from '@/auth';
-import type { UserRole } from '@/prisma/src/generated/prisma/client';
+import { auth } from "@/auth";
+import type { UserRole } from "@prisma/client";
 
 type CurrentUser = {
   id: string;
   name: string | null;
   email: string | null;
   image: string | null;
-  role: UserRole;
+  organization: {
+    id: string;
+    name: string;
+    slug: string;
+    role: UserRole;
+  } | null;
   isTwoFAEnabled: boolean;
   isOAuth: boolean;
 };
@@ -21,8 +26,8 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     id: u.id,
     name: u.name ?? null,
     email: u.email ?? null,
-    image: typeof u.image === 'string' ? u.image : null,
-    role: u.role,
+    image: typeof u.image === "string" ? u.image : null,
+    organization: session.organization,
     isTwoFAEnabled: u.isTwoFAEnabled,
     isOAuth: u.isOAuth,
   };
@@ -31,7 +36,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 export async function requireCurrentUser(): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) {
-    throw new Error('Unauthorized');
+    throw new Error("Unauthorized");
   }
   return user;
 }

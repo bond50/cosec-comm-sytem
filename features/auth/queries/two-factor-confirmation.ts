@@ -1,5 +1,5 @@
 // features/auth/queries/two-factor-confirmation.ts
-import { db } from '@/lib/db';
+import { db } from "@/lib/db";
 
 export const getTwoFactorConfirmationByUserId = async (userId: string) => {
   try {

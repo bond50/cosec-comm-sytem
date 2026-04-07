@@ -1,0 +1,37 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - img "County Government of Vihiga logo" [ref=e9]
+          - generic [ref=e10]:
+            - paragraph [ref=e11]: County Government of Vihiga
+            - heading "Office of the County Secretary and Head of Public Service" [level=1] [ref=e12]
+        - heading "Enter your email address" [level=3] [ref=e14]
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - generic [ref=e18]: Email address*
+            - textbox "Email address*" [ref=e19]
+          - button "Continue" [ref=e20]
+        - generic [ref=e23]: Or continue with
+        - button "Continue with Google" [ref=e26]:
+          - img [ref=e27]
+          - text: Continue with Google
+        - paragraph [ref=e32]:
+          - text: Need a different path?
+          - link "Reset password" [ref=e33] [cursor=pointer]:
+            - /url: /auth/reset
+    - generic [ref=e34]:
+      - img "County Government of Vihiga logo" [ref=e43]
+      - generic [ref=e44]:
+        - paragraph [ref=e45]: County Government of Vihiga
+        - heading "Secure access for county communication workflows." [level=2] [ref=e46]
+        - paragraph [ref=e47]: Sign in, verify identity, and continue with correspondence tracking in one consistent workspace.
+      - generic [ref=e49]:
+        - img "County Government of Vihiga logo" [ref=e51]
+        - generic [ref=e52]:
+          - paragraph [ref=e53]: Umoja Na Kazi
+          - paragraph [ref=e54]: Secure access to county workflows
+  - button "Open Next.js Dev Tools" [ref=e60] [cursor=pointer]:
+    - img [ref=e61]

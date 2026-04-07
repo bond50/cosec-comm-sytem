@@ -1,0 +1,45 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - img "County Government of Vihiga logo" [ref=e10]
+        - generic [ref=e11]:
+          - paragraph [ref=e12]: County Government of Vihiga
+          - heading "Office of the County Secretary and Head of Public Service" [level=1] [ref=e13]
+          - paragraph [ref=e14]: Umoja Na Kazi
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - paragraph [ref=e17]: Communication movement + accountability
+          - heading "Track correspondence from receipt to closure with a clear chain of responsibility." [level=2] [ref=e18]
+          - paragraph [ref=e19]: Secure sign-in, review, dispatch, action follow-up, and verification in a single county workflow.
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - paragraph [ref=e22]: Registry-ready
+            - paragraph [ref=e23]: Receive and route official correspondence consistently.
+          - generic [ref=e24]:
+            - paragraph [ref=e25]: Multi-step access
+            - paragraph [ref=e26]: Email verification, password reset, and challenge code flows.
+          - generic [ref=e27]:
+            - paragraph [ref=e28]: County branding
+            - paragraph [ref=e29]: Visual identity aligned with Vihiga County colors and mark.
+    - generic [ref=e31]:
+      - generic [ref=e33]:
+        - paragraph [ref=e34]: County Government of Vihiga
+        - heading "Enter your email address" [level=3] [ref=e35]
+      - generic [ref=e36]:
+        - generic [ref=e37]:
+          - generic [ref=e38]:
+            - generic [ref=e39]: Email address*
+            - textbox "Email address*" [ref=e40]
+          - button "Continue" [ref=e41]
+        - generic [ref=e44]: Or continue with
+        - button "Continue with Google" [ref=e47]:
+          - img [ref=e48]
+          - text: Continue with Google
+        - paragraph [ref=e53]:
+          - text: Need a different path?
+          - link "Reset password" [ref=e54] [cursor=pointer]:
+            - /url: /auth/reset
+  - button "Open Next.js Dev Tools" [ref=e60] [cursor=pointer]:
+    - img [ref=e61]
+  - alert [ref=e64]

@@ -1,0 +1,51 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - img "County Government of Vihiga logo" [ref=e9]
+          - generic [ref=e10]:
+            - paragraph [ref=e11]: County Government of Vihiga
+            - heading "Office of the County Secretary and Head of Public Service" [level=1] [ref=e12]
+        - generic [ref=e13]:
+          - heading "Sign in to your account" [level=3] [ref=e14]
+          - paragraph [ref=e15]: Use your email and password to continue.
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - text: Email address
+            - textbox "Email address" [ref=e19]
+          - generic [ref=e20]:
+            - generic [ref=e21]:
+              - generic [ref=e22]: Password
+              - link "Forgot password?" [ref=e23] [cursor=pointer]:
+                - /url: /auth/reset
+            - generic [ref=e24]:
+              - text: Password
+              - generic [ref=e25]:
+                - textbox "Password" [ref=e26]
+                - button "Show password" [ref=e27]:
+                  - img [ref=e28]
+          - button "Sign in" [ref=e31]
+        - generic [ref=e34]: Or continue with
+        - button "Continue with Google" [ref=e37]:
+          - img [ref=e38]
+          - text: Continue with Google
+        - paragraph [ref=e43]:
+          - text: Not registered yet?
+          - link "Create an account" [ref=e44] [cursor=pointer]:
+            - /url: /auth/register
+    - generic [ref=e45]:
+      - img "County Government of Vihiga logo" [ref=e54]
+      - generic [ref=e55]:
+        - paragraph [ref=e56]: County Government of Vihiga
+        - heading "Secure access for county communication workflows." [level=2] [ref=e57]
+        - paragraph [ref=e58]: Sign in, verify identity, and continue with correspondence tracking in one consistent workspace.
+      - generic [ref=e60]:
+        - img "County Government of Vihiga logo" [ref=e62]
+        - generic [ref=e63]:
+          - paragraph [ref=e64]: Umoja Na Kazi
+          - paragraph [ref=e65]: Secure access to county workflows
+  - button "Open Next.js Dev Tools" [ref=e71] [cursor=pointer]:
+    - img [ref=e72]
+  - alert [ref=e75]

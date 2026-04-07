@@ -1,8 +1,8 @@
 // features/auth/components/emails/action-email.tsx
-import type { CSSProperties } from 'react';
-import * as React from 'react';
-import { Button, Heading, Section, Text } from '@react-email/components';
-import { BaseEmail } from '@/components/emails/base-email';
+import type { CSSProperties } from "react";
+import * as React from "react";
+import { Button, Heading, Section, Text } from "@react-email/components";
+import { BaseEmail } from "@/components/emails/base-email";
 
 export function ActionEmail({
   title,
@@ -26,7 +26,7 @@ export function ActionEmail({
           {buttonLabel}
         </Button>
       </Section>
-      <Text style={{ ...styles.p, color: '#555' }}>
+      <Text style={{ ...styles.p, color: "#555" }}>
         If you didn’t request this, you can ignore this email.
       </Text>
     </BaseEmail>
@@ -35,14 +35,14 @@ export function ActionEmail({
 
 const styles: Record<string, CSSProperties> = {
   h1: { fontSize: 24, margin: 0 },
-  p: { fontSize: 14, lineHeight: '22px' },
-  center: { textAlign: 'center' as const, margin: '24px 0' },
+  p: { fontSize: 14, lineHeight: "22px" },
+  center: { textAlign: "center" as const, margin: "24px 0" },
   btn: {
-    display: 'inline-block',
-    padding: '12px 16px',
-    backgroundColor: '#111',
-    color: '#fff',
-    textDecoration: 'none',
+    display: "inline-block",
+    padding: "12px 16px",
+    backgroundColor: "#111",
+    color: "#fff",
+    textDecoration: "none",
     borderRadius: 6,
   },
 };

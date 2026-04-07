@@ -1,41 +1,57 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
+# --- IDE / OS ---
+.idea/
+.vscode/
 .DS_Store
-*.pem
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
+# --- Dependencies / build ---
+node_modules/
+.pnp/
+.pnp.js
+coverage/
+.next/
+out/
+build/
 *.tsbuildinfo
 next-env.d.ts
+
+# --- Logs / debug ---
+npm-debug.log*
+yarn-*.log*
+pnpm-debug.log*
+logs/
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# --- Local env & secrets ---
+# keep example only
+.env
+.env.*
+!.env.example
+.envrc
+.envrc.local
+# prisma sometimes uses its own .env
+prisma/.env
+# package managers can hold tokens
+.npmrc
+.yarnrc*
+.pnpmrc
+
+# --- Certs / keys ---
+*.pem
+*.key
+*.crt
+*.pfx
+
+# --- Misc you had ---
+.scripts.zip
+.vercel
+lib/generated/prisma
+extra
+extra/
+# --- Docker (the file itself should be a separate .dockerignore) ---
+.dockerignore
+
+
+/prisma/src/generated/prisma

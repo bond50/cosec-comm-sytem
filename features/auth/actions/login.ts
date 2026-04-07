@@ -1,25 +1,33 @@
-'use server';
+"use server";
 
-import * as z from 'zod';
-import bcrypt from 'bcryptjs';
-import { AuthError } from 'next-auth';
-import { signIn } from '@/auth';
-import { DEFAULT_LOGIN_REDIRECT, mfaRoute } from '@/routes';
+import * as z from "zod";
+import bcrypt from "bcryptjs";
+import { AuthError } from "next-auth";
+import { signIn } from "@/auth";
+import { DEFAULT_LOGIN_REDIRECT, mfaRoute } from "@/routes";
 
-import { loginSchema } from '@/features/auth/schemas/auth';
-import { db } from '@/lib/db';
-import { generateTwoFactorToken, generateVerificationToken } from '@/features/auth/queries/tokens';
-import { sendTwoFactorEmail, sendVerificationEmail } from '@/features/auth/utils/auth-email';
+import { loginSchema } from "@/features/auth/schemas/auth";
+import { db } from "@/lib/db";
+import {
+  generateTwoFactorToken,
+  generateVerificationToken,
+} from "@/features/auth/queries/tokens";
+import {
+  sendTwoFactorEmail,
+  sendVerificationEmail,
+} from "@/features/auth/utils/auth-email";
 import {
   assertNotRateLimited2FA,
   assertNotRateLimitedLogin,
   clearLoginLockOnSuccess,
-} from '@/features/auth/utils/rate-limit';
-import { getUserByEmail } from '@/features/auth/queries/user';
-import { getTwoFactorTokenByToken } from '@/features/auth/queries/two-factor-token';
-import { getTwoFactorConfirmationByUserId } from '@/features/auth/queries/two-factor-confirmation';
+} from "@/features/auth/utils/rate-limit";
+import { getUserByEmail } from "@/features/auth/queries/user";
+import { getActiveOrganizationMembershipByUserId } from "@/features/auth/queries/organization-membership";
+import { getTwoFactorTokenByToken } from "@/features/auth/queries/two-factor-token";
+import { getTwoFactorConfirmationByUserId } from "@/features/auth/queries/two-factor-confirmation";
+import { isAdminRole } from "@/features/auth/utils/roles";
 
-const GENERIC = 'Invalid email or password';
+const GENERIC = "Invalid email or password";
 
 export type LoginResult = {
   error?: string;
@@ -32,7 +40,7 @@ export type LoginActionState = {
   error?: string;
   success?: string;
   twoFactorRequired?: boolean;
-  fieldErrors?: Partial<Record<'email' | 'password' | 'code', string>>;
+  fieldErrors?: Partial<Record<"email" | "password" | "code", string>>;
   values?: {
     email?: string;
     code?: string;
@@ -40,7 +48,7 @@ export type LoginActionState = {
 };
 
 function formatLockDuration(ms: number | null | undefined): string {
-  if (!ms || !Number.isFinite(ms) || ms <= 0) return 'a moment';
+  if (!ms || !Number.isFinite(ms) || ms <= 0) return "a moment";
 
   const totalSeconds = Math.ceil(ms / 1000);
   const totalMinutes = Math.ceil(totalSeconds / 60);
@@ -48,36 +56,38 @@ function formatLockDuration(ms: number | null | undefined): string {
   const oneDay = 24 * oneHour;
   const oneWeek = 7 * oneDay;
 
-  if (totalMinutes <= 1) return '1 minute';
+  if (totalMinutes <= 1) return "1 minute";
   if (totalMinutes < oneHour) return `${totalMinutes} minutes`;
 
   const hours = Math.round(totalMinutes / oneHour);
   if (totalMinutes < oneDay) {
-    return `${hours} hour${hours === 1 ? '' : 's'}`;
+    return `${hours} hour${hours === 1 ? "" : "s"}`;
   }
 
   const days = Math.round(totalMinutes / oneDay);
   if (totalMinutes < oneWeek) {
-    return `${days} day${days === 1 ? '' : 's'}`;
+    return `${days} day${days === 1 ? "" : "s"}`;
   }
 
   const weeks = Math.round(totalMinutes / oneWeek);
-  return `${weeks} week${weeks === 1 ? '' : 's'}`;
+  return `${weeks} week${weeks === 1 ? "" : "s"}`;
 }
 
 function getLoginFieldErrors(error: z.ZodError<z.infer<typeof loginSchema>>) {
-  const fields = error.flatten().fieldErrors;
+  const fields = z.flattenError(error).fieldErrors;
 
   return {
     email: fields.email?.[0],
     password: fields.password?.[0],
     code: fields.code?.[0],
-  } satisfies LoginActionState['fieldErrors'];
+  } satisfies LoginActionState["fieldErrors"];
 }
 
-export const login = async (values: z.infer<typeof loginSchema>): Promise<LoginResult> => {
+export const login = async (
+  values: z.infer<typeof loginSchema>,
+): Promise<LoginResult> => {
   const parsed = loginSchema.safeParse(values);
-  if (!parsed.success) return { error: 'Invalid fields' };
+  if (!parsed.success) return { error: "Invalid fields" };
 
   const { email, password, code } = parsed.data;
   const normalizedEmail = email.toLowerCase();
@@ -85,15 +95,19 @@ export const login = async (values: z.infer<typeof loginSchema>): Promise<LoginR
   try {
     await assertNotRateLimitedLogin(normalizedEmail);
   } catch (e) {
-    if (e instanceof Error && e.message.startsWith('rate_limited')) {
-      const parts = e.message.split(':');
+    if (e instanceof Error && e.message.startsWith("rate_limited")) {
+      const parts = e.message.split(":");
       const raw = parts[1];
-      const remainingMs = raw && raw.trim().length > 0 ? Number.parseInt(raw.trim(), 10) : undefined;
+      const remainingMs =
+        raw && raw.trim().length > 0
+          ? Number.parseInt(raw.trim(), 10)
+          : undefined;
       const friendly = formatLockDuration(remainingMs ?? null);
 
       return {
         error: `Too many attempts. Please try again in ${friendly}.`,
-        lockMs: remainingMs && Number.isFinite(remainingMs) ? remainingMs : undefined,
+        lockMs:
+          remainingMs && Number.isFinite(remainingMs) ? remainingMs : undefined,
       };
     }
 
@@ -114,8 +128,11 @@ export const login = async (values: z.infer<typeof loginSchema>): Promise<LoginR
 
   if (!user.emailVerified) {
     const verificationToken = await generateVerificationToken(user.email);
-    await sendVerificationEmail(verificationToken.email, verificationToken.token);
-    return { success: 'Check your email to verify your account.' };
+    await sendVerificationEmail(
+      verificationToken.email,
+      verificationToken.token,
+    );
+    return { success: "Check your email to verify your account." };
   }
 
   if (user.isTwoFAEnabled) {
@@ -124,7 +141,7 @@ export const login = async (values: z.infer<typeof loginSchema>): Promise<LoginR
         await assertNotRateLimited2FA(user.email);
       } catch {
         return {
-          error: 'Too many verification codes requested. Try again shortly.',
+          error: "Too many verification codes requested. Try again shortly.",
         };
       }
 
@@ -134,8 +151,12 @@ export const login = async (values: z.infer<typeof loginSchema>): Promise<LoginR
     }
 
     const existingToken = await getTwoFactorTokenByToken(code);
-    if (!existingToken || existingToken.email !== user.email || existingToken.expires < new Date()) {
-      return { error: 'Invalid or expired 2FA code' };
+    if (
+      !existingToken ||
+      existingToken.email !== user.email ||
+      existingToken.expires < new Date()
+    ) {
+      return { error: "Invalid or expired 2FA code" };
     }
 
     await db.twoFactorToken.delete({ where: { id: existingToken.id } });
@@ -148,18 +169,22 @@ export const login = async (values: z.infer<typeof loginSchema>): Promise<LoginR
 
   await clearLoginLockOnSuccess(normalizedEmail);
 
-  const requiresChallenge = user.role === 'ADMIN' || Boolean(user.isTwoFAEnabled);
+  const activeMembership = await getActiveOrganizationMembershipByUserId(
+    user.id,
+  );
+  const requiresChallenge =
+    isAdminRole(activeMembership?.role) || Boolean(user.isTwoFAEnabled);
   const redirectTarget = requiresChallenge
     ? `${mfaRoute}?next=${encodeURIComponent(DEFAULT_LOGIN_REDIRECT)}`
     : DEFAULT_LOGIN_REDIRECT;
 
   try {
-    await signIn('credentials', {
+    await signIn("credentials", {
       email: normalizedEmail,
       password,
       redirectTo: redirectTarget,
     });
-    return { success: 'Login successful!' };
+    return { success: "Login successful!" };
   } catch (e) {
     if (e instanceof AuthError) return { error: GENERIC };
     throw e;
@@ -171,15 +196,15 @@ export async function loginAction(
   formData: FormData,
 ): Promise<LoginActionState> {
   const values = {
-    email: String(formData.get('email') ?? ''),
-    password: String(formData.get('password') ?? ''),
-    code: String(formData.get('code') ?? ''),
+    email: String(formData.get("email") ?? ""),
+    password: String(formData.get("password") ?? ""),
+    code: String(formData.get("code") ?? ""),
   };
 
   const parsed = loginSchema.safeParse(values);
   if (!parsed.success) {
     return {
-      error: 'Please correct the highlighted fields.',
+      error: "Please correct the highlighted fields.",
       fieldErrors: getLoginFieldErrors(parsed.error),
       values: {
         email: values.email,
@@ -194,11 +219,11 @@ export async function loginAction(
   return {
     error: result.error,
     success: result.success,
-    twoFactorRequired: result.twoFactorRequired ?? ((parsed.data.code?.trim()?.length ?? 0) > 0),
+    twoFactorRequired:
+      result.twoFactorRequired ?? (parsed.data.code?.trim()?.length ?? 0) > 0,
     values: {
       email: parsed.data.email,
-      code: parsed.data.code ?? '',
+      code: parsed.data.code ?? "",
     },
   };
 }
-

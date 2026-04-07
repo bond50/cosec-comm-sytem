@@ -1,0 +1,48 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - img "County Government of Vihiga logo" [ref=e9]
+          - generic [ref=e10]:
+            - paragraph [ref=e11]: County Government of Vihiga
+            - heading "Office of the County Secretary and Head of Public Service" [level=1] [ref=e12]
+        - heading "Sign in to your account" [level=3] [ref=e14]
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - text: Email address
+            - textbox "Email address" [ref=e18]
+          - generic [ref=e19]:
+            - generic [ref=e20]:
+              - generic [ref=e21]: Password
+              - link "Forgot password?" [ref=e22] [cursor=pointer]:
+                - /url: /auth/reset
+            - generic [ref=e23]:
+              - text: Password
+              - generic [ref=e24]:
+                - textbox "Password" [ref=e25]
+                - button "Show password" [ref=e26]:
+                  - img [ref=e27]
+          - button "Sign in" [ref=e30]
+        - generic [ref=e33]: Or continue with
+        - button "Continue with Google" [ref=e36]:
+          - img [ref=e37]
+          - text: Continue with Google
+        - paragraph [ref=e42]:
+          - text: Not registered yet?
+          - link "Create an account" [ref=e43] [cursor=pointer]:
+            - /url: /auth/register
+    - generic [ref=e44]:
+      - img "County Government of Vihiga logo" [ref=e53]
+      - generic [ref=e54]:
+        - paragraph [ref=e55]: County Government of Vihiga
+        - heading "Secure access for county communication workflows." [level=2] [ref=e56]
+        - paragraph [ref=e57]: Sign in, verify identity, and continue with correspondence tracking in one consistent workspace.
+      - generic [ref=e59]:
+        - img "County Government of Vihiga logo" [ref=e61]
+        - generic [ref=e62]:
+          - paragraph [ref=e63]: Umoja Na Kazi
+          - paragraph [ref=e64]: Secure access to county workflows
+  - button "Open Next.js Dev Tools" [ref=e70] [cursor=pointer]:
+    - img [ref=e71]

@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { db } from "@/lib/db";
 
 export const getTwoFactorTokenByToken = async (token: string) => {
   try {
@@ -19,7 +19,7 @@ export const getTwoFactorTokenByEmail = async (email: string) => {
         email,
       },
       orderBy: {
-        expires: 'desc',
+        expires: "desc",
       },
     });
   } catch {

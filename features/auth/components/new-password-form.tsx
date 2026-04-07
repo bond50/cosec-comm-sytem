@@ -1,17 +1,16 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useActionState, useEffect, useEffectEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { useFormStatus } from 'react-dom';
-import { AlertCircle, CheckCircle2, LoaderCircle } from 'lucide-react';
+import Link from "next/link";
+import { useActionState, useEffect, useEffectEvent } from "react";
+import { useRouter } from "next/navigation";
 import {
   resetPasswordWithTokenAction,
   type NewPasswordActionState,
-} from '@/features/auth/actions/new-password';
-import { AuthShell } from '@/features/auth/components/auth-shell';
-import { PasswordInput } from '@/features/auth/components/password-input';
-import { Button } from '@/components/ui/button';
+} from "@/features/auth/actions/new-password";
+import { AuthFormStatus } from "@/features/auth/components/auth-form-status";
+import { AuthShell } from "@/features/auth/components/auth-shell";
+import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
+import { PasswordInput } from "@/features/auth/components/password-input";
 
 type NewPasswordFormProps = {
   token?: string;
@@ -23,23 +22,16 @@ const initialState: NewPasswordActionState = {
   fieldErrors: {},
 };
 
-function SubmitButton({ disabled }: { disabled: boolean }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button className="w-full" size="lg" type="submit" disabled={pending || disabled}>
-      {pending ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
-      Update password
-    </Button>
-  );
-}
-
-export function NewPasswordForm({ token, email = '', organizationName }: NewPasswordFormProps) {
+export function NewPasswordForm({
+  token,
+  email = "",
+  organizationName,
+}: NewPasswordFormProps) {
   const router = useRouter();
   const actionWithToken = resetPasswordWithTokenAction.bind(null, token);
   const [state, action] = useActionState(actionWithToken, initialState);
   const redirectToLogin = useEffectEvent(() => {
-    router.push('/auth/login');
+    router.push("/auth/login");
   });
 
   useEffect(() => {
@@ -52,7 +44,7 @@ export function NewPasswordForm({ token, email = '', organizationName }: NewPass
     }, 1200);
 
     return () => window.clearTimeout(timeoutId);
-  }, [state.success, redirectToLogin]);
+  }, [state.success]);
 
   return (
     <AuthShell
@@ -95,26 +87,22 @@ export function NewPasswordForm({ token, email = '', organizationName }: NewPass
           />
         </div>
 
-        {state.error ? (
-          <div className="flex items-start gap-2 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{state.error}</span>
-          </div>
-        ) : null}
+        <AuthFormStatus
+          error={state.error}
+          success={state.success}
+          successTitle=""
+          successType="success"
+        />
 
-        {state.success ? (
-          <div className="flex items-start gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{state.success}</span>
-          </div>
-        ) : null}
-
-        <SubmitButton disabled={!token} />
+        <AuthSubmitButton disabled={!token}>Update password</AuthSubmitButton>
 
         {!token ? (
           <p className="text-sm text-slate-600">
-            This reset link is missing a token.{' '}
-            <Link className="font-semibold text-[var(--brand)]" href="/auth/reset">
+            This reset link is missing a token.{" "}
+            <Link
+              className="font-semibold text-[var(--brand)]"
+              href="/auth/reset"
+            >
               Request a new reset email.
             </Link>
           </p>

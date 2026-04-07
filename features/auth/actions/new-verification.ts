@@ -1,28 +1,28 @@
 // features/auth/actions/new-verification.ts
-'use server';
+"use server";
 
-import { db } from '@/lib/db';
-import { getUserByEmail } from '@/features/auth/queries/user';
-import { getVerificationTokenByToken } from '@/features/auth/queries/verification-token';
+import { db } from "@/lib/db";
+import { getUserByEmail } from "@/features/auth/queries/user";
+import { getVerificationTokenByToken } from "@/features/auth/queries/verification-token";
 
 export async function verifyEmailToken(token?: string | null) {
   if (!token) {
-    return { error: 'Verification link is missing or invalid.' };
+    return { error: "Verification link is missing or invalid." };
   }
 
   const existingToken = await getVerificationTokenByToken(token);
   if (!existingToken) {
-    return { error: 'Verification link is invalid or has already been used.' };
+    return { error: "Verification link is invalid or has already been used." };
   }
 
   if (existingToken.expires < new Date()) {
     await db.verificationToken.delete({ where: { id: existingToken.id } });
-    return { error: 'Verification link has expired. Request a new one.' };
+    return { error: "Verification link has expired. Request a new one." };
   }
 
   const existingUser = await getUserByEmail(existingToken.email);
   if (!existingUser?.email) {
-    return { error: 'Account no longer exists for this verification link.' };
+    return { error: "Account no longer exists for this verification link." };
   }
 
   if (!existingUser.emailVerified) {
@@ -35,6 +35,6 @@ export async function verifyEmailToken(token?: string | null) {
   await db.verificationToken.delete({ where: { id: existingToken.id } });
 
   return {
-    success: 'Your email has been verified. Your account is now active.',
+    success: "Your email has been verified. Your account is now active.",
   };
 }

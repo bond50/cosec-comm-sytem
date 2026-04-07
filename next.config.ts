@@ -1,7 +1,36 @@
 import type { NextConfig } from "next";
 
+const isWindows = process.platform === "win32";
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: ["192.168.8.13"],
+
+  ...(isWindows ? {} : { output: "standalone" }),
+
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
+  },
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "img.youtube.com",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

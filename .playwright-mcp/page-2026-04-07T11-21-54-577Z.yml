@@ -1,0 +1,26 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - img "County Government of Vihiga logo" [ref=e9]
+        - generic [ref=e10]:
+          - paragraph [ref=e11]: County Government of Vihiga
+          - heading "Office of the County Secretary and Head of Public Service" [level=1] [ref=e12]
+      - heading "Enter your email address" [level=3] [ref=e14]
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: Email address*
+          - textbox "Email address*" [ref=e19]
+        - button "Continue" [ref=e20]
+      - generic [ref=e25]: Or continue with
+      - button "Continue with Google" [ref=e28]:
+        - img [ref=e29]
+        - text: Continue with Google
+      - paragraph [ref=e34]:
+        - text: Need a different path?
+        - link "Reset password" [ref=e35] [cursor=pointer]:
+          - /url: /auth/reset
+  - button "Open Next.js Dev Tools" [ref=e47] [cursor=pointer]:
+    - img [ref=e48]
+  - alert [ref=e51]

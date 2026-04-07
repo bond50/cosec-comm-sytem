@@ -1,6 +1,6 @@
 // features/auth/queries/user.ts
-import { db } from '@/lib/db';
-import { UserRole } from '@/prisma/src/generated/prisma/client';
+import { db } from "@/lib/db";
+import { ADMIN_MEMBERSHIP_ROLES } from "@/features/auth/utils/roles";
 
 export const getUserByEmail = async (email: string) => {
   return db.user.findUnique({
@@ -27,31 +27,44 @@ export const getUsersForSelect = async (): Promise<
       name: true,
       email: true,
     },
-    orderBy: { name: 'asc' },
+    orderBy: { name: "asc" },
   });
 
   return users.map((user) => ({
     id: user.id,
-    name: user.name || 'Unnamed',
-    email: user.email ?? '',
+    name: user.name || "Unnamed",
+    email: user.email ?? "",
   }));
 };
 
 export const getAdminNotificationRecipients = async (): Promise<string[]> => {
-  const admins = await db.user.findMany({
+  const admins = await db.organizationMembership.findMany({
     where: {
-      role: UserRole.ADMIN,
-      email: {
-        not: null,
+      role: {
+        in: [...ADMIN_MEMBERSHIP_ROLES],
+      },
+      user: {
+        email: {
+          not: null,
+        },
       },
     },
     select: {
-      email: true,
+      user: {
+        select: {
+          email: true,
+        },
+      },
     },
-    orderBy: { email: 'asc' },
+    distinct: ["userId"],
+    orderBy: {
+      user: {
+        email: "asc",
+      },
+    },
   });
 
   return admins
-    .map((admin) => admin.email?.trim().toLowerCase())
+    .map((admin) => admin.user.email?.trim().toLowerCase())
     .filter((email): email is string => Boolean(email));
 };

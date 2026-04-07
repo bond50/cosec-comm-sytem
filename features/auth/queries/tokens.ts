@@ -1,12 +1,12 @@
-import { nanoid } from 'nanoid';
-import * as crypto from 'crypto';
+import { nanoid } from "nanoid";
+import * as crypto from "crypto";
 
-import { db } from '@/lib/db';
-import { getPasswordResetTokenByEmail } from '@/features/auth/queries/password-reset-token';
-import { getVerificationTokenByEmail } from '@/features/auth/queries/verification-token';
+import { db } from "@/lib/db";
+import { getPasswordResetTokenByEmail } from "@/features/auth/queries/password-reset-token";
+import { getVerificationTokenByEmail } from "@/features/auth/queries/verification-token";
 
 export const generateTwoFactorToken = async (email: string) => {
-  const token = crypto.randomInt(100_000, 999_999).toString().padStart(6, '0');
+  const token = crypto.randomInt(100_000, 999_999).toString().padStart(6, "0");
   const expires = new Date(new Date().getTime() + 5 * 60 * 1000);
 
   await db.twoFactorToken.deleteMany({

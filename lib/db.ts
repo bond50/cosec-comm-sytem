@@ -1,52 +1,55 @@
-import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '@/prisma/src/generated/prisma/client';
+import fs from "node:fs";
+import path from "node:path";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
 
-const PRISMA_SCHEMA_CACHE_VERSION = '2026-03-28-renewal-cycle-v1';
+const connectionString = process.env.DATABASE_URL;
+
+function getGeneratedSchemaVersion() {
+  try {
+    const clientDir = path.dirname(
+      require.resolve("@prisma/client/package.json"),
+    );
+    const schemaPath = path.join(
+      clientDir,
+      "..",
+      "..",
+      ".prisma",
+      "client",
+      "schema.prisma",
+    );
+
+    return fs.statSync(schemaPath).mtimeMs;
+  } catch {
+    return 0;
+  }
+}
 
 const prismaClientSingleton = () => {
-  const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
-    throw new Error('DATABASE_URL is not set');
+    throw new Error("DATABASE_URL is not configured.");
   }
 
   const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 };
 
-function isCompatiblePrismaClient(value: unknown): value is ReturnType<typeof prismaClientSingleton> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'user' in value &&
-    'membershipApplication' in value &&
-    'applicationDraft' in value &&
-    'applicantProfile' in value &&
-    'membershipCategory' in value &&
-    'applicationPortalSetting' in value &&
-    'applicationPaymentProofHistory' in value &&
-    'membershipPaymentRecord' in value &&
-    'paymentIntent' in value &&
-    'mpesaStkRequest' in value &&
-    'mpesaC2BReceipt' in value &&
-    'paymentIncident' in value &&
-    'userNotificationState' in value
-  );
-}
-
 declare const globalThis: {
-  prismaGlobal: ReturnType<typeof prismaClientSingleton> | undefined;
-  prismaGlobalVersion: string | undefined;
+  prismaGlobal: ReturnType<typeof prismaClientSingleton>;
+  prismaGlobalSchemaVersion?: number;
 } & typeof global;
 
-const cachedClient =
-  globalThis.prismaGlobalVersion === PRISMA_SCHEMA_CACHE_VERSION && isCompatiblePrismaClient(globalThis.prismaGlobal)
-    ? globalThis.prismaGlobal
-    : undefined;
+const generatedSchemaVersion = getGeneratedSchemaVersion();
 
-export const db = cachedClient ?? prismaClientSingleton();
+const shouldCreateNewClient =
+  !globalThis.prismaGlobal ||
+  globalThis.prismaGlobalSchemaVersion !== generatedSchemaVersion;
 
-if (process.env.NODE_ENV !== 'production') {
+export const db = shouldCreateNewClient
+  ? prismaClientSingleton()
+  : globalThis.prismaGlobal;
+
+if (process.env.NODE_ENV !== "production") {
   globalThis.prismaGlobal = db;
-  globalThis.prismaGlobalVersion = PRISMA_SCHEMA_CACHE_VERSION;
+  globalThis.prismaGlobalSchemaVersion = generatedSchemaVersion;
 }
-
