@@ -1,36 +1,241 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# COSEC Communication System
 
-## Getting Started
+A fullstack **County Secretary Communication & Correspondence Tracking System** built with Next.js App Router.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🚀 Overview
+
+This system is designed to manage and track official communication within a government office.
+
+It ensures:
+
+- Accountability
+- Traceability
+- Structured document flow
+- Timely action & feedback
+
+This is a multi-tenant system.
+
+All core business data is organization-scoped.
+
+---
+
+## 🧠 Core Concept
+
+The system revolves around a single core entity:
+
+👉 **Correspondence**
+
+Lifecycle:
+
+Receive → Register → Review → Dispatch → Action → Feedback → Close
+
+This is **not a simple CRUD system** — it models real-world communication workflows.
+
+---
+
+## 🏗️ Tech Stack
+
+- Next.js (App Router)
+- Prisma ORM
+- PostgreSQL
+- Auth.js
+- Server Actions
+- Zod (server-side validation)
+- shadcn/ui
+- Tailwind CSS
+- lucide-react
+
+---
+
+## 📁 Project Structure
+
+app/
+(auth)/
+dashboard/
+correspondence/
+documents/
+dispatch/
+meetings/
+reports/
+users/
+settings/
+
+components/
+features/
+lib/
+auth/
+db/
+validations/
+
+prisma/
+types/
+
+---
+
+## 🔐 Authentication
+
+- All `/dashboard` routes are protected
+- Session is validated in pages and server actions
+
+## 🏢 Multi-Tenancy
+
+- The system supports multiple organizations
+- Core business records are scoped by `organization_id`
+- Queries and protected workflows must resolve the active organization context
+
+---
+
+## ⚙️ Core Modules
+
+### Organizations
+
+- multi-tenant foundation
+- membership context
+- organization-scoped access
+
+### Users & Departments
+
+- organization member structure
+- department ownership and assignment
+
+### Correspondence (CORE)
+
+Tracks all communication:
+
+- sender
+- delivery method
+- instructions
+- priority
+- status
+- due date
+
+### Dispatch
+
+Tracks document movement
+
+### Documents
+
+File storage & categorization
+
+### Meetings
+
+Meeting records & action points
+
+### Dashboard
+
+Read-only summary and workload visibility
+
+---
+
+## 📌 Status Workflow
+
+New → Under Review → Dispatched → In Progress → Awaiting Feedback → Completed → Cancelled → Closed
+
+---
+
+## 🧩 Forms Pattern
+
+- `<form action={formAction}>`
+- `useActionState`
+- `useFormStatus`
+- Zod validation on server
+
+---
+
+## 🧪 Server Action Pattern
+
+1. Parse FormData
+2. Validate (Zod)
+3. Check auth
+4. Prisma query
+5. Return structured response
+
+### Response Shape
+
+```ts
+type ActionState<T = unknown> = {
+  ok: boolean;
+  message: string;
+  fieldErrors?: Record<string, string[] | undefined>;
+  values?: Record<string, any>;
+  data?: T;
+};
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🗄️ Database
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Use migrations only:
 
-## Learn More
+```bash
+pnpm prisma migrate dev --name init
+```
 
-To learn more about Next.js, take a look at the following resources:
+Current schema notes:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- outgoing correspondence may later require explicit recipient fields
+- dispatch tracking may later require an explicit dispatch method field
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## ▶️ Getting Started
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm install
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Create `.env`:
+
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/cosec_db"
+```
+
+```bash
+pnpm prisma migrate dev
+pnpm dev
+```
+
+---
+
+## 🎯 Development Rules
+
+- Server Components for data
+- Server Actions for mutations
+- Zod validation (server)
+- Keep logic out of UI
+
+---
+
+## ❌ Avoid
+
+- API routes (unless external)
+- Client-only validation
+- Random refactors
+
+---
+
+## 🧭 Build Order
+
+1. Auth
+2. Organizations
+3. Users & Departments
+4. Correspondence
+5. Dispatch / Movement Tracking
+6. Documents
+7. Meetings
+8. Dashboard
+
+---
+
+## 🧠 Principle
+
+System is about **communication tracking + accountability**, not CRUD.
+
+---
+
+## 📄 License
+
+Private / Internal Use
