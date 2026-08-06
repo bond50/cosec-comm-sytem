@@ -56,6 +56,11 @@ prisma/.env
 *.crt
 *.pfx
 
+# --- Deployment secrets (keep sample/template only) ---
+/secrets/*
+!/secrets/.gitkeep
+!/secrets/COSEC_ENV_JSON.sample.json
+
 # --- Misc you had ---
 .scripts.zip
 .vercel
