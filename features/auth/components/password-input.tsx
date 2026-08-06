@@ -25,11 +25,11 @@ export function PasswordInput({
   const [visible, setVisible] = useState(false);
 
   return (
-    <div className={cn("space-y-2", containerClassName)}>
+    <div className={cn("space-y-4", containerClassName)}>
       <label htmlFor={id} className="text-sm font-medium text-slate-700">
         {label}
       </label>
-      <div className="relative">
+      <div className="relative mt-2">
         <Input
           id={id}
           type={visible ? "text" : "password"}

@@ -10,6 +10,10 @@ const SITEVERIFY_URL =
 const TURNSTILE_ACCESS_COOKIE = "auth-access-turnstile";
 const TURNSTILE_ACCESS_MAX_AGE_SECONDS = 10 * 60;
 
+function isTurnstileBypassed(): boolean {
+  return process.env.NODE_ENV === "development";
+}
+
 const turnstileVerifyResponseSchema = z.object({
   success: z.boolean(),
   "error-codes": z.array(z.string()).optional(),
@@ -129,6 +133,10 @@ function decodeGateValue(
 }
 
 export async function grantTurnstileAccess(email: string): Promise<void> {
+  if (isTurnstileBypassed()) {
+    return;
+  }
+
   const secret = getSigningSecret();
   if (!secret) {
     return;
@@ -156,6 +164,10 @@ export async function grantTurnstileAccess(email: string): Promise<void> {
 }
 
 export async function hasTurnstileAccess(email: string): Promise<boolean> {
+  if (isTurnstileBypassed()) {
+    return true;
+  }
+
   const secret = getSigningSecret();
   if (!secret) {
     return false;
@@ -187,6 +199,10 @@ export async function clearTurnstileAccess(): Promise<void> {
 export async function verifyTurnstileToken(
   token: string,
 ): Promise<TurnstileVerificationResult> {
+  if (isTurnstileBypassed()) {
+    return { ok: true };
+  }
+
   const secret = getSigningSecret();
 
   if (!secret) {

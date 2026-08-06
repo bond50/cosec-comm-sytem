@@ -14,7 +14,10 @@ export async function getCurrentOrganization(): Promise<Organization | null> {
 
   if (!userId) return null;
 
-  const membership = await getActiveMembershipByUserId(userId);
+  const membership = await getActiveMembershipByUserId(
+    userId,
+    session.organization?.id,
+  );
   return membership?.organization ?? null;
 }
 

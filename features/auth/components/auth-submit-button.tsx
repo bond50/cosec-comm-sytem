@@ -10,6 +10,7 @@ type AuthSubmitButtonProps = {
   className?: string;
   disabled?: boolean;
   icon?: React.ReactNode;
+  form?: string;
 };
 
 export function AuthSubmitButton({
@@ -18,6 +19,7 @@ export function AuthSubmitButton({
   className = "w-full rounded-xl",
   disabled = false,
   icon,
+  form,
 }: AuthSubmitButtonProps) {
   const { pending } = useFormStatus();
 
@@ -27,6 +29,7 @@ export function AuthSubmitButton({
       size="lg"
       type="submit"
       variant={variant}
+      form={form}
       disabled={pending || disabled}
     >
       {pending ? (

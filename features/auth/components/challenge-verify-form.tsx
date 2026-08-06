@@ -1,11 +1,10 @@
 "use client";
 
-import { AuthFeedback } from "@/features/auth/components/auth-feedback";
 import { AuthOtpField } from "@/features/auth/components/auth-otp-field";
-import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 
 type ChallengeVerifyFormProps = {
   action: (formData: FormData) => void;
+  formId: string;
   next?: string;
   error?: string;
   success?: string;
@@ -13,24 +12,14 @@ type ChallengeVerifyFormProps = {
 
 export function ChallengeVerifyForm({
   action,
+  formId,
   next,
   error,
-  success,
 }: ChallengeVerifyFormProps) {
   return (
-    <form action={action} className="space-y-5">
+    <form id={formId} action={action} className="space-y-4">
       <input type="hidden" name="next" value={next ?? ""} />
       <AuthOtpField id="challenge-code" error={error} required />
-      <AuthFeedback
-        type="info"
-        title="Verification message"
-        message={success}
-        icon="mail"
-      />
-
-      <AuthSubmitButton className="flex-1">
-        Verify and continue
-      </AuthSubmitButton>
     </form>
   );
 }

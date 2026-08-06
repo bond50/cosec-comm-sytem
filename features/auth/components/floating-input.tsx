@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 type FloatingInputProps = ComponentProps<typeof Input> & {
   label: string;
@@ -16,11 +17,11 @@ export function FloatingInput({
   ...props
 }: FloatingInputProps) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <label htmlFor={id} className="text-sm font-medium text-slate-700">
         {label}
       </label>
-      <Input id={id} className={className} {...props} />
+      <Input id={id} className={cn("mt-2", className)} {...props} />
       {description ? (
         <p className="text-sm text-slate-500">{description}</p>
       ) : null}

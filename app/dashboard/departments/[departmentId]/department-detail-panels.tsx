@@ -108,7 +108,7 @@ export function DepartmentHero({
 
       <div className="rounded-[22px] border border-slate-200 bg-slate-50/70 p-5">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-          Department identity
+          Entity identity
         </p>
         <p className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-slate-950">
           {department.name}
@@ -150,10 +150,10 @@ export function DepartmentSummaryCards({
               {department.status}
             </p>
             <p className="mt-1 text-sm text-slate-600">
-              Department lifecycle state
+              Entity lifecycle state
             </p>
           </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#edf2ff] text-[#465fff]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#edf2ff] text-[#1868a6]">
             <ShieldCheck className="h-5 w-5" />
           </div>
         </CardContent>
@@ -172,7 +172,7 @@ export function DepartmentSummaryCards({
               Assigned organization members
             </p>
           </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#edf2ff] text-[#465fff]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#edf2ff] text-[#1868a6]">
             <Users className="h-5 w-5" />
           </div>
         </CardContent>
@@ -182,7 +182,7 @@ export function DepartmentSummaryCards({
         <CardContent className="flex items-start justify-between px-6 py-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-              Department head
+              Accountable lead
             </p>
             <p className="mt-3 text-[1.15rem] font-semibold tracking-[-0.03em] text-slate-950">
               {currentHead?.name || currentHead?.email || "Not assigned"}
@@ -191,7 +191,7 @@ export function DepartmentSummaryCards({
               Current accountable lead
             </p>
           </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#edf2ff] text-[#465fff]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#edf2ff] text-[#1868a6]">
             <BriefcaseBusiness className="h-5 w-5" />
           </div>
         </CardContent>
@@ -207,13 +207,13 @@ export function DepartmentProfileCard({
     <Card className="rounded-[22px] border-slate-200 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
       <CardHeader className="px-6 py-5">
         <CardTitle className="text-[1.05rem] text-slate-950">
-          Department profile
+          Entity profile
         </CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4 px-6 pb-6 md:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
           <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-            Department name
+            Entity / department name
           </div>
           <div className="mt-2 text-sm font-semibold text-slate-950">
             {department.name}
@@ -221,7 +221,7 @@ export function DepartmentProfileCard({
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
           <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-            Department code
+            Entity code
           </div>
           <div className="mt-2 text-sm font-semibold text-slate-950">
             {department.code || "No code"}
@@ -246,7 +246,7 @@ export function DepartmentProfileCard({
             Routing role
           </div>
           <div className="mt-2 text-sm font-semibold text-slate-950">
-            Departmental accountability unit
+            Entity accountability unit
           </div>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 md:col-span-2">
@@ -272,7 +272,7 @@ export function DepartmentHeadCard({
     <Card className="rounded-[22px] border-slate-200 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
       <CardHeader className="px-6 py-5">
         <CardTitle className="text-[1.05rem] text-slate-950">
-          Current head
+          Current lead
         </CardTitle>
       </CardHeader>
       <CardContent className="px-6 pb-6">
@@ -287,7 +287,7 @@ export function DepartmentHeadCard({
                   {currentHead.email || "No email"}
                 </div>
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf2ff] text-[#465fff]">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf2ff] text-[#1868a6]">
                 <Building2 className="h-4 w-4" />
               </div>
             </div>
@@ -312,7 +312,7 @@ export function DepartmentHeadCard({
 
 export function DepartmentMembersCard({
   members,
-  title = "Members",
+  title = "Assigned members",
   description,
   emptyMessage,
 }: DepartmentMembersCardProps) {

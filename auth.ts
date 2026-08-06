@@ -8,7 +8,11 @@ import { getUserById } from "@/features/auth/queries/user";
 import { getActiveOrganizationMembershipByUserId } from "@/features/auth/queries/organization-membership";
 import { getTwoFactorConfirmationByUserId } from "@/features/auth/queries/two-factor-confirmation";
 import { getAccountByUserId } from "@/features/auth/queries/account";
-import { isAdminRole } from "@/features/auth/utils/roles";
+import {
+  isAdminRole,
+  normalizeMembershipRoles,
+  resolvePrimaryRole,
+} from "@/features/auth/utils/roles";
 import { forbiddenRoute, unauthorizedRoute } from "@/routes";
 
 export const { auth, handlers, signIn, signOut, unstable_update } = NextAuth({
@@ -70,7 +74,10 @@ export const { auth, handlers, signIn, signOut, unstable_update } = NextAuth({
             await getActiveOrganizationMembershipByUserId(existing.id);
 
           // First-time Google linking for an admin should not immediately bounce into the challenge.
-          if (isAdminRole(activeMembership?.role) && !linkedProviderAccount) {
+          if (
+            isAdminRole(activeMembership?.roles ?? activeMembership?.role) &&
+            !linkedProviderAccount
+          ) {
             const prior = await getTwoFactorConfirmationByUserId(existing.id);
             if (!prior) {
               await db.twoFactorConfirmation.create({
@@ -97,9 +104,28 @@ export const { auth, handlers, signIn, signOut, unstable_update } = NextAuth({
       if (!dbUser) return token;
 
       const existingAccount = await getAccountByUserId(dbUser.id);
-      const activeMembership = await getActiveOrganizationMembershipByUserId(
+      const requestedOrganizationId =
+        trigger === "update" &&
+        session?.organization &&
+        typeof session.organization.id === "string"
+          ? session.organization.id
+          : undefined;
+      const preferredOrganizationId =
+        requestedOrganizationId ??
+        (typeof token.organizationId === "string"
+          ? token.organizationId
+          : undefined);
+
+      let activeMembership = await getActiveOrganizationMembershipByUserId(
         dbUser.id,
+        preferredOrganizationId,
       );
+
+      if (!activeMembership && preferredOrganizationId) {
+        activeMembership = await getActiveOrganizationMembershipByUserId(
+          dbUser.id,
+        );
+      }
 
       if (typeof dbUser.image === "string") {
         token.picture = dbUser.image;
@@ -107,16 +133,22 @@ export const { auth, handlers, signIn, signOut, unstable_update } = NextAuth({
       }
 
       const isTwoFAEnabled = dbUser.isTwoFAEnabled ?? false;
+      const activeMembershipRoles = normalizeMembershipRoles(
+        activeMembership?.roles ?? activeMembership?.role,
+      );
+      const activeMembershipRole = resolvePrimaryRole(activeMembershipRoles);
       const requiresChallenge =
-        isAdminRole(activeMembership?.role) || isTwoFAEnabled;
+        isAdminRole(activeMembershipRoles) || isTwoFAEnabled;
 
       token.isOAuth = !!existingAccount;
       token.mfaRequired = requiresChallenge;
       token.isTwoFAEnabled = isTwoFAEnabled;
+      token.mustChangePassword = dbUser.mustChangePassword ?? false;
       token.organizationId = activeMembership?.organization.id;
       token.organizationName = activeMembership?.organization.name;
       token.organizationSlug = activeMembership?.organization.slug;
-      token.organizationRole = activeMembership?.role;
+      token.organizationRole = activeMembershipRole ?? undefined;
+      token.organizationRoles = activeMembershipRoles;
       if (typeof token.mfaVerified !== "boolean") {
         token.mfaVerified = false;
       }
@@ -150,12 +182,16 @@ export const { auth, handlers, signIn, signOut, unstable_update } = NextAuth({
               name: token.organizationName ?? "",
               slug: token.organizationSlug ?? "",
               role: (token.organizationRole as UserRole) ?? UserRole.USER,
+              roles: Array.isArray(token.organizationRoles)
+                ? (token.organizationRoles as UserRole[])
+                : [],
             }
           : null;
 
         session.user.id = token.sub ?? "";
         session.user.isTwoFAEnabled = Boolean(token.isTwoFAEnabled);
         session.user.isOAuth = Boolean(token.isOAuth);
+        session.user.mustChangePassword = Boolean(token.mustChangePassword);
 
         if (typeof token.name === "string") session.user.name = token.name;
         if (typeof token.email === "string") session.user.email = token.email;

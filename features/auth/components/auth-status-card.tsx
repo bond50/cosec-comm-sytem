@@ -6,10 +6,20 @@ import { AuthShell } from "@/features/auth/components/auth-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+type StatusTone = "info" | "success" | "warning" | "error";
+
+const TONE_STYLES: Record<StatusTone, string> = {
+  info: "bg-[var(--brand-soft)] text-[var(--brand)]",
+  success: "bg-emerald-50 text-emerald-600",
+  warning: "bg-amber-50 text-amber-600",
+  error: "bg-rose-50 text-rose-600",
+};
+
 type AuthStatusCardProps = {
   title: string;
   description: string;
   icon?: ReactNode;
+  tone?: StatusTone;
   primaryHref?: string;
   primaryLabel?: string;
   secondaryHref?: string;
@@ -21,6 +31,7 @@ export async function AuthStatusCard({
   title,
   description,
   icon,
+  tone = "info",
   primaryHref,
   primaryLabel,
   secondaryHref,
@@ -37,10 +48,17 @@ export async function AuthStatusCard({
       description={description}
       organizationName={organizationName ?? branding.organizationName}
     >
-      <div className="space-y-5">
+      <div className="space-y-6">
         {icon ? (
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--brand-soft)] text-[var(--brand)]">
-            {icon}
+          <div className="flex justify-center">
+            <div
+              className={cn(
+                "auth-status-icon flex h-20 w-20 items-center justify-center rounded-full",
+                TONE_STYLES[tone],
+              )}
+            >
+              {icon}
+            </div>
           </div>
         ) : null}
 

@@ -4,7 +4,11 @@ import * as z from "zod";
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { signIn } from "@/auth";
-import { DEFAULT_LOGIN_REDIRECT, mfaRoute } from "@/routes";
+import {
+  changePasswordRoute,
+  DEFAULT_LOGIN_REDIRECT,
+  mfaRoute,
+} from "@/routes";
 
 import { loginSchema } from "@/features/auth/schemas/auth";
 import { db } from "@/lib/db";
@@ -128,11 +132,23 @@ export const login = async (
 
   if (!user.emailVerified) {
     const verificationToken = await generateVerificationToken(user.email);
-    await sendVerificationEmail(
+    const delivery = await sendVerificationEmail(
       verificationToken.email,
       verificationToken.token,
     );
-    return { success: "Check your email to verify your account." };
+    if (!delivery.ok) {
+      return {
+        error:
+          "Your account needs verification, but the email could not be sent right now. Try again shortly.",
+      };
+    }
+
+    return {
+      success:
+        delivery.simulated && delivery.actionUrl
+          ? `Development verification link: ${delivery.actionUrl}`
+          : "Check your email to verify your account.",
+    };
   }
 
   if (user.isTwoFAEnabled) {
@@ -146,8 +162,22 @@ export const login = async (
       }
 
       const token = await generateTwoFactorToken(user.email);
-      await sendTwoFactorEmail(user.email, token.token);
-      return { twoFactorRequired: true };
+      const delivery = await sendTwoFactorEmail(user.email, token.token);
+
+      if (!delivery.ok) {
+        return {
+          error:
+            "Verification code could not be sent right now. Please try again shortly.",
+        };
+      }
+
+      return {
+        twoFactorRequired: true,
+        success:
+          delivery.simulated && delivery.code
+            ? `Development verification code: ${delivery.code}`
+            : undefined,
+      };
     }
 
     const existingToken = await getTwoFactorTokenByToken(code);
@@ -173,10 +203,15 @@ export const login = async (
     user.id,
   );
   const requiresChallenge =
-    isAdminRole(activeMembership?.role) || Boolean(user.isTwoFAEnabled);
-  const redirectTarget = requiresChallenge
+    isAdminRole(activeMembership?.roles ?? activeMembership?.role) ||
+    Boolean(user.isTwoFAEnabled);
+  let redirectTarget = requiresChallenge
     ? `${mfaRoute}?next=${encodeURIComponent(DEFAULT_LOGIN_REDIRECT)}`
     : DEFAULT_LOGIN_REDIRECT;
+
+  if (user.mustChangePassword) {
+    redirectTarget = `${changePasswordRoute}?next=${encodeURIComponent(redirectTarget)}`;
+  }
 
   try {
     await signIn("credentials", {

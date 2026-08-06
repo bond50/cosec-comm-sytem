@@ -18,11 +18,11 @@ export function AuthAccessEmailStep({
   showLastUsedBadge = false,
 }: AuthAccessEmailStepProps) {
   return (
-    <Field>
+    <Field className="space-y-4">
       <FieldLabel htmlFor="email" required>
         Email address
       </FieldLabel>
-      <div className="relative">
+      <div className="relative mt-2">
         {showLastUsedBadge ? (
           <Badge
             variant="outline"

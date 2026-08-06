@@ -15,18 +15,34 @@ import {
   MissingOrganizationError,
   UnauthorizedError,
 } from "@/features/auth/utils/auth-errors";
+import {
+  normalizeMembershipRoles,
+  resolvePrimaryRole,
+} from "@/features/auth/utils/roles";
+import { areMembershipRolesAllowedForDepartmentKind } from "@/features/application/lib/membership-role-policy";
 
 export async function updateMemberAccessAction(
   _previousState: UpdateMemberAccessActionState,
   formData: FormData,
 ): Promise<UpdateMemberAccessActionState> {
+  const submittedRoles = normalizeMembershipRoles(
+    formData
+      .getAll("roles")
+      .map((value) => String(value))
+      .filter(Boolean) as UserRole[],
+  ).filter((role): role is (typeof editableMemberRoleValues)[number] =>
+    editableMemberRoleValues.includes(
+      role as (typeof editableMemberRoleValues)[number],
+    ),
+  );
+
   const values = {
     userId: String(formData.get("userId") ?? "").trim(),
     name: String(formData.get("name") ?? "").trim(),
     email: String(formData.get("email") ?? "")
       .trim()
       .toLowerCase(),
-    role: String(formData.get("role") ?? ""),
+    roles: submittedRoles,
     status: String(formData.get("status") ?? ""),
     departmentId: String(formData.get("departmentId") ?? "").trim(),
   };
@@ -41,18 +57,18 @@ export async function updateMemberAccessAction(
         userId: values.userId,
         name: values.name,
         email: values.email,
-        role:
-          editableMemberRoleValues.find((role) => role === values.role) ??
-          UserRole.USER,
+        roles: values.roles.length > 0 ? values.roles : [UserRole.USER],
         status:
           values.status === MembershipStatus.SUSPENDED ||
           values.status === MembershipStatus.INACTIVE
             ? values.status
             : MembershipStatus.ACTIVE,
-        departmentId: values.departmentId || undefined,
+        departmentId: values.departmentId,
       },
     };
   }
+
+  const primaryRole = resolvePrimaryRole(parsed.data.roles) ?? UserRole.USER;
 
   let organizationId: string;
 
@@ -106,17 +122,16 @@ export async function updateMemberAccessAction(
         departmentId: true,
       },
     }),
-    parsed.data.departmentId
-      ? db.department.findFirst({
-          where: {
-            id: parsed.data.departmentId,
-            organizationId,
-          },
-          select: {
-            id: true,
-          },
-        })
-      : Promise.resolve(null),
+    db.department.findFirst({
+      where: {
+        id: parsed.data.departmentId,
+        organizationId,
+      },
+      select: {
+        id: true,
+        kind: true,
+      },
+    }),
     db.user.findUnique({
       where: {
         email: parsed.data.email,
@@ -138,12 +153,28 @@ export async function updateMemberAccessAction(
     };
   }
 
-  if (parsed.data.departmentId && !department) {
+  if (!department) {
     return {
       ok: false,
       message: "The selected department could not be found.",
       fieldErrors: {
         departmentId: ["The selected department could not be found."],
+      },
+      values: parsed.data,
+    };
+  }
+
+  if (
+    !areMembershipRolesAllowedForDepartmentKind(
+      parsed.data.roles,
+      department.kind,
+    )
+  ) {
+    return {
+      ok: false,
+      message: "The selected roles are not valid for that department.",
+      fieldErrors: {
+        roles: ["The selected roles are not valid for that department."],
       },
       values: parsed.data,
     };
@@ -180,19 +211,14 @@ export async function updateMemberAccessAction(
           },
         },
         data: {
-          role: parsed.data.role,
+          role: primaryRole,
+          roles: parsed.data.roles,
           status: parsed.data.status,
-          departmentId:
-            parsed.data.status === MembershipStatus.ACTIVE
-              ? (parsed.data.departmentId ?? null)
-              : null,
+          departmentId: parsed.data.departmentId,
         },
       });
 
-      if (
-        parsed.data.status !== MembershipStatus.ACTIVE ||
-        membership.departmentId !== (parsed.data.departmentId ?? null)
-      ) {
+      if (membership.departmentId !== (parsed.data.departmentId ?? null)) {
         await tx.department.updateMany({
           where: {
             organizationId,
@@ -215,7 +241,6 @@ export async function updateMemberAccessAction(
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/access");
     revalidatePath("/dashboard/members");
-    revalidatePath("/dashboard/members/add");
     revalidatePath("/dashboard/departments");
 
     return {

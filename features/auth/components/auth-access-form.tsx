@@ -82,28 +82,21 @@ export function AuthAccessForm({
   const formLevelError = fieldErrors.turnstile ? undefined : state.error;
   const shellTitle =
     mode === "email"
-      ? "Access the workspace"
+      ? ""
       : mode === "login"
-        ? "Sign in to continue"
+        ? "Password"
         : mode === "register"
-          ? "Create your credentials"
-          : "Choose your sign-in path";
+          ? "Create password"
+          : "Google sign-in";
   const shellDescription =
     mode === "email"
-      ? "Start with your email address. The system will guide you to password login, registration, or Google sign-in based on the account state."
+      ? ""
       : mode === "login"
-        ? "Use your account password to continue into the protected business area."
+        ? ""
         : mode === "register"
-          ? "Finish setting up credentials so this email can access the organization workspace."
-          : "This account is linked to Google. Continue with Google or email yourself a secure link to add a password.";
-  const shellEyebrow =
-    mode === "email"
-      ? "Account access"
-      : mode === "login"
-        ? "Password sign-in"
-        : mode === "register"
-          ? "First-time setup"
-          : "Google-linked account";
+          ? ""
+          : "";
+  const shellEyebrow = undefined;
 
   const resetToEmailStep = () => {
     setModeOverride("email");
@@ -149,30 +142,6 @@ export function AuthAccessForm({
         }}
       >
         <input type="hidden" name="intent" value={getAuthAccessIntent(mode)} />
-
-        <div className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
-          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-slate-500">
-            Current step
-          </p>
-          <p className="mt-2 text-sm font-semibold text-slate-950">
-            {mode === "email"
-              ? "Identify the account"
-              : mode === "login"
-                ? "Enter password"
-                : mode === "register"
-                  ? "Create credentials"
-                  : "Use Google or add a password"}
-          </p>
-          <p className="mt-1 text-sm leading-6 text-slate-600">
-            {mode === "email"
-              ? "We first determine whether this email should sign in, register, or use Google."
-              : mode === "login"
-                ? "Complete authentication to enter the protected workspace."
-                : mode === "register"
-                  ? "Register this email with a password before access is granted."
-                  : "Choose the safest route for a Google-linked account."}
-          </p>
-        </div>
 
         {mode === "email" ? (
           <AuthAccessEmailStep
@@ -243,8 +212,8 @@ export function AuthAccessForm({
 
         {mode === "oauth" ? (
           <AuthFeedback
-            title="Google sign-in found for this email"
-            message="This account does not have a saved password yet. Continue with Google below, or email yourself a secure link to add a password."
+            title="Google sign-in required"
+            message="Continue with Google or send yourself a password setup link."
           />
         ) : null}
 
@@ -254,12 +223,16 @@ export function AuthAccessForm({
 
         <AuthInlineError message={formLevelError} />
 
-        <AuthFeedback
-          type="info"
-          title="Check your email"
-          message={!registrationComplete ? statusMessage : undefined}
-          icon="mail"
-        />
+        {!registrationComplete &&
+        statusMessage &&
+        !(mode === "login" && twoFactorRequired) ? (
+          <AuthFeedback
+            type="info"
+            title="Check your email"
+            message={statusMessage}
+            icon="mail"
+          />
+        ) : null}
 
         {mode === "email" ? (
           <>

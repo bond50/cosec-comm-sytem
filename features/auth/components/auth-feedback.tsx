@@ -1,5 +1,4 @@
 import { AlertCircle, CheckCircle2, Info, Mail } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
 type AuthFeedbackProps = {
@@ -30,33 +29,70 @@ export function AuthFeedback({
           ? CheckCircle2
           : Info;
 
-  const styles =
+  const tone =
     type === "error"
-      ? "border-rose-200 bg-rose-50/90 text-rose-700"
+      ? {
+          border: "border-rose-200",
+          bg: "bg-rose-50/90",
+          text: "text-rose-700",
+          badge: "bg-white text-rose-600",
+        }
       : type === "success"
-        ? "border-emerald-200 bg-emerald-50/90 text-emerald-700"
-        : "border-[var(--brand-border)] bg-[var(--brand-soft)] text-[var(--foreground)]";
+        ? {
+            border: "border-emerald-200",
+            bg: "bg-emerald-50/90",
+            text: "text-emerald-700",
+            badge: "bg-white text-emerald-600",
+          }
+        : {
+            border: "border-[var(--brand-border)]",
+            bg: "bg-[var(--brand-soft)]",
+            text: "text-[var(--foreground)]",
+            badge: "bg-white text-[var(--brand)]",
+          };
 
   return (
-    <Alert
+    <div
+      role="alert"
       className={cn(
-        "shadow-sm",
-        compact ? "rounded-[16px] px-4 py-3" : "rounded-[18px]",
-        styles,
+        "flex items-start gap-3 rounded-2xl border shadow-sm",
+        compact ? "p-4" : "p-5",
+        tone.border,
+        tone.bg,
         className,
       )}
     >
-      <Icon className={cn(compact ? "h-4 w-4" : "h-4 w-4")} />
-      {title ? (
-        <AlertTitle className={compact ? "mb-0.5 text-[0.95rem]" : undefined}>
-          {title}
-        </AlertTitle>
-      ) : null}
-      <AlertDescription
-        className={compact ? "text-[0.92rem] leading-5" : undefined}
+      <span
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-full shadow-sm",
+          compact ? "h-9 w-9" : "h-10 w-10",
+          tone.badge,
+        )}
       >
-        {message}
-      </AlertDescription>
-    </Alert>
+        <Icon className={compact ? "h-4 w-4" : "h-[1.1rem] w-[1.1rem]"} />
+      </span>
+      <div className="min-w-0 space-y-1 pt-0.5">
+        {title ? (
+          <p
+            className={cn(
+              "font-semibold",
+              compact ? "text-[0.95rem]" : "text-base",
+              tone.text,
+            )}
+          >
+            {title}
+          </p>
+        ) : null}
+        <p
+          className={cn(
+            "leading-6",
+            compact ? "text-[0.92rem]" : "text-sm",
+            tone.text,
+          )}
+        >
+          {message}
+        </p>
+      </div>
+    </div>
   );
 }

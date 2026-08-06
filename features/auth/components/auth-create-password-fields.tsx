@@ -1,10 +1,6 @@
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 type AuthCreatePasswordFieldsProps = {
   passwordError?: string;
@@ -23,9 +19,7 @@ export function AuthCreatePasswordFields({
   inputErrorClass,
   onPasswordChange,
   onConfirmPasswordChange,
-  description = "Use at least 8 characters with upper, lower, number, and symbol.",
   fieldClassName,
-  descriptionClassName,
 }: AuthCreatePasswordFieldsProps) {
   return (
     <>
@@ -38,13 +32,10 @@ export function AuthCreatePasswordFields({
           name="password"
           type="password"
           autoComplete="new-password"
-          className={passwordError ? inputErrorClass : undefined}
+          className={cn("mt-2", passwordError && inputErrorClass)}
           onChange={onPasswordChange}
           required
         />
-        <FieldDescription className={descriptionClassName}>
-          {description}
-        </FieldDescription>
         <FieldError>{passwordError}</FieldError>
       </Field>
 
@@ -57,7 +48,7 @@ export function AuthCreatePasswordFields({
           name="confirmPassword"
           type="password"
           autoComplete="new-password"
-          className={confirmPasswordError ? inputErrorClass : undefined}
+          className={cn("mt-2", confirmPasswordError && inputErrorClass)}
           onChange={onConfirmPasswordChange}
           required
         />

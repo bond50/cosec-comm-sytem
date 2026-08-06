@@ -42,7 +42,23 @@ export async function resendVerificationEmail(
   }
 
   const verificationToken = await generateVerificationToken(normalizedEmail);
-  await sendVerificationEmail(verificationToken.email, verificationToken.token);
+  const delivery = await sendVerificationEmail(
+    verificationToken.email,
+    verificationToken.token,
+  );
+
+  if (!delivery.ok) {
+    return {
+      error:
+        "Verification email could not be sent right now. Please try again shortly.",
+    };
+  }
+
+  if (delivery.simulated && delivery.actionUrl) {
+    return {
+      success: `${GENERIC_SUCCESS} Development verification link: ${delivery.actionUrl}`,
+    };
+  }
 
   return { success: GENERIC_SUCCESS };
 }

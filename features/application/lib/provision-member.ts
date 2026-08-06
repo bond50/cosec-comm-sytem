@@ -16,11 +16,27 @@ import {
   type ProvisionMemberActionState,
   provisionMemberSchema,
 } from "@/features/application/lib/provision-member.shared";
+import { areMembershipRolesAllowedForDepartmentKind } from "@/features/application/lib/membership-role-policy";
+import {
+  normalizeMembershipRoles,
+  resolvePrimaryRole,
+} from "@/features/auth/utils/roles";
 
 export async function provisionMemberAction(
   _previousState: ProvisionMemberActionState,
   formData: FormData,
 ): Promise<ProvisionMemberActionState> {
+  const submittedRoles = normalizeMembershipRoles(
+    formData
+      .getAll("roles")
+      .map((value) => String(value))
+      .filter(Boolean) as UserRole[],
+  ).filter((role): role is (typeof memberProvisionRoleValues)[number] =>
+    memberProvisionRoleValues.includes(
+      role as (typeof memberProvisionRoleValues)[number],
+    ),
+  );
+
   const values = {
     name: String(formData.get("name") ?? "").trim(),
     email: String(formData.get("email") ?? "")
@@ -28,7 +44,8 @@ export async function provisionMemberAction(
       .toLowerCase(),
     password: String(formData.get("password") ?? ""),
     confirmPassword: String(formData.get("confirmPassword") ?? ""),
-    role: String(formData.get("role") ?? UserRole.USER),
+    roles: submittedRoles,
+    departmentId: String(formData.get("departmentId") ?? "").trim(),
   };
 
   const parsed = provisionMemberSchema.safeParse(values);
@@ -39,12 +56,12 @@ export async function provisionMemberAction(
       fieldErrors: z.flattenError(parsed.error).fieldErrors,
       values: {
         ...values,
-        role:
-          memberProvisionRoleValues.find((role) => role === values.role) ??
-          UserRole.USER,
+        roles: values.roles.length > 0 ? values.roles : [UserRole.USER],
       },
     };
   }
+
+  const primaryRole = resolvePrimaryRole(parsed.data.roles) ?? UserRole.USER;
 
   let organizationId: string;
 
@@ -108,6 +125,52 @@ export async function provisionMemberAction(
     };
   }
 
+  const department = await db.department.findFirst({
+    where: {
+      id: parsed.data.departmentId,
+      organizationId,
+    },
+    select: {
+      id: true,
+      kind: true,
+    },
+  });
+
+  if (!department) {
+    return {
+      ok: false,
+      message: "The selected department could not be found.",
+      fieldErrors: {
+        departmentId: ["The selected department could not be found."],
+      },
+      values: {
+        ...parsed.data,
+        password: "",
+        confirmPassword: "",
+      },
+    };
+  }
+
+  if (
+    !areMembershipRolesAllowedForDepartmentKind(
+      parsed.data.roles,
+      department.kind,
+    )
+  ) {
+    return {
+      ok: false,
+      message: "The selected roles are not valid for that department.",
+      fieldErrors: {
+        roles: ["The selected roles are not valid for that department."],
+      },
+      values: {
+        ...parsed.data,
+        password: "",
+        confirmPassword: "",
+      },
+    };
+  }
+
   try {
     const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
 
@@ -118,6 +181,7 @@ export async function provisionMemberAction(
           email: parsed.data.email,
           password: hashedPassword,
           emailVerified: new Date(),
+          mustChangePassword: true,
         },
         select: {
           id: true,
@@ -128,7 +192,9 @@ export async function provisionMemberAction(
         data: {
           userId: user.id,
           organizationId,
-          role: parsed.data.role,
+          departmentId: department.id,
+          role: primaryRole,
+          roles: parsed.data.roles,
           status: MembershipStatus.ACTIVE,
         },
         select: {
@@ -142,7 +208,6 @@ export async function provisionMemberAction(
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/access");
     revalidatePath("/dashboard/members");
-    revalidatePath("/dashboard/members/add");
 
     return {
       ok: true,
@@ -152,7 +217,8 @@ export async function provisionMemberAction(
         email: "",
         password: "",
         confirmPassword: "",
-        role: UserRole.USER,
+        roles: [],
+        departmentId: parsed.data.departmentId,
       },
       data: {
         membershipId: membership.id,
@@ -178,6 +244,8 @@ export async function provisionMemberAction(
         },
       };
     }
+
+    console.error("provisionMemberAction failed", error);
 
     return {
       ok: false,

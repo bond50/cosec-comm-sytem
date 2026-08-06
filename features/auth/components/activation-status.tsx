@@ -13,7 +13,8 @@ export function ActivationStatus({ success, error }: ActivationStatusProps) {
       <AuthStatusCard
         title="Email verified"
         description={success}
-        icon={<CheckCircle2 className="h-6 w-6" />}
+        icon={<CheckCircle2 className="h-9 w-9" />}
+        tone="success"
         primaryHref="/auth/login"
         primaryLabel="Continue to sign in"
       />
@@ -27,7 +28,8 @@ export function ActivationStatus({ success, error }: ActivationStatusProps) {
         error ??
         "This activation link is not valid anymore. Request a fresh one to continue."
       }
-      icon={<MailWarning className="h-6 w-6" />}
+      icon={<MailWarning className="h-9 w-9" />}
+      tone="warning"
       primaryHref="/auth/verify-email"
       primaryLabel="Request new link"
       secondaryHref="/auth/login"

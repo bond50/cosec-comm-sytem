@@ -19,13 +19,14 @@ export function TurnstileWidget({
   hiddenInputName = "cf-turnstile-response",
 }: TurnstileWidgetProps) {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+  const isDevelopment = process.env.NODE_ENV === "development";
 
   return (
     <>
       <input type="hidden" name={hiddenInputName} value={value} readOnly />
 
-      <div className={cn("w-full py-1", className)}>
-        {siteKey ? (
+      <div className={cn(isDevelopment ? "" : "w-full py-1", className)}>
+        {isDevelopment ? null : siteKey ? (
           <div className="flex w-full justify-center">
             <Turnstile
               className="w-full opacity-90"

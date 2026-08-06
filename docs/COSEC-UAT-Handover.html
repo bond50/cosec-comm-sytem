@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>COSEC Manual UAT Walkthrough and Owner Handover</title>
+    <style>
+      :root {
+        --ink: #0f172a;
+        --muted: #475569;
+        --soft: #f8fafc;
+        --line: #dbe3ee;
+        --brand: #1d4ed8;
+        --ok: #047857;
+        --warn: #b45309;
+        --danger: #b91c1c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #e9eef6;
+        color: var(--ink);
+        font-family: Cambria, Georgia, "Times New Roman", Times, serif;
+        line-height: 1.55;
+      }
+
+      .page {
+        max-width: 980px;
+        margin: 32px auto;
+        background: white;
+        border: 1px solid var(--line);
+        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+      }
+
+      .cover {
+        padding: 56px 64px 40px;
+        border-bottom: 1px solid var(--line);
+        background:
+          linear-gradient(135deg, rgba(29, 78, 216, 0.08), transparent 38%),
+          white;
+      }
+
+      .content {
+        padding: 36px 64px 64px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        line-height: 1.18;
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 34px;
+        letter-spacing: -0.03em;
+      }
+
+      h2 {
+        margin-top: 34px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--line);
+        color: var(--brand);
+        font-size: 22px;
+      }
+
+      h3 {
+        margin-top: 22px;
+        font-size: 17px;
+      }
+
+      p {
+        margin: 10px 0;
+      }
+
+      ul,
+      ol {
+        margin: 10px 0 16px 22px;
+        padding: 0;
+      }
+
+      li {
+        margin: 6px 0;
+      }
+
+      code {
+        padding: 1px 5px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: var(--soft);
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.92em;
+      }
+
+      .subtitle {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      .meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 28px;
+      }
+
+      .meta div,
+      .note,
+      .result,
+      .warning,
+      .todo {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+        background: var(--soft);
+      }
+
+      .label {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .status {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 3px 9px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .pass {
+        background: #ecfdf5;
+        color: var(--ok);
+      }
+
+      .fixed {
+        background: #eff6ff;
+        color: var(--brand);
+      }
+
+      .pending {
+        background: #fffbeb;
+        color: var(--warn);
+      }
+
+      .result {
+        border-color: #bbf7d0;
+        background: #f0fdf4;
+      }
+
+      .warning,
+      .todo {
+        border-color: #fde68a;
+        background: #fffbeb;
+      }
+
+      table {
+        width: 100%;
+        margin: 14px 0 22px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--line);
+        padding: 9px 10px;
+        vertical-align: top;
+        text-align: left;
+      }
+
+      th {
+        background: var(--soft);
+      }
+
+      .small {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media print {
+        body {
+          background: white;
+        }
+
+        .page {
+          margin: 0;
+          max-width: none;
+          border: 0;
+          box-shadow: none;
+        }
+
+        h2 {
+          page-break-after: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="cover">
+        <h1>COSEC Communication System</h1>
+        <p class="subtitle">Manual UAT Walkthrough and Owner Handover</p>
+        <div class="meta">
+          <div>
+            <span class="label">Prepared For</span>
+            County Government of Vihiga / Office of the County Secretary and
+            Head of Public Service
+          </div>
+          <div>
+            <span class="label">Scope</span>
+            Setup, roles, correspondence, documents, meetings, reporting
+          </div>
+          <div>
+            <span class="label">UAT Style</span>
+            Clean manual database setup, not seeded demo data
+          </div>
+          <div>
+            <span class="label">Overall Status</span>
+            <span class="status pass">Core workflows passed</span>
+            <span class="status pending">Reporting revisit later</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="content">
+        <h2>1. Purpose</h2>
+        <p>
+          This is the UAT record for the COSEC Communication System: what was
+          tested, what passed, what was fixed, and what still needs a data-rich
+          reporting pass. The system models communication movement and
+          accountability —
+          <strong
+            >Receive → Register → Review → Dispatch → Action → Feedback →
+            Close</strong
+          >, not generic CRUD.
+        </p>
+
+        <h2>2. Confirmed Operating Model</h2>
+        <ul>
+          <li>
+            <strong
+              >Office of the County Secretary and Head of Public Service</strong
+            >
+            is the central control office.
+          </li>
+          <li>
+            Registry receives and registers correspondence at the central
+            office.
+          </li>
+          <li>
+            Reviewing Officer / Management represents the County Secretary
+            authority path.
+          </li>
+          <li>
+            Line departments (Transport, Health, Finance) are execution units.
+          </li>
+          <li>Users can hold multiple roles, assigned by the administrator.</li>
+          <li>Every active user belongs to a department.</li>
+        </ul>
+
+        <h2>3. Setup, Roles, And Access Control</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>Scenario</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Environment</td>
+              <td>
+                <code>pnpm prisma migrate reset --force</code>, then first
+                account + organization creation (<strong
+                  >County Government of Vihiga</strong
+                >)
+              </td>
+              <td><span class="status pass">Passed</span></td>
+            </tr>
+            <tr>
+              <td>Central office</td>
+              <td>
+                Created
+                <code
+                  >Office of the County Secretary and Head of Public
+                  Service</code
+                >
+                (code <code>OCS-HPS</code>)
+              </td>
+              <td><span class="status pass">Passed</span></td>
+            </tr>
+            <tr>
+              <td>Execution departments</td>
+              <td>
+                Health (<code>HLT</code>), Transport (<code>TRN</code>), Finance
+                (<code>FIN</code>) created as execution units
+              </td>
+              <td><span class="status pass">Passed</span></td>
+            </tr>
+            <tr>
+              <td>Role-aware member setup</td>
+              <td>
+                Registry Officer, Reviewing Officer/County Secretary (<code
+                  >REVIEWING_OFFICER</code
+                >
+                + <code>MANAGEMENT</code>), Health Officer, Transport Officer
+                created; role checkboxes expected to hide/show by department
+              </td>
+              <td><span class="status pass">Passed</span></td>
+            </tr>
+            <tr>
+              <td>Wrong-access blocking</td>
+              <td>
+                Department User tested against <code>/dashboard/members</code>,
+                <code>/dashboard/access</code>, and
+                <code>/dashboard/correspondences/register</code>
+              </td>
+              <td><span class="status pass">Passed</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>4. Correspondence UAT: Full Lifecycle</h2>
+        <p>
+          Reference format expected: <code>VCG/OCS/2026/04/000001</code>. Test
+          item: “Request for road repair status update” from the Office of the
+          Governor, routed to Department of Transport and Infrastructure.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>Actor</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Register</td>
+              <td>Registry Officer</td>
+              <td>
+                <span class="status pass">Passed</span> — reference
+                auto-generated, registry-only user blocked from review/dispatch
+              </td>
+            </tr>
+            <tr>
+              <td>Review, route, dispatch</td>
+              <td>Reviewing Officer / County Secretary</td>
+              <td><span class="status pass">Passed</span></td>
+            </tr>
+            <tr>
+              <td>Dispatch state check</td>
+              <td>Reviewing Officer</td>
+              <td>
+                <span class="status fixed">Fixed</span> — reviewer could see
+                “Confirm receipt”; now restricted to the receiving
+                department/user
+              </td>
+            </tr>
+            <tr>
+              <td>Acknowledge receipt</td>
+              <td>Transport Officer</td>
+              <td>
+                <span class="status pass">Passed</span> — status → In Progress
+              </td>
+            </tr>
+            <tr>
+              <td>Submit feedback</td>
+              <td>Transport Officer</td>
+              <td>
+                <span class="status pass">Passed</span> — status → Awaiting
+                Feedback
+              </td>
+            </tr>
+            <tr>
+              <td>Close</td>
+              <td>Reviewing Officer / County Secretary</td>
+              <td>
+                <span class="status fixed">Fixed</span> — upload was still
+                possible after closure; now blocked in UI and server action
+              </td>
+            </tr>
+            <tr>
+              <td>Reopen</td>
+              <td>Reviewing Officer / County Secretary</td>
+              <td>
+                <span class="status pass">Passed</span> — status → Under Review,
+                upload re-enabled, reopen visible only to closure-authority role
+              </td>
+            </tr>
+            <tr>
+              <td>Re-dispatch + second full cycle</td>
+              <td>Reviewing Officer / County Secretary + Transport Officer</td>
+              <td>
+                <span class="status pass">Passed</span> — second dispatch,
+                acknowledgement, feedback, and closure all recorded alongside
+                the first cycle in movement/audit history
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Fixes made during correspondence UAT</h3>
+        <ul>
+          <li>Routing validation fixed for valid department selection.</li>
+          <li>
+            Confirm receipt and feedback controls restricted to receiving
+            department/user.
+          </li>
+          <li>Upload after closure blocked in both UI and server action.</li>
+          <li>Re-dispatch after reopen supported for a second cycle.</li>
+          <li>Linked documents under correspondence made clickable.</li>
+        </ul>
+
+        <h2>5. Document Registry UAT</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                Open workspace, create categories (Official Letters, Internal
+                Memos, Reports and Returns)
+              </td>
+              <td><span class="status pass">Passed</span></td>
+            </tr>
+            <tr>
+              <td>
+                Create standalone physical document (medium: Physical, origin:
+                Office of the Governor)
+              </td>
+              <td>
+                <span class="status pass">Passed</span> — reference number
+                system-generated (<code>VCG/OCS/DOC/YYYY/MM/NNNNNN</code>), not
+                typed manually
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Create linked hybrid document (current holder: Transport
+                Officer)
+              </td>
+              <td>
+                <span class="status fixed">Fixed</span> — linked document was
+                visible under correspondence but not openable; now opens the
+                document detail page
+              </td>
+            </tr>
+            <tr>
+              <td>Edit holder/location/status on both documents</td>
+              <td>
+                <span class="status pass">Passed</span> — reference number stays
+                unchanged, linked document stays visible under correspondence
+              </td>
+            </tr>
+            <tr>
+              <td>Upload attachments, archive standalone document</td>
+              <td>
+                <span class="status pass">Passed</span> — archived document
+                stays searchable/openable but becomes read-only
+              </td>
+            </tr>
+            <tr>
+              <td>Department User permission check</td>
+              <td>
+                <span class="status pass">Passed</span> — view-only; create,
+                edit, upload, archive hidden; linked docs still openable from
+                correspondence
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>6. Meetings UAT</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                Create meeting (“Roads follow-up coordination meeting”, County
+                Secretary Boardroom)
+              </td>
+              <td>
+                <span class="status pass">Passed</span> — agenda displayed;
+                resolutions shown as placeholder (capture not yet part of the
+                completed slice)
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Create action points (Transport: progress update; Health:
+                service-delivery impact)
+              </td>
+              <td><span class="status pass">Passed</span> — start as OPEN</td>
+            </tr>
+            <tr>
+              <td>Update action point statuses and remarks</td>
+              <td>
+                <span class="status fixed">Fixed</span> — updates were not being
+                audited; action points now create audit entries and show their
+                own change history (verified persisting after refresh, with
+                actor and timestamp)
+              </td>
+            </tr>
+            <tr>
+              <td>Department User permission check</td>
+              <td>
+                <span class="status pass">Passed</span> — view meetings/detail,
+                read-only history; create/update controls hidden
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>7. Dashboard And Reporting UAT</h2>
+        <p>
+          Started conceptually but not fully accepted — not enough
+          representative data yet to validate totals, urgent/overdue/SLA
+          sections, department workload, pending action points, and recent
+          activity against real numbers.
+        </p>
+        <p class="todo">
+          Status: not fully tested. Revisit after more realistic correspondence,
+          dispatch, overdue, document, and action-point data exists.
+        </p>
+
+        <h2>8. Untested / Later UAT Items</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>Reason To Revisit</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Dashboard reporting</td>
+              <td>Needs larger and more varied data set.</td>
+              <td><span class="status pending">Pending</span></td>
+            </tr>
+            <tr>
+              <td>Monthly summary exports</td>
+              <td>Should be tested after enough monthly data exists.</td>
+              <td><span class="status pending">Pending</span></td>
+            </tr>
+            <tr>
+              <td>Department workload exports</td>
+              <td>Needs multiple departments with realistic workloads.</td>
+              <td><span class="status pending">Pending</span></td>
+            </tr>
+            <tr>
+              <td>SLA/overdue reports</td>
+              <td>Needs deliberate overdue and on-time cases.</td>
+              <td><span class="status pending">Pending</span></td>
+            </tr>
+            <tr>
+              <td>Meeting resolutions capture</td>
+              <td>
+                Resolutions currently show as placeholder; update workflow
+                should be added if required for launch.
+              </td>
+              <td><span class="status pending">Enhancement</span></td>
+            </tr>
+            <tr>
+              <td>Production-like role UAT</td>
+              <td>Actual office users should repeat role-by-role testing.</td>
+              <td><span class="status pending">Pending</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>9. Owner Demo Script</h2>
+        <ol>
+          <li>
+            Explain that COSEC is a workflow movement and accountability system,
+            not ordinary CRUD.
+          </li>
+          <li>
+            Show central office and execution departments in department setup.
+          </li>
+          <li>
+            Show member role assignment and explain multi-role memberships.
+          </li>
+          <li>Register correspondence as Registry Officer.</li>
+          <li>
+            Review, route, and dispatch as Reviewing Officer / County Secretary.
+          </li>
+          <li>Acknowledge receipt and submit feedback as Transport Officer.</li>
+          <li>Close, reopen, and redispatch as Reviewing Officer.</li>
+          <li>
+            Open movement history, dispatch history, and audit/accountability
+            sections.
+          </li>
+          <li>
+            Create a document, link it to correspondence, upload attachment, and
+            archive it.
+          </li>
+          <li>
+            Create a meeting, assign action points, update status, and show
+            action point history.
+          </li>
+          <li>
+            Explain that dashboard/reporting will be revisited when enough real
+            data exists.
+          </li>
+        </ol>
+
+        <h2>10. Final UAT Summary</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>Result</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Organization, departments, members, roles</td>
+              <td><span class="status pass">Passed</span></td>
+              <td>Central-office-led role model confirmed.</td>
+            </tr>
+            <tr>
+              <td>Correspondence</td>
+              <td><span class="status pass">Passed</span></td>
+              <td>
+                Full register, review, dispatch, feedback, close, reopen, and
+                redispatch cycle tested.
+              </td>
+            </tr>
+            <tr>
+              <td>Documents</td>
+              <td><span class="status pass">Passed</span></td>
+              <td>
+                Categories, standalone/linked documents, attachments, editing,
+                archive, permissions tested.
+              </td>
+            </tr>
+            <tr>
+              <td>Meetings</td>
+              <td><span class="status pass">Passed</span></td>
+              <td>
+                Meeting creation, action points, status updates, history, and
+                permissions tested.
+              </td>
+            </tr>
+            <tr>
+              <td>Dashboard/reporting</td>
+              <td><span class="status pending">Revisit later</span></td>
+              <td>Needs more realistic data before final acceptance.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="note small">
+          Generated as an HTML handover document so it can be opened in a
+          browser, printed to PDF, or pasted into Word if needed.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,774 @@
+<title>Three Directions — COSEC Sign-In</title>
+<style>
+  :root {
+    --gallery-bg: #eef1f0;
+    --gallery-ink: #1b211f;
+    --gallery-muted: #5c655f;
+    --gallery-line: #d7ddda;
+    --gallery-card: #ffffff;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --gallery-bg: #14171a;
+      --gallery-ink: #e7ebe8;
+      --gallery-muted: #9aa39d;
+      --gallery-line: #2b3134;
+      --gallery-card: #1b1f22;
+    }
+  }
+  :root[data-theme="dark"] {
+    --gallery-bg: #14171a;
+    --gallery-ink: #e7ebe8;
+    --gallery-muted: #9aa39d;
+    --gallery-line: #2b3134;
+    --gallery-card: #1b1f22;
+  }
+  :root[data-theme="light"] {
+    --gallery-bg: #eef1f0;
+    --gallery-ink: #1b211f;
+    --gallery-muted: #5c655f;
+    --gallery-line: #d7ddda;
+    --gallery-card: #ffffff;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: var(--gallery-bg);
+    color: var(--gallery-ink);
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    padding: 56px 20px 100px;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  .intro {
+    max-width: 640px;
+    margin: 0 auto 64px;
+    text-align: center;
+  }
+  .intro .kicker {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gallery-muted);
+  }
+  .intro h1 {
+    margin: 14px 0 12px;
+    font-size: 1.9rem;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .intro p {
+    margin: 0;
+    color: var(--gallery-muted);
+    line-height: 1.6;
+    font-size: 0.98rem;
+  }
+
+  .direction {
+    margin: 0 auto 88px;
+    max-width: 1080px;
+  }
+  .direction:last-child {
+    margin-bottom: 24px;
+  }
+
+  .direction-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .direction-letter {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    border: 1px solid var(--gallery-line);
+    border-radius: 999px;
+    padding: 3px 11px;
+    color: var(--gallery-muted);
+  }
+  .direction-head h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    letter-spacing: -0.01em;
+  }
+  .direction-rationale {
+    margin: 0 0 22px;
+    color: var(--gallery-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    max-width: 62ch;
+  }
+
+  .frame-scroll {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .browser-chrome {
+    width: 1000px;
+    border: 1px solid var(--gallery-line);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(10, 14, 12, 0.14);
+  }
+  .chrome-bar {
+    height: 34px;
+    background: var(--gallery-card);
+    border-bottom: 1px solid var(--gallery-line);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+  }
+  .chrome-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gallery-line);
+  }
+  .chrome-url {
+    margin-left: 10px;
+    font-size: 0.72rem;
+    color: var(--gallery-muted);
+    font-family: ui-monospace, monospace;
+  }
+
+  /* ===================== DIRECTION A — Quiet Registry ===================== */
+  .mock-a {
+    background: #f6f2e8;
+    min-height: 620px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+  }
+  .mock-a .panel {
+    width: 100%;
+    max-width: 380px;
+  }
+  .mock-a .crest {
+    width: 46px;
+    height: 46px;
+    margin: 0 auto 18px;
+    color: #22301f;
+  }
+  .mock-a .org {
+    text-align: center;
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-size: 1.32rem;
+    letter-spacing: -0.01em;
+    color: #20261f;
+    margin: 0 0 4px;
+  }
+  .mock-a .unit {
+    text-align: center;
+    font-size: 0.76rem;
+    color: #7a7361;
+    margin: 0 0 26px;
+  }
+  .mock-a .rule {
+    width: 40px;
+    height: 1px;
+    background: #a9762c;
+    margin: 0 auto 30px;
+    opacity: 0.7;
+  }
+  .mock-a label {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #55503f;
+    margin-bottom: 8px;
+  }
+  .mock-a .field {
+    border: none;
+    border-bottom: 1px solid #c9bea0;
+    background: transparent;
+    width: 100%;
+    padding: 8px 2px;
+    font-size: 0.95rem;
+    color: #20261f;
+    margin-bottom: 26px;
+  }
+  .mock-a .btn-primary {
+    width: 100%;
+    background: #16232f;
+    color: #f6f2e8;
+    border: none;
+    padding: 13px;
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-bottom: 22px;
+  }
+  .mock-a .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #9a9179;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .mock-a .divider::before,
+  .mock-a .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #ddd2b5;
+  }
+  .mock-a .btn-google {
+    width: 100%;
+    border: 1px solid #c9bea0;
+    background: transparent;
+    padding: 11px;
+    font-size: 0.85rem;
+    color: #20261f;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .mock-a .foot {
+    text-align: center;
+    margin-top: 22px;
+    font-size: 0.78rem;
+    color: #8a8268;
+  }
+  .mock-a .foot a {
+    color: #16232f;
+    text-decoration: underline;
+  }
+
+  /* ===================== DIRECTION B — County Letterhead ===================== */
+  .mock-b {
+    background: #f1ead9;
+    min-height: 660px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 44px 20px;
+  }
+  .mock-b .certificate {
+    width: 100%;
+    max-width: 460px;
+    background: #f8f4e8;
+    border: 1px solid #b9a67c;
+    position: relative;
+  }
+  .mock-b .certificate::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1px solid #c9b98c;
+    pointer-events: none;
+  }
+  .mock-b .masthead {
+    background: #132a44;
+    padding: 30px 24px 24px;
+    text-align: center;
+  }
+  .mock-b .crest {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 14px;
+    color: #d9c184;
+  }
+  .mock-b .kicker {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #a9c1d6;
+    margin-bottom: 6px;
+  }
+  .mock-b .org {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-size: 1.28rem;
+    color: #f4ecd8;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .mock-b .body {
+    padding: 32px 34px 30px;
+  }
+  .mock-b h3 {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-size: 1.3rem;
+    margin: 0 0 22px;
+    color: #20222a;
+    text-align: center;
+    letter-spacing: -0.01em;
+  }
+  .mock-b label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: #4b4536;
+    margin-bottom: 7px;
+  }
+  .mock-b .field {
+    width: 100%;
+    border: 1px solid #c3b48c;
+    background: #fffdf7;
+    padding: 11px 12px;
+    font-size: 0.92rem;
+    color: #20222a;
+    margin-bottom: 20px;
+  }
+  .mock-b .btn-primary {
+    width: 100%;
+    background: #c08a2e;
+    color: #221803;
+    border: none;
+    padding: 13px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    margin-bottom: 18px;
+  }
+  .mock-b .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #93876a;
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .mock-b .divider::before,
+  .mock-b .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #d4c6a0;
+  }
+  .mock-b .btn-google {
+    width: 100%;
+    border: 1px solid #c3b48c;
+    background: #fffdf7;
+    padding: 10px;
+    font-size: 0.85rem;
+    color: #20222a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .mock-b .foot {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.76rem;
+    color: #837860;
+    border-top: 1px solid #d4c6a0;
+    padding-top: 16px;
+  }
+  .mock-b .foot a {
+    color: #132a44;
+    font-weight: 600;
+  }
+  .mock-b .refline {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 0.66rem;
+    color: #a2977c;
+    font-family: ui-monospace, monospace;
+    letter-spacing: 0.04em;
+  }
+
+  /* ===================== DIRECTION C — Dispatch ===================== */
+  .mock-c {
+    min-height: 660px;
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+  }
+  .mock-c .form-side {
+    background: #f5f1e6;
+    padding: 56px 52px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .mock-c .crest {
+    width: 42px;
+    height: 42px;
+    color: #16232f;
+    margin-bottom: 18px;
+  }
+  .mock-c .org {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #16232f;
+    margin: 0 0 2px;
+  }
+  .mock-c .unit {
+    font-size: 0.78rem;
+    color: #6b6656;
+    margin: 0 0 30px;
+  }
+  .mock-c label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #3c3928;
+    margin-bottom: 8px;
+  }
+  .mock-c .field {
+    width: 100%;
+    border: 1.5px solid #d8d0ba;
+    background: #fffdf8;
+    padding: 12px 14px;
+    font-size: 0.92rem;
+    color: #16232f;
+    margin-bottom: 22px;
+  }
+  .mock-c .btn-primary {
+    width: 100%;
+    background: #16232f;
+    color: #f5f1e6;
+    border: none;
+    padding: 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    margin-bottom: 18px;
+    position: relative;
+  }
+  .mock-c .btn-primary::after {
+    content: "→";
+    position: absolute;
+    right: 16px;
+    color: #d6a419;
+  }
+  .mock-c .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #a49c81;
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .mock-c .divider::before,
+  .mock-c .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #ddd4bb;
+  }
+  .mock-c .btn-google {
+    width: 100%;
+    border: 1.5px solid #d8d0ba;
+    background: #fffdf8;
+    padding: 11px;
+    font-size: 0.85rem;
+    color: #16232f;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .mock-c .foot {
+    font-size: 0.78rem;
+    color: #7d765f;
+  }
+  .mock-c .foot a {
+    color: #16232f;
+    font-weight: 700;
+  }
+
+  .mock-c .dark-side {
+    background: #0d1b2a;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px 44px;
+  }
+  .mock-c .dark-kicker {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #d6a419;
+    border: 1px solid rgba(214, 164, 25, 0.4);
+    border-radius: 999px;
+    padding: 6px 14px;
+    display: inline-flex;
+    width: fit-content;
+  }
+  .mock-c .ref-motif {
+    font-family: Georgia, "Iowan Old Style", serif;
+    font-weight: 700;
+    color: rgba(245, 241, 230, 0.9);
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+  }
+  .mock-c .ref-motif .l1 {
+    font-size: 2.6rem;
+    display: block;
+  }
+  .mock-c .ref-motif .l2 {
+    font-size: 2.6rem;
+    display: block;
+    color: #d6a419;
+  }
+  .mock-c .ref-caption {
+    font-size: 0.86rem;
+    color: rgba(245, 241, 230, 0.65);
+    line-height: 1.6;
+    max-width: 340px;
+    margin-top: 18px;
+  }
+  .mock-c .dark-foot {
+    display: flex;
+    gap: 28px;
+    font-size: 0.78rem;
+    color: rgba(245, 241, 230, 0.55);
+    border-top: 1px solid rgba(245, 241, 230, 0.14);
+    padding-top: 18px;
+  }
+  .mock-c .dark-foot b {
+    color: rgba(245, 241, 230, 0.92);
+    display: block;
+    font-size: 1.05rem;
+  }
+
+  .close-note {
+    max-width: 640px;
+    margin: 0 auto;
+    text-align: center;
+    color: var(--gallery-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+</style>
+
+<div class="wrap">
+  <div class="intro">
+    <div class="kicker">Design review — pick one</div>
+    <h1>Three directions for the COSEC sign-in page</h1>
+    <p>
+      Same content, same fields, three different visual worlds. Tell me a letter
+      (A, B, C), or mix pieces from more than one — e.g. "B's palette with C's
+      layout."
+    </p>
+  </div>
+
+  <!-- DIRECTION A -->
+  <div class="direction">
+    <div class="direction-head">
+      <span class="direction-letter">A</span>
+      <h2>Quiet Registry</h2>
+    </div>
+    <p class="direction-rationale">
+      No side panel, no card, no shadow — the page is the paper. Underlined
+      fields like a registry form, a single hairline rule under the crest,
+      small-caps labels. Ink navy, warm paper, one thin brass rule as the only
+      accent.
+    </p>
+    <div class="frame-scroll">
+      <div class="browser-chrome">
+        <div class="chrome-bar">
+          <span class="chrome-dot"></span><span class="chrome-dot"></span
+          ><span class="chrome-dot"></span>
+          <span class="chrome-url">localhost:3000/auth/login</span>
+        </div>
+        <div class="mock-a">
+          <div class="panel">
+            <svg class="crest" viewBox="0 0 48 48" fill="none">
+              <circle
+                cx="24"
+                cy="24"
+                r="21"
+                stroke="currentColor"
+                stroke-width="1.4"
+              />
+              <path
+                d="M24 14l6 3v6c0 5-3 8-6 9-3-1-6-4-6-9v-6l6-3z"
+                stroke="currentColor"
+                stroke-width="1.3"
+                fill="none"
+              />
+            </svg>
+            <p class="org">County Government of Vihiga</p>
+            <p class="unit">
+              Office of the County Secretary &amp; Head of Public Service
+            </p>
+            <div class="rule"></div>
+            <label>Email address</label>
+            <input class="field" placeholder="you@vihiga.go.ke" />
+            <button class="btn-primary">Continue</button>
+            <div class="divider">or</div>
+            <button class="btn-google">Continue with Google</button>
+            <p class="foot">
+              Need a different path? <a href="#">Reset password</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIRECTION B -->
+  <div class="direction">
+    <div class="direction-head">
+      <span class="direction-letter">B</span>
+      <h2>County Letterhead</h2>
+    </div>
+    <p class="direction-rationale">
+      Built like an official certificate: a navy masthead carrying the seal, a
+      double-rule border framing the whole document, cream stock, brass
+      call-to-action. This is the direction that reads most explicitly as
+      "issued by government," not "issued by a SaaS."
+    </p>
+    <div class="frame-scroll">
+      <div class="browser-chrome">
+        <div class="chrome-bar">
+          <span class="chrome-dot"></span><span class="chrome-dot"></span
+          ><span class="chrome-dot"></span>
+          <span class="chrome-url">localhost:3000/auth/login</span>
+        </div>
+        <div class="mock-b">
+          <div class="certificate">
+            <div class="masthead">
+              <svg class="crest" viewBox="0 0 48 48" fill="none">
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="21"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                />
+                <path
+                  d="M24 14l6 3v6c0 5-3 8-6 9-3-1-6-4-6-9v-6l6-3z"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  fill="none"
+                />
+              </svg>
+              <div class="kicker">Office of the County Secretary</div>
+              <p class="org">County Government of Vihiga</p>
+            </div>
+            <div class="body">
+              <h3>Sign in to continue</h3>
+              <label>Email address</label>
+              <input class="field" placeholder="you@vihiga.go.ke" />
+              <button class="btn-primary">Continue</button>
+              <div class="divider">or</div>
+              <button class="btn-google">Continue with Google</button>
+              <p class="foot">
+                Need a different path? <a href="#">Reset password</a>
+              </p>
+              <p class="refline">Umoja Na Kazi</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIRECTION C -->
+  <div class="direction">
+    <div class="direction-head">
+      <span class="direction-letter">C</span>
+      <h2>Dispatch</h2>
+    </div>
+    <p class="direction-rationale">
+      Keeps the split-screen, but the right side now carries the one thing this
+      whole system is actually about — a correspondence reference number — blown
+      up as the hero device, instead of generic feature icons. Dark
+      charcoal-navy, warm paper form side, gold used once, boldly, as the single
+      accent.
+    </p>
+    <div class="frame-scroll">
+      <div class="browser-chrome">
+        <div class="chrome-bar">
+          <span class="chrome-dot"></span><span class="chrome-dot"></span
+          ><span class="chrome-dot"></span>
+          <span class="chrome-url">localhost:3000/auth/login</span>
+        </div>
+        <div class="mock-c">
+          <div class="form-side">
+            <svg class="crest" viewBox="0 0 48 48" fill="none">
+              <circle
+                cx="24"
+                cy="24"
+                r="21"
+                stroke="currentColor"
+                stroke-width="1.6"
+              />
+              <path
+                d="M24 14l6 3v6c0 5-3 8-6 9-3-1-6-4-6-9v-6l6-3z"
+                stroke="currentColor"
+                stroke-width="1.4"
+                fill="none"
+              />
+            </svg>
+            <p class="org">County Government of Vihiga</p>
+            <p class="unit">
+              Office of the County Secretary &amp; Head of Public Service
+            </p>
+            <label>Email address</label>
+            <input class="field" placeholder="you@vihiga.go.ke" />
+            <button class="btn-primary">Continue</button>
+            <div class="divider">or</div>
+            <button class="btn-google">Continue with Google</button>
+            <p class="foot">
+              Need a different path? <a href="#">Reset password</a>
+            </p>
+          </div>
+          <div class="dark-side">
+            <span class="dark-kicker">Secure workspace</span>
+            <div class="ref-motif">
+              <span class="l1">VCG/OCS/</span>
+              <span class="l2">2026/04/000001</span>
+              <p class="ref-caption">
+                Every letter this office receives gets one of these. Sign in to
+                see where yours is — registered, dispatched, or waiting on a
+                department.
+              </p>
+            </div>
+            <div class="dark-foot">
+              <div><b>7</b>stages tracked</div>
+              <div><b>100%</b>movement history</div>
+              <div><b>0</b>lost in transit</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="close-note">
+    Reply with A, B, C, or a mix — I'll wire the winner into the real sign-in,
+    register, reset, 2FA, and status pages.
+  </p>
+</div>

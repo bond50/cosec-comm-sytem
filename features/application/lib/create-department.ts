@@ -1,6 +1,6 @@
 "use server";
 
-import { DepartmentStatus, Prisma } from "@prisma/client";
+import { DepartmentKind, DepartmentStatus, Prisma } from "@prisma/client";
 import * as z from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
@@ -83,6 +83,7 @@ export async function createDepartmentAction(
         name: parsed.data.name.trim(),
         code: parsed.data.code,
         description: parsed.data.description,
+        kind: DepartmentKind.EXECUTION,
         status: DepartmentStatus.ACTIVE,
       },
       select: {

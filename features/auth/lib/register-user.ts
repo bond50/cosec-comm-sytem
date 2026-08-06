@@ -38,7 +38,23 @@ export async function registerUser(
   });
 
   const verificationToken = await generateVerificationToken(normalizedEmail);
-  await sendVerificationEmail(verificationToken.email, verificationToken.token);
+  const delivery = await sendVerificationEmail(
+    verificationToken.email,
+    verificationToken.token,
+  );
+
+  if (!delivery.ok) {
+    return {
+      error:
+        "Account created, but the verification email could not be sent. Try again from the verification page shortly.",
+    };
+  }
+
+  if (delivery.simulated && delivery.actionUrl) {
+    return {
+      success: `Account created. Development verification link: ${delivery.actionUrl}`,
+    };
+  }
 
   return {
     success: "Check your email to verify your account before signing in.",

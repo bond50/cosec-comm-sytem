@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh run watch *)",
+      "Bash(pnpm exec tsc --noEmit)",
+      "Bash(pnpm run lint:ts)",
+      "Bash(pnpm run ts-check)",
+      "Bash(nslookup *)",
+      "Bash(gh secret list)",
+      "Bash(gh secret list *)",
+      "Bash(aws s3 ls)",
+      "Bash(aws s3 ls *)"
+    ]
+  }
+}

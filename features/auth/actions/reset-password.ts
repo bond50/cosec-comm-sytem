@@ -42,7 +42,23 @@ export async function requestPasswordReset(
   }
 
   const resetToken = await generatePasswordResetToken(normalizedEmail);
-  await sendPasswordResetEmail(resetToken.email, resetToken.token);
+  const delivery = await sendPasswordResetEmail(
+    resetToken.email,
+    resetToken.token,
+  );
+
+  if (!delivery.ok) {
+    return {
+      error:
+        "Password reset email could not be sent right now. Please try again shortly.",
+    };
+  }
+
+  if (delivery.simulated && delivery.actionUrl) {
+    return {
+      success: `${GENERIC_SUCCESS} Development reset link: ${delivery.actionUrl}`,
+    };
+  }
 
   return { success: GENERIC_SUCCESS };
 }

@@ -62,17 +62,13 @@ export function AuthAccessRegisterStep({
 
   return (
     <div className="space-y-3">
-      <p className="text-[0.82rem] leading-5 text-slate-500">
-        Create a password to register this email.
-      </p>
-
       <AuthCreatePasswordFields
         passwordError={passwordError}
         confirmPasswordError={confirmPasswordError}
         inputErrorClass={inputErrorClass}
         onPasswordChange={onPasswordChange}
         onConfirmPasswordChange={onConfirmPasswordChange}
-        fieldClassName="space-y-1.5"
+        fieldClassName="space-y-4"
         descriptionClassName="text-[0.9rem] leading-5"
       />
 

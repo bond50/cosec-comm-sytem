@@ -8,13 +8,13 @@ export const DEFAULT_ORGANIZATION_UNIT =
 export const DEFAULT_ORGANIZATION_TAGLINE =
   process.env.NEXT_PUBLIC_ORGANIZATION_TAGLINE ?? "Umoja Na Kazi";
 
+export const DEFAULT_ORGANIZATION_SYSTEM_NAME =
+  process.env.NEXT_PUBLIC_ORGANIZATION_SYSTEM_NAME ??
+  "Correspondence Tracker & Documents Management System";
+
 export const DEFAULT_ORGANIZATION_SUPPORT_LINE =
   process.env.NEXT_PUBLIC_ORGANIZATION_SUPPORT_LINE ??
-  "Secure access to county correspondence workflows.";
+  "Use your email to log in or sign up.";
 
 export const DEFAULT_ORGANIZATION_LOGO_PATH =
   process.env.NEXT_PUBLIC_ORGANIZATION_LOGO_PATH ?? "/logo.png";
-
-export const DEFAULT_AUTH_PANEL_IMAGE =
-  process.env.NEXT_PUBLIC_AUTH_PANEL_IMAGE ??
-  "https://images.pexels.com/photos/36123568/pexels-photo-36123568.jpeg?auto=compress&cs=tinysrgb&w=1600";

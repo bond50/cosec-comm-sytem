@@ -6,7 +6,8 @@ export default function UnauthorizedPage() {
     <AuthStatusCard
       title="Credentials required"
       description="This account cannot continue with the selected method. Sign in with your verified password or request a reset link."
-      icon={<ShieldAlert className="h-6 w-6" />}
+      icon={<ShieldAlert className="h-9 w-9" />}
+      tone="warning"
       primaryHref="/auth/login"
       primaryLabel="Sign in"
       secondaryHref="/auth/reset"

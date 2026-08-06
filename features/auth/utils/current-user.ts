@@ -12,9 +12,11 @@ type CurrentUser = {
     name: string;
     slug: string;
     role: UserRole;
+    roles: UserRole[];
   } | null;
   isTwoFAEnabled: boolean;
   isOAuth: boolean;
+  mustChangePassword: boolean;
 };
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -30,6 +32,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     organization: session.organization,
     isTwoFAEnabled: u.isTwoFAEnabled,
     isOAuth: u.isOAuth,
+    mustChangePassword: u.mustChangePassword,
   };
 }
 

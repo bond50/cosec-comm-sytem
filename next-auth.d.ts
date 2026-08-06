@@ -8,12 +8,14 @@ declare module "next-auth" {
       id: string;
       isTwoFAEnabled: boolean;
       isOAuth: boolean;
+      mustChangePassword: boolean;
     };
     organization: {
       id: string;
       name: string;
       slug: string;
       role: UserRole;
+      roles: UserRole[];
     } | null;
     mfaRequired: boolean;
     mfaVerified: boolean;
@@ -23,6 +25,7 @@ declare module "next-auth" {
     id?: string;
     isTwoFAEnabled?: boolean;
     isOAuth?: boolean;
+    mustChangePassword?: boolean;
   }
 }
 
@@ -32,8 +35,10 @@ declare module "next-auth/jwt" {
     organizationName?: string;
     organizationSlug?: string;
     organizationRole?: UserRole;
+    organizationRoles?: UserRole[];
     isOAuth?: boolean;
     isTwoFAEnabled?: boolean;
+    mustChangePassword?: boolean;
     mfaRequired?: boolean;
     mfaVerified?: boolean;
     image?: string;

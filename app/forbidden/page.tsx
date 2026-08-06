@@ -7,8 +7,8 @@ export default function ForbiddenPage() {
       title="Access restricted"
       description="Your account signed in successfully, but you do not have permission to open this area."
       icon={<Ban className="h-6 w-6" />}
-      primaryHref="/"
-      primaryLabel="Return home"
+      primaryHref="/dashboard"
+      primaryLabel="Go to dashboard"
       secondaryHref="/auth/login"
       secondaryLabel="Use another account"
     />

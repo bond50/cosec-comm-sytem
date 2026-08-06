@@ -9,8 +9,16 @@ export const departmentSummarySelect = {
   name: true,
   code: true,
   description: true,
+  kind: true,
   status: true,
   headUserId: true,
+  headUser: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  },
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.DepartmentSelect;
@@ -26,7 +34,7 @@ export async function getDepartmentsByOrganization(
 
   return db.department.findMany({
     where: { organizationId },
-    orderBy: [{ name: "asc" }, { createdAt: "asc" }],
+    orderBy: [{ kind: "asc" }, { name: "asc" }, { createdAt: "asc" }],
     select: departmentSummarySelect,
   });
 }

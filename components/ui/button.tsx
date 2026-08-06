@@ -6,7 +6,7 @@ type ButtonSize = "default" | "sm" | "lg";
 
 const variantClasses: Record<ButtonVariant, string> = {
   default:
-    "border border-[#465fff] bg-[#465fff] text-white shadow-sm hover:bg-[#3641f5]",
+    "border border-[#1868a6] bg-[#1868a6] text-white shadow-sm hover:bg-[#0f4c79]",
   outline:
     "border border-slate-200 bg-white text-slate-900 shadow-sm hover:border-slate-300 hover:bg-slate-50",
   ghost: "text-slate-700 hover:bg-slate-100",

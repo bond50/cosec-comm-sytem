@@ -25,7 +25,8 @@ export default async function AuthErrorPage({ searchParams }: ErrorPageProps) {
     <AuthStatusCard
       title="Authentication error"
       description={getErrorMessage(error)}
-      icon={<AlertTriangle className="h-6 w-6" />}
+      icon={<AlertTriangle className="h-9 w-9" />}
+      tone="error"
       primaryHref="/auth/login"
       primaryLabel="Back to sign in"
       secondaryHref="/auth/reset"

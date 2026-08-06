@@ -18,53 +18,93 @@ The goal is to avoid:
 
 ### 1.1 Done
 
-- Next.js App Router foundation is in place.
-- Prisma schema exists and initial migration has been generated.
-- Auth.js is configured centrally in [auth.ts](D:/active_projects/cosec-comm-system/auth.ts).
-- Prisma singleton is configured in [lib/db.ts](D:/active_projects/cosec-comm-system/lib/db.ts).
-- Unified auth entry flow exists on:
+- [x] Next.js App Router foundation is in place.
+- [x] Prisma schema exists and initial migration has been generated.
+- [x] Auth.js is configured centrally in [auth.ts](D:/active_projects/cosec-comm-system/auth.ts).
+- [x] Prisma singleton is configured in [lib/db.ts](D:/active_projects/cosec-comm-system/lib/db.ts).
+- [x] Unified auth entry flow exists on:
   - `/`
   - `/auth/login`
   - `/auth/register`
-- Email verification flow works through:
+- [x] Email verification flow works through:
   - `/auth/new-verification`
   - `/auth/activate` compatibility route
-- Password reset flow exists.
-- Google sign-in exists.
-- Turnstile is enforced for the access flow.
-- MFA challenge flow exists.
-- Protected post-login landing page exists at `/dashboard`.
-- Session now includes active organization context when a membership exists.
-- Organization creation and onboarding flow exists.
-- Organization membership query foundation exists.
-- Members listing exists.
-- Direct add-member flow exists.
-- Department creation, listing, member assignment, and head assignment foundations exist.
-- Department detail, member-assignment, and head-assignment pages exist.
+- [x] Password reset flow exists.
+- [x] Google sign-in exists.
+- [x] Turnstile is enforced for the access flow.
+- [x] MFA challenge flow exists.
+- [x] Protected post-login landing page exists at `/dashboard`.
+- [x] Session now includes active organization context when a membership exists.
+- [x] Active organization switching now exists for users with more than one active membership.
+- [x] Organization creation and onboarding flow exists.
+- [x] Organization membership query foundation exists.
+- [x] Authenticated app shell foundation exists:
+  - header
+  - sidebar
+  - route navigation for current implemented business pages
+- [x] Members listing exists.
+- [x] Direct add-member flow exists.
+- [x] Department creation, listing, member assignment, and head assignment foundations exist.
+- [x] Department detail, member-assignment, and head-assignment pages exist.
+- [x] Phase 4 caveats have been manually verified and closed for the current foundation scope:
+  - member onboarding tested through the real app flow
+  - member management and department assignment routes tested through the real app flow
+  - active organization switching tested through the header workspace switcher
+  - role-aware navigation and page guards checked across ORG_ADMIN, MANAGEMENT, REGISTRY_OFFICER, REVIEWING_OFFICER, and DEPARTMENT_USER
+- [x] Correspondence schema has been audited against AGENTS, the county BRD, the current Excel tracker, and the current Prisma models.
+- [x] No pre-phase-1 correspondence migration is required; the remaining work is queries, actions, validation, and UI.
+- [x] Phase-1 correspondence rules are now fixed in code terms for intake, required fields, permissions, reference numbers, and status transitions.
+- [x] Correspondence query foundation now exists for list, detail, movement history, filters, and SLA helpers.
+- [x] Correspondence shared validation and action helpers now exist for create, update, review, and assign flows.
+- [x] The first correspondence mutation now exists: register correspondence with validation, permission checks, audit entry, and first movement entry.
+- [x] `/dashboard/correspondences/register` now exists as a real authenticated route with shell navigation and county intake form.
+- [x] `/dashboard/correspondences` now exists as a real datatable-backed correspondence workspace with search, sort, filters, and exports.
+- [x] `/dashboard/correspondences/[id]` now exists as a real detail workspace with header summary, intake registration, review, routing, deadline tracking, movement, attachments, and accountability sections.
+- [x] Correspondence detail now supports explicit close/cancel finalization with closure notes, audit logging, and movement-history entries.
+- [x] `/dashboard` now includes real reporting widgets backed by organization-scoped metrics for overdue items, urgent items, SLA compliance, department performance, trends over time, pending dispatches, and pending action points.
+- [x] Correspondence sender-office suggestions now exist as an organization-scoped lookup and free-text combobox on the register form.
+- [x] Reporting/export refinement now includes printable correspondence detail, filtered register exports, monthly/SLA summary exports, and department performance exports.
+- [x] Membership role model now supports admin-assigned multi-role memberships, with effective permissions evaluated from the assigned role set.
+- [x] Department structure model now treats `Office of the County Secretary and Head of Public Service` as the central control office, classifies all other departments as execution units, and requires department assignment in new/updated membership flows.
+- [x] Correspondence detail and action wording now explicitly follow the central-office-led workflow:
+  - receive
+  - register
+  - review
+  - dispatch
+  - execute
+  - feedback
+  - verify
+  - close
+- [x] Correspondence closure now requires feedback to return before a record can be closed, which matches the confirmed county workflow.
+- [x] Review, routing, dispatch, verification, and closure authority are now tightened to the County Secretary authority path (`Reviewing Officer` / `Management`) instead of the generic admin path.
+- [x] Registry dispatch behavior now follows the assigned role set: registry-only users register by default, and dispatch becomes available only when admin also assigns central-office dispatch authority.
+- [x] Correspondence reference numbers now follow the county format pattern (`VCG/OCS/YYYY/MM/NNNNNN`) instead of the earlier generic reference style.
+- [x] Organization setup and department administration now explain the central-office-first county structure directly in the UI.
+- [x] Correspondence field rules now match the returned questionnaire for mandatory dispatch due date, acknowledgement before feedback, required feedback note, repeated review/feedback updates, feedback-before-close, and justified reopen.
+- [x] Correspondence status and action wording now uses office workflow language: intake, review instructions, routing decision, receiving office, dispatch, receipt confirmation, feedback return, verification, and closure.
+- [x] Document registry assumptions now match the returned requirements: physical/digital/hybrid records, current holder, current location, archive state, linked correspondence, and searchable archived records.
+- [x] Meeting/action-point assumptions now match the returned requirements: action points must be assigned to a user, department, or both; action-point deadlines are mandatory; meetings can link back to relevant correspondence.
+- [x] Seed/reset setup now uses a county-accurate UAT foundation instead of generic demo assumptions: one Vihiga County organization, one central control office, execution departments, multi-role County Secretary authority, registry-only officer, department users, document categories, and sender-office suggestions.
+- [x] README/Roadmap/business-facing docs now describe the final county operating model rather than the earlier generic department model.
+- [x] Dashboard/reporting UAT closed against realistic multi-month data: generated ~90 correspondence records, 18 documents, and 9 meetings spanning six months, then re-verified KPIs, SLA compliance, department performance, trends, and workflow-stage/priority/meeting-status breakdowns, plus CSV/Excel exports, all against real numbers in the running app.
+- [x] Fixed a stale bcrypt password hash in `prisma/county-foundation-seed.sql` (all seeded UAT accounts shared one hash that did not actually match the documented `ChangeMe123!` password, blocking login for every seeded demo account).
+- [x] Dashboard UI noise pass: cut restated explanatory paragraphs across dashboard widgets, the correspondence register/detail workflow, and member/document/meeting forms; converted the workflow-stage, priority-mix, and meeting-status widgets from progress-bar lists into compact donut charts with a validated categorical/status palette.
 
 ### 1.2 Not Done Yet
 
-- Active organization selection/switching
-- Authenticated app shell foundation:
-  - header
-  - sidebar
-  - route navigation that stays current as features land
-- Member onboarding completion:
-  - clear direct-add workflow hardening
-  - invite/provisioning strategy decision
-  - membership management polish
-- Final closure of users/departments phase caveats
-- Correspondence module
-- Dispatch and movement tracking module
-- Documents module
-- Meetings module
-- Real dashboard widgets/analytics module
+- [x] Correspondence module
+- [x] Dispatch and movement tracking module
+- [x] Documents module
+- [x] Meetings module
+- [x] Real dashboard widgets/analytics module
+- [x] County UAT seed/reset foundation
+- [x] README/Roadmap/business-doc alignment
 
 ### 1.3 Important Clarification
 
-`/dashboard` currently exists as a protected landing route, but the authenticated app shell is not yet complete.
+`/dashboard` now sits inside the authenticated shell foundation, and existing business pages are reachable through real navigation.
 
-The authenticated shell foundation must be built before continuing into Correspondence so implemented business pages can be tested through real navigation.
+The remaining gate before Correspondence is no longer shell construction or phase-4 cleanup. It is disciplined phase-1-only correspondence delivery.
 
 That matches AGENTS intent:
 
@@ -120,21 +160,20 @@ Core auth foundation is complete enough to move forward.
 
 ### 4.2 What Is Already Covered
 
-- registration
-- email verification
-- credential login
-- Google login
-- password reset
-- Turnstile gate
-- MFA challenge flow
-- protected post-login route
-- active organization context on session when membership exists
+- [x] registration
+- [x] email verification
+- [x] credential login
+- [x] Google login
+- [x] password reset
+- [x] Turnstile gate
+- [x] MFA challenge flow
+- [x] protected post-login route
+- [x] active organization context on session when membership exists
 
 ### 4.3 Auth-Adjacent Work Deferred To Later Phases
 
 - create first organization after signup
 - invite/add users into organizations
-- switch active organization
 - role and permission enforcement based on membership rather than only user role
 
 These are not basic auth tasks anymore. They belong to organizations and users/departments.
@@ -331,7 +370,7 @@ Acceptance:
 
 ## 7. Phase 4: Users & Departments
 
-This phase is partially implemented already, but it is not fully closed yet.
+This phase foundation is now closed enough to begin Correspondence phase 1.
 
 ### 7.1 Goal
 
@@ -348,58 +387,31 @@ Support organization members, role structure, and departments.
 
 ### 7.3 Completed Foundations
 
-- member listing
-- direct add-member flow
-- department creation
-- department listing
-- department head assignment foundation
-- department member assignment foundation
-- department detail pages
+- [x] member listing
+- [x] direct add-member flow
+- [x] department creation
+- [x] department listing
+- [x] department head assignment foundation
+- [x] department member assignment foundation
+- [x] department detail pages
+- [x] member onboarding, member management, department assignment, and role-aware navigation have been manually tested in the running app
+- [x] active organization switching has been manually tested in the running app
 
-### 7.4 Remaining Slices To Close Caveats
+### 7.4 Closure Notes
 
-#### Slice 4.1: Member Onboarding Completion
-
-Build:
-
-- direct add-member hardening and manual test pass
-- clear handling for duplicate, inactive, or invalid selections
-- confirm role assignment flow is stable
-
-Acceptance:
-
-- direct add flow is considered stable and manually tested
-
-#### Slice 4.2: Invite / Provisioning Decision
-
-Decide and document the member onboarding strategy:
-
-- keep direct-add only for now, or
-- add invite/provisioning later as an explicit next slice
-
-Acceptance:
-
-- no ambiguity remains about how new organization members are introduced
-
-#### Slice 4.3: Membership Management Polish
-
-Build:
-
-- any missing read-only visibility needed for roles, statuses, and department assignments
-
-Acceptance:
-
-- users/departments phase has no blocking caveat before Correspondence
+- [x] Direct add-member remains the active onboarding strategy for this phase.
+- [x] Invite/provisioning stays deferred until a later explicit slice.
+- [x] Users/departments no longer have a blocking caveat before Correspondence.
 
 ## 8. Phase 5: Correspondence (Core Module)
 
 This is the most important business module.
 
-Do not begin this phase until Phase 3 and Phase 4 caveats are fully closed.
+Phase 3 and Phase 4 foundations are now closed enough to begin this phase.
 
 ### 8.1 Goal
 
-Represent real correspondence intake, review, assignment, and status tracking.
+Represent real correspondence intake, review, routing, dispatch, feedback, verification, and closure tracking.
 
 ### 8.2 Deliverables
 
@@ -408,6 +420,10 @@ Represent real correspondence intake, review, assignment, and status tracking.
 - view single correspondence
 - assign responsibility
 - update workflow status
+
+Status:
+
+- [x] Implemented and hardened for organization scoping, authorization, validation, and accountability flows.
 
 ### 8.3 Small Task Slices
 
@@ -471,6 +487,10 @@ Acceptance:
 
 - single record fully viewable
 
+Status:
+
+- [x] Implemented
+
 #### Slice 5.4: Assignment and Review Actions
 
 Build:
@@ -485,6 +505,10 @@ Acceptance:
 - all mutations use server actions
 - auditability fields remain intact
 
+Status:
+
+- [x] Implemented
+
 ## 9. Phase 6: Dispatch / Movement Tracking
 
 ### 9.1 Goal
@@ -497,6 +521,10 @@ Track full movement history, not just current state.
 - acknowledgement
 - feedback receipt
 - movement timeline
+
+Status:
+
+- [x] Implemented and included in the live correspondence detail workflow.
 
 ### 9.3 Small Task Slices
 
@@ -512,6 +540,10 @@ Acceptance:
 
 - dispatch creates dispatch record tied to org and correspondence
 
+Status:
+
+- [x] Implemented
+
 #### Slice 6.2: Acknowledgement Action
 
 Required fields:
@@ -523,6 +555,10 @@ Acceptance:
 
 - acknowledgement updates dispatch and timeline
 
+Status:
+
+- [x] Implemented
+
 #### Slice 6.3: Feedback Receipt Action
 
 Required fields:
@@ -532,6 +568,10 @@ Required fields:
 Acceptance:
 
 - feedback state is traceable in UI
+
+Status:
+
+- [x] Implemented
 
 #### Slice 6.4: Movement Timeline
 
@@ -544,6 +584,10 @@ Acceptance:
 
 - correspondence history is reconstructable
 
+Status:
+
+- [x] Implemented
+
 ## 10. Phase 7: Documents
 
 ### 10.1 Goal
@@ -552,15 +596,25 @@ Manage supporting documents and attachments in an organization-scoped way.
 
 ### 10.2 Small Task Slices
 
-- document category management
-- create document record
-- attach to correspondence
-- file upload handling
-- archive flow
+- [x] document category management
+- [x] create document record
+- [x] attach to correspondence
+- [x] file upload handling
+- [x] archive flow
+- [x] physical, digital, and hybrid tracking
+- [x] current holder and current location tracking
+- [x] searchable archived records
+- [x] system-generated document reference numbers using the county document format (`VCG/OCS/DOC/YYYY/MM/NNNNNN`)
+- [x] document detail editing for active records, while archived records remain read-only
 
 Acceptance:
 
 - every document and attachment stays organization-scoped
+
+Notes:
+
+- [x] Correspondence detail already supports attachment upload and linked-document display.
+- [x] Standalone documents module now exists with registry listing, category management, standalone document creation, archive flow, direct document attachment upload, and searchable active/archived records.
 
 ## 11. Phase 8: Meetings
 
@@ -570,17 +624,33 @@ Track meetings and action points related to organizational work.
 
 ### 11.2 Small Task Slices
 
-- create meeting
-- list meetings
-- meeting detail
-- action point creation
-- action point assignment
-- action point status updates
+- [x] create meeting
+- [x] list meetings
+- [x] meeting detail
+- [x] meeting edit/update with agenda, discussion summary, and resolutions
+- [x] meeting status workflow now supports Scheduled, Held, Action points issued, Postponed, Cancelled, and Closed; closing requires resolutions or action points
+- [x] meeting attachment upload for minutes, attendance sheets, signed resolutions, and scanned notes
+- [x] meeting decisions field and print-friendly meeting summary are now available on meeting detail
+- [x] action point history now records exact field-level changes for status, assigned user, assigned department, due date, and remarks
+- [x] `My action points` ownership view now shows user/department action points, due dates, overdue state, and CSV/Excel/PDF export
+- [x] linked meetings and action points now appear from correspondence detail when a meeting is tied to correspondence
+- [x] in-app notification foundation now exists with organization-scoped notifications, dashboard bell, mark-as-read, meeting scheduled notifications, and action point assignment/update notifications
+- [x] action point creation
+- [x] action point assignment
+- [x] action point status updates
 
 Acceptance:
 
 - meeting action points are scoped by organization
 - assignees are valid users/departments from current organization
+- action points require a user, department, or both
+- action points require a deadline
+- meetings can link back to relevant correspondence where the meeting came from correspondence work
+
+Status:
+
+- [x] Meetings foundation now includes `/dashboard/meetings`, `/dashboard/meetings/[id]`, meeting creation, action point creation, and action point assignment/status updates.
+- [x] Meeting assumption pass completed for assignment, mandatory deadlines, and correspondence linkage.
 
 ## 12. Phase 9: Dashboard Widgets / Analytics Module
 
@@ -588,7 +658,7 @@ This is the real dashboard module, not the current auth landing page.
 
 ### 12.1 Goal
 
-Provide summary, workload visibility, and overdue insight.
+Provide the office reporting views explicitly requested in the requirements: overdue, urgent, SLA compliance, department performance, trends, pending dispatches, and pending action points.
 
 ### 12.2 Visual Direction
 
@@ -632,12 +702,19 @@ Acceptance:
 
 - cards use real domain metrics only
 
+Status:
+
+- [x] Implemented
+
 #### Slice 9.2: Core Lists
 
-- recent correspondence
-- overdue items
-- pending dispatches
-- pending action points
+- [x] overdue items
+- [x] urgent items
+- [x] SLA compliance
+- [x] department performance
+- [x] trends over time
+- [x] pending dispatches
+- [x] pending action points
 
 Acceptance:
 
@@ -646,7 +723,7 @@ Acceptance:
 
 #### Slice 9.3: Quick Links
 
-- quick links
+- [x] quick links
 
 Acceptance:
 
@@ -660,6 +737,10 @@ Acceptance:
 
 - no fake chart data once the real dashboard phase is active
 - visuals stay aligned with the reference shell
+
+Status:
+
+- [x] Implemented
 
 ## 13. Cross-Cutting Work
 
@@ -702,14 +783,24 @@ After each slice:
 
 Do these one by one:
 
-1. build authenticated header
-2. build authenticated sidebar
-3. wrap existing authenticated pages in the shell
-4. keep navigation updated for the existing members and departments routes
-5. close users/departments caveats
-6. only then begin correspondence intake
+1. begin the meetings module now that documents have a clear scoped foundation
+2. expand dashboard analytics beyond KPI cards only after the underlying lists and charts are backed by real data
 
-Do not jump into Correspondence until those six are done.
+Current status:
+
+1. [x] continue with documents as a separate module after correspondence stabilization
+2. [x] begin the meetings module now that documents have a clear scoped foundation
+3. [x] expand dashboard analytics beyond KPI cards only after the underlying lists and charts are backed by real data
+
+Do not collapse documents into correspondence uploads, and do not jump into charts before the remaining dashboard list slices exist.
+
+Immediate next phase according to AGENTS development order:
+
+1. All mandatory phases through dashboard analytics are implemented for the current roadmap scope
+2. Current refinement work includes explicit correspondence close/cancel handling after the core module delivery
+3. Current refinement work also includes practical office exports for correspondence registers, monthly/SLA summaries, department performance, and printable detail views
+4. Dashboard/reporting UAT is now closed against realistic multi-month data (see 1.1); remaining pre-launch items are production-like role UAT with real office users and the meeting resolutions capture enhancement
+5. Next work should be a new explicitly scoped enhancement, reporting pass, or deployment-readiness pass
 
 ## 15. Definition Of “Ready To Start Correspondence”
 

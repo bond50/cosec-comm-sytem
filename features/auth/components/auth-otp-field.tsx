@@ -35,7 +35,7 @@ export function AuthOtpField({
         Two-factor verification
       </div>
       <p className="text-sm leading-6 text-slate-700">{description}</p>
-      <Field>
+      <Field className="space-y-4">
         <FieldLabel htmlFor={id} required={required}>
           {label}
         </FieldLabel>
@@ -47,6 +47,7 @@ export function AuthOtpField({
           autoComplete="one-time-code"
           defaultValue={defaultValue}
           pattern="^[0-9]+$"
+          containerClassName="mt-2"
         >
           <InputOTPGroup>
             <InputOTPSlot index={0} />

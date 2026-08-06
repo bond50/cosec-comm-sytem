@@ -53,6 +53,16 @@ export const initialCreateOrganizationState: CreateOrganizationActionState = {
   },
 };
 
+export function slugifyOrganizationName(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-")
+    .slice(0, 64);
+}
+
 export function coerceOrganizationType(value: string): OrganizationType {
   return (
     organizationTypeValues.find((type) => type === value) ??

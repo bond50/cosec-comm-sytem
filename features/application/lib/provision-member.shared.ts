@@ -1,14 +1,7 @@
 import * as z from "zod";
-import { UserRole } from "@prisma/client";
+import { EDITABLE_MEMBERSHIP_ROLES } from "@/features/auth/utils/roles";
 
-export const memberProvisionRoleValues = [
-  UserRole.ORG_ADMIN,
-  UserRole.REGISTRY_OFFICER,
-  UserRole.REVIEWING_OFFICER,
-  UserRole.DEPARTMENT_USER,
-  UserRole.MANAGEMENT,
-  UserRole.USER,
-] as const;
+export const memberProvisionRoleValues = EDITABLE_MEMBERSHIP_ROLES;
 
 export const provisionMemberSchema = z
   .object({
@@ -18,27 +11,25 @@ export const provisionMemberSchema = z
       .min(2, { message: "Name is required." })
       .max(120, { message: "Name is too long." }),
     email: z.email({ message: "Enter a valid email address." }),
+    // Deliberately relaxed: this is a temporary password an administrator
+    // hands to someone else. The account is forced to set a real password
+    // (under the normal strong-password rules) on first login, so requiring
+    // complexity here just makes handoff harder without adding security.
     password: z
       .string()
-      .min(8, { message: "Password must be at least 8 characters long." })
-      .regex(/[A-Z]/, {
-        message: "Password must contain at least one uppercase letter.",
-      })
-      .regex(/[a-z]/, {
-        message: "Password must contain at least one lowercase letter.",
-      })
-      .regex(/[0-9]/, {
-        message: "Password must contain at least one number.",
-      })
-      .regex(/[^A-Za-z0-9]/, {
-        message: "Password must contain at least one special character.",
-      }),
+      .min(4, { message: "Password must be at least 4 characters long." }),
     confirmPassword: z
       .string()
       .min(1, { message: "Please confirm the password." }),
-    role: z.enum(memberProvisionRoleValues, {
-      message: "Select a valid role.",
-    }),
+    roles: z
+      .array(z.enum(memberProvisionRoleValues), {
+        message: "Select at least one valid role.",
+      })
+      .min(1, { message: "Select at least one role." }),
+    departmentId: z
+      .string()
+      .trim()
+      .cuid({ message: "Select a valid department." }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match.",
@@ -68,6 +59,7 @@ export const initialProvisionMemberState: ProvisionMemberActionState = {
     email: "",
     password: "",
     confirmPassword: "",
-    role: UserRole.USER,
+    roles: [],
+    departmentId: "",
   },
 };

@@ -1,9 +1,14 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const isWindows = process.platform === "win32";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["192.168.8.13"],
+  allowedDevOrigins: ["192.168.131.6"],
+
+  turbopack: {
+    root: path.join(__dirname),
+  },
 
   ...(isWindows ? {} : { output: "standalone" }),
 

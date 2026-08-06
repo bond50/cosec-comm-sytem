@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { AuthFeedback } from "@/features/auth/components/auth-feedback";
 import { AuthOtpField } from "@/features/auth/components/auth-otp-field";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
+import { cn } from "@/lib/utils";
 
 type AuthAccessLoginStepProps = {
   passwordError?: string;
@@ -24,12 +24,11 @@ export function AuthAccessLoginStep({
 }: AuthAccessLoginStepProps) {
   return (
     <>
-      <AuthFeedback
-        title="Account found"
-        message="Enter your password to continue. If you normally use Google, you can also continue with Google below."
-      />
+      <p className="text-[0.85rem] leading-5 text-slate-500">
+        Enter your password. If you use Google, continue below.
+      </p>
 
-      <Field>
+      <Field className="space-y-4">
         <div className="flex items-center justify-between">
           <FieldLabel htmlFor="password" required>
             Password
@@ -47,7 +46,7 @@ export function AuthAccessLoginStep({
           name="password"
           type="password"
           autoComplete="current-password"
-          className={passwordError ? inputErrorClass : undefined}
+          className={cn("mt-2", passwordError && inputErrorClass)}
           onChange={onPasswordChange}
           required
         />

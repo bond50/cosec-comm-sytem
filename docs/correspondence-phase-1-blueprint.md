@@ -152,11 +152,28 @@ Rules:
 - `receivedAt` is required
 - `receivedByUserId` defaults to current user if not supplied explicitly
 - initial status on create: `NEW`
+- `referenceNumber` is user-supplied, human-readable, normalized, and unique within the active organization
+- required create fields are:
+  - `referenceNumber`
+  - `type`
+  - `subject`
+  - `senderName`
+  - `senderOffice`
+  - `deliveryMethod`
+  - `receivedAt`
+- optional create fields are:
+  - `description`
+  - `deliveredBy`
+  - `priority`
+  - `confidentiality`
+  - `receivedByUserId`
 
 ### Review
 
 - review moves status from `NEW` to `UNDER_REVIEW`
 - review requires instructions before dispatch
+- review only operates on records in `NEW` or `UNDER_REVIEW`
+- first review must capture `reviewedAt` and `reviewedByUserId`
 
 ### Assignment
 
@@ -164,11 +181,30 @@ Rules:
 - user assignment is optional on phase 1
 - assignment sets status to `DISPATCHED`
 - `assignedByUserId` must always be captured
+- `assignedToDepartmentId` is required for phase 1 assignment
+- `dueDate` is optional but should be supported on assignment
 
 ### SLA
 
 - `is_overdue` and `days_remaining` remain computed in queries/UI
 - no schema changes are required for those two values in phase 1
+
+### Outgoing Handling
+
+- `OUTGOING` remains supported by schema and enums
+- phase 1 does not expose outgoing authoring UI
+- phase-1 create action must reject `OUTGOING`
+
+### Status Transition Boundary
+
+Phase 1 actively implements only:
+
+- `none -> NEW`
+- `NEW -> UNDER_REVIEW`
+- `UNDER_REVIEW -> UNDER_REVIEW`
+- `UNDER_REVIEW -> DISPATCHED`
+
+Later statuses remain valid in the model and list/detail displays, but their full action flows come in later slices.
 
 ## Role Policy For Phase 1
 
@@ -198,3 +234,4 @@ The first correspondence slice is ready to implement when:
 - test users and departments exist
 - routing units exist for assignment
 - the list/register/detail/review/assign scope is accepted as the exact phase 1 boundary
+- implementation rules are fixed in [correspondence-phase-1-rules.md](D:/active_projects/cosec-comm-system/docs/correspondence-phase-1-rules.md)

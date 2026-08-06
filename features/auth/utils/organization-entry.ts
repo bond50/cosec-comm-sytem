@@ -4,9 +4,7 @@ import { MembershipStatus } from "@prisma/client";
 import { getUserMemberships } from "@/features/application/queries/memberships";
 
 export type OrganizationEntryState =
-  | "NO_ORG"
-  | "HAS_ORG_SINGLE"
-  | "HAS_ORG_MULTIPLE";
+  "NO_ORG" | "HAS_ORG_SINGLE" | "HAS_ORG_MULTIPLE";
 
 export async function resolveOrganizationEntry(
   userId: string,

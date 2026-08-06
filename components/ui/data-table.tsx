@@ -1,4 +1,6 @@
 "use client";
+"use no memo";
+/* eslint-disable react-hooks/incompatible-library */
 
 import * as React from "react";
 import {
@@ -6,6 +8,7 @@ import {
   type ColumnDef,
   type PaginationState,
   type SortingState,
+  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -17,16 +20,14 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
-  Download,
-  FileSpreadsheet,
   Filter,
-  FileText,
   ChevronLeft,
   ChevronRight,
+  Columns3,
   Search,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ExportActions } from "@/components/ui/export-actions";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -35,22 +36,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+
+const EMPTY_COLUMN_FILTERS: ColumnFiltersState = [];
 
 type DataTableProps<TData> = {
   columns: ColumnDef<TData, unknown>[];
   data: TData[];
-  caption: string;
+  caption?: string;
+  description?: string;
   searchPlaceholder: string;
   searchableColumns: string[];
   emptyMessage: string;
   initialPageSize?: number;
   toolbarLabel?: string;
+  showToolbarMeta?: boolean;
   toolbarFilters?: Array<{
     id: string;
     label: string;
     options: Array<{ label: string; value: string }>;
   }>;
+  toolbarPrimaryAction?: React.ReactNode;
+  initialColumnFilters?: ColumnFiltersState;
 };
 
 function getValueAtPath(source: unknown, path: string): string {
@@ -74,22 +97,32 @@ export function DataTable<TData>({
   columns,
   data,
   caption,
+  description,
   searchPlaceholder,
   searchableColumns,
   emptyMessage,
   initialPageSize = 10,
   toolbarLabel = "Directory",
+  showToolbarMeta = true,
   toolbarFilters = [],
+  toolbarPrimaryAction,
+  initialColumnFilters = EMPTY_COLUMN_FILTERS,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
+  const [columnFilters, setColumnFilters] =
+    React.useState<ColumnFiltersState>(initialColumnFilters);
   const [globalFilter, setGlobalFilter] = React.useState("");
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: initialPageSize,
   });
+
+  React.useEffect(() => {
+    setColumnFilters(initialColumnFilters);
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
+  }, [initialColumnFilters]);
 
   const table = useReactTable({
     data,
@@ -99,11 +132,13 @@ export function DataTable<TData>({
       columnFilters,
       globalFilter,
       pagination,
+      columnVisibility,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: setPagination,
+    onColumnVisibilityChange: setColumnVisibility,
     globalFilterFn: (row, _columnId, filterValue) => {
       const normalizedFilter = String(filterValue).trim().toLowerCase();
 
@@ -135,6 +170,7 @@ export function DataTable<TData>({
   const exportColumns = table
     .getAllLeafColumns()
     .filter((column) => column.id !== "actions");
+  const exportCaption = caption ?? toolbarLabel;
   const exportHeaderRow = exportColumns.map((column) => {
     const header = column.columnDef.header;
     return typeof header === "string" ? header : column.id;
@@ -148,73 +184,6 @@ export function DataTable<TData>({
     }),
   );
 
-  function exportRowsToCsv() {
-    const csv = [
-      exportHeaderRow.join(","),
-      ...exportRows.map((row) =>
-        row.map((value) => `"${value.replaceAll('"', '""')}"`).join(","),
-      ),
-    ].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = `${toolbarLabel.toLowerCase().replace(/\s+/g, "-")}-export.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-  }
-
-  async function exportRowsToExcel() {
-    const XLSX = await import("xlsx");
-    const worksheet = XLSX.utils.aoa_to_sheet([exportHeaderRow, ...exportRows]);
-    const workbook = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(workbook, worksheet, toolbarLabel);
-    XLSX.writeFile(
-      workbook,
-      `${toolbarLabel.toLowerCase().replace(/\s+/g, "-")}-export.xlsx`,
-    );
-  }
-
-  async function exportRowsToPdf() {
-    const { jsPDF } = await import("jspdf");
-    const { default: autoTable } = await import("jspdf-autotable");
-    const doc = new jsPDF({
-      orientation: exportHeaderRow.length > 5 ? "landscape" : "portrait",
-      unit: "pt",
-      format: "a4",
-    });
-
-    doc.setFontSize(14);
-    doc.text(caption, 40, 40);
-    autoTable(doc, {
-      head: [exportHeaderRow],
-      body: exportRows,
-      startY: 56,
-      styles: {
-        fontSize: 9,
-        cellPadding: 8,
-        textColor: [51, 65, 85],
-      },
-      headStyles: {
-        fillColor: [248, 250, 252],
-        textColor: [100, 116, 139],
-        lineColor: [226, 232, 240],
-        lineWidth: 1,
-      },
-      bodyStyles: {
-        lineColor: [226, 232, 240],
-        lineWidth: 1,
-      },
-      alternateRowStyles: {
-        fillColor: [248, 250, 252],
-      },
-      margin: { left: 40, right: 40 },
-    });
-    doc.save(`${toolbarLabel.toLowerCase().replace(/\s+/g, "-")}-export.pdf`);
-  }
-
   function clearAllFilters() {
     setGlobalFilter("");
     setColumnFilters([]);
@@ -224,227 +193,237 @@ export function DataTable<TData>({
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      <div className="border-b border-slate-200 px-6 py-5">
-        <div className="flex flex-col gap-4">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge
-                variant="outline"
-                className="rounded-full border-slate-200 bg-slate-50 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-slate-500"
-              >
-                {toolbarLabel}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="rounded-full border-slate-200 bg-white px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-slate-500"
-              >
-                {totalRows} records
-              </Badge>
-              {hasActiveFilters ? (
-                <Badge className="rounded-full bg-[#eef2ff] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#465fff]">
-                  {activeColumnFilterCount + (globalFilter ? 1 : 0)} filter
-                  {activeColumnFilterCount + (globalFilter ? 1 : 0) === 1
-                    ? ""
-                    : "s"}{" "}
-                  active
-                </Badge>
-              ) : null}
-            </div>
-            <h3 className="text-lg font-semibold text-slate-950">{caption}</h3>
-          </div>
-
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex flex-wrap items-center gap-2">
-              {toolbarFilters.map((filter) => (
-                <Select
-                  key={filter.id}
-                  value={String(
-                    table.getColumn(filter.id)?.getFilterValue() ?? "all",
-                  )}
-                  onValueChange={(value) => {
-                    table
-                      .getColumn(filter.id)
-                      ?.setFilterValue(value === "all" ? undefined : value);
-                    table.setPageIndex(0);
-                  }}
-                >
-                  <SelectTrigger className="h-10 min-w-[150px] rounded-xl border-slate-200 bg-white text-slate-700 shadow-none">
-                    <div className="flex items-center gap-2">
-                      <Filter className="h-4 w-4 text-slate-400" />
-                      <SelectValue placeholder={filter.label} />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All {filter.label}</SelectItem>
-                    {filter.options.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ))}
-              {hasActiveFilters ? (
-                <button
-                  type="button"
-                  onClick={clearAllFilters}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
-                >
-                  <Filter className="h-4 w-4 text-slate-400" />
-                  Clear filters
-                </button>
-              ) : (
-                <div className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-600">
-                  <Filter className="h-4 w-4 text-slate-400" />
-                  Filters
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={exportRowsToCsv}
-                className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-              >
-                <Download className="h-4 w-4 text-slate-400" />
-                CSV
-              </button>
-              <button
-                type="button"
-                onClick={exportRowsToExcel}
-                className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-              >
-                <FileSpreadsheet className="h-4 w-4 text-slate-400" />
-                Excel
-              </button>
-              <button
-                type="button"
-                onClick={exportRowsToPdf}
-                className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-              >
-                <FileText className="h-4 w-4 text-slate-400" />
-                PDF
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center xl:justify-end">
-              <div className="flex items-center gap-3 text-sm text-slate-600">
-                <span>Show</span>
-                <Select
-                  value={String(pagination.pageSize)}
-                  onValueChange={(value) => table.setPageSize(Number(value))}
-                >
-                  <SelectTrigger className="h-10 min-w-[84px] rounded-xl border-slate-200 bg-white text-slate-700 shadow-none">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[10, 20, 30, 50].map((size) => (
-                      <SelectItem key={size} value={String(size)}>
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <span>entries</span>
+      <div className="border-b border-slate-200 px-4 py-4 sm:px-6 sm:py-5">
+        <div className="flex flex-col gap-3">
+          {showToolbarMeta ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                {caption ? (
+                  <h3 className="text-lg font-semibold text-slate-950">
+                    {caption}
+                    <span className="ml-2 text-sm font-normal text-slate-500">
+                      {totalRows} {totalRows === 1 ? "record" : "records"}
+                    </span>
+                  </h3>
+                ) : null}
+                {description ? (
+                  <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
+                    {description}
+                  </p>
+                ) : null}
               </div>
 
-              <label className="relative block w-full sm:w-[260px]">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  value={globalFilter}
-                  onChange={(event) => {
-                    setGlobalFilter(event.target.value);
-                    table.setPageIndex(0);
-                  }}
-                  placeholder={searchPlaceholder}
-                  className="pl-11"
-                />
-              </label>
+              {toolbarPrimaryAction ? <div>{toolbarPrimaryAction}</div> : null}
+            </div>
+          ) : null}
+
+          <div className="flex flex-wrap items-center gap-2">
+            {!showToolbarMeta && toolbarPrimaryAction ? (
+              <div className="w-full sm:mr-1 sm:w-auto">
+                {toolbarPrimaryAction}
+              </div>
+            ) : null}
+            {toolbarFilters.map((filter) => (
+              <Select
+                key={filter.id}
+                value={String(
+                  table.getColumn(filter.id)?.getFilterValue() ?? "all",
+                )}
+                onValueChange={(value) => {
+                  table
+                    .getColumn(filter.id)
+                    ?.setFilterValue(value === "all" ? undefined : value);
+                  table.setPageIndex(0);
+                }}
+              >
+                <SelectTrigger className="h-10 min-w-[132px] rounded-xl border-slate-200 bg-white text-slate-700 shadow-none sm:min-w-[144px]">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-slate-400" />
+                    <SelectValue placeholder={filter.label} />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All {filter.label}</SelectItem>
+                  {filter.options.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ))}
+            {toolbarFilters.length > 0 && hasActiveFilters ? (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
+              >
+                <Filter className="h-4 w-4 text-slate-400" />
+                Clear filters
+              </button>
+            ) : null}
+
+            <label className="relative ml-auto w-full sm:w-[240px]">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                value={globalFilter}
+                onChange={(event) => {
+                  setGlobalFilter(event.target.value);
+                  table.setPageIndex(0);
+                }}
+                placeholder={searchPlaceholder}
+                className="pl-11"
+              />
+            </label>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 rounded-xl border-slate-200"
+                >
+                  <Columns3 className="h-4 w-4" />
+                  View
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {table
+                  .getAllColumns()
+                  .filter(
+                    (column) =>
+                      column.getCanHide() &&
+                      typeof column.accessorFn !== "undefined",
+                  )
+                  .map((column) => (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(Boolean(value))
+                      }
+                      className="capitalize"
+                    >
+                      {String(column.columnDef.header ?? column.id)}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <ExportActions
+              caption={exportCaption}
+              fileName={`${toolbarLabel} export`}
+              headerRow={exportHeaderRow}
+              rows={exportRows}
+              compact
+            />
+
+            <div className="flex items-center gap-2 text-sm text-slate-600">
+              <span>Show</span>
+              <Select
+                value={String(pagination.pageSize)}
+                onValueChange={(value) => table.setPageSize(Number(value))}
+              >
+                <SelectTrigger className="h-10 min-w-[84px] rounded-xl border-slate-200 bg-white text-slate-700 shadow-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[10, 20, 30, 50].map((size) => (
+                    <SelectItem key={size} value={String(size)}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[680px] text-sm">
-          <thead className="bg-slate-50/90">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="border-b border-slate-200">
-                {headerGroup.headers.map((header) => {
-                  const canSort = header.column.getCanSort();
-                  const sortState = header.column.getIsSorted();
+      <Table className="min-w-[860px] text-sm">
+        <TableHeader className="bg-slate-50/90">
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow
+              key={headerGroup.id}
+              className="border-slate-200 hover:bg-transparent"
+            >
+              {headerGroup.headers.map((header) => {
+                const canSort = header.column.getCanSort();
+                const sortState = header.column.getIsSorted();
 
-                  return (
-                    <th
-                      key={header.id}
-                      className="px-6 py-4 text-left text-[0.78rem] font-semibold uppercase tracking-[0.12em] text-slate-500"
-                    >
-                      {header.isPlaceholder ? null : canSort ? (
-                        <button
-                          type="button"
-                          onClick={header.column.getToggleSortingHandler()}
-                          className="inline-flex items-center gap-2 text-left transition hover:text-slate-950"
-                        >
-                          <span>
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                          </span>
-                          {sortState === "asc" ? (
-                            <ArrowUp className="h-3.5 w-3.5 text-slate-400" />
-                          ) : sortState === "desc" ? (
-                            <ArrowDown className="h-3.5 w-3.5 text-slate-400" />
-                          ) : (
-                            <ArrowUpDown className="h-3.5 w-3.5 text-slate-300" />
+                return (
+                  <TableHead
+                    key={header.id}
+                    className="px-4 py-4 text-left text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:px-6 sm:text-[0.78rem]"
+                  >
+                    {header.isPlaceholder ? null : canSort ? (
+                      <button
+                        type="button"
+                        onClick={header.column.getToggleSortingHandler()}
+                        className="inline-flex items-center gap-2 text-left transition hover:text-slate-950"
+                      >
+                        <span>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
                           )}
-                        </button>
-                      ) : (
-                        flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )
-                      )}
-                    </th>
-                  );
-                })}
-              </tr>
-            ))}
-          </thead>
+                        </span>
+                        {sortState === "asc" ? (
+                          <ArrowUp className="h-3.5 w-3.5 text-slate-400" />
+                        ) : sortState === "desc" ? (
+                          <ArrowDown className="h-3.5 w-3.5 text-slate-400" />
+                        ) : (
+                          <ArrowUpDown className="h-3.5 w-3.5 text-slate-300" />
+                        )}
+                      </button>
+                    ) : (
+                      flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )
+                    )}
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
 
-          <tbody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="border-b border-slate-200 transition odd:bg-white even:bg-slate-50/40 hover:bg-slate-50"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className={cn("px-6 py-4 align-middle text-slate-600")}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-6 py-10 text-center text-sm text-slate-500"
-                >
-                  {emptyMessage}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+        <TableBody>
+          {table.getRowModel().rows.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                className="border-b border-slate-200 transition odd:bg-white even:bg-slate-50/40 hover:bg-slate-50"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell
+                    key={cell.id}
+                    className={cn(
+                      "px-4 py-4 align-middle text-slate-600 sm:px-6",
+                    )}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell
+                colSpan={table.getVisibleLeafColumns().length}
+                className="px-4 py-10 text-center text-sm text-slate-500 sm:px-6"
+              >
+                {emptyMessage}
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
 
-      <div className="flex flex-col gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 border-t border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <p className="text-sm text-slate-500">
           Showing {from} to {to} of {totalRows} entries
         </p>

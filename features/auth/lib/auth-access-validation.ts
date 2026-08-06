@@ -2,6 +2,10 @@ import * as z from "zod";
 import { type AuthAccessActionState } from "@/features/auth/actions/access";
 import { loginSchema, registerSchema } from "@/features/auth/schemas/auth";
 
+function isTurnstileBypassed(): boolean {
+  return process.env.NODE_ENV === "development";
+}
+
 export type AuthAccessLocalFieldErrors = Partial<
   Record<
     "email" | "password" | "confirmPassword" | "code" | "turnstile",
@@ -72,7 +76,7 @@ export function validateAuthAccessSubmit({
       };
     }
 
-    if (!turnstileToken.trim()) {
+    if (!isTurnstileBypassed() && !turnstileToken.trim()) {
       return {
         turnstile: "Complete the security check before continuing.",
       };

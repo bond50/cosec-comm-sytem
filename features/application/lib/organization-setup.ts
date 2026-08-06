@@ -1,13 +1,25 @@
 "use server";
 
-import { MembershipStatus, Prisma, UserRole } from "@prisma/client";
+import {
+  DepartmentKind,
+  DepartmentStatus,
+  MembershipStatus,
+  Prisma,
+  UserRole,
+} from "@prisma/client";
 import * as z from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getOrganizationBySlug } from "@/features/application/queries/organizations";
 import {
+  CENTRAL_OFFICE_DEPARTMENT_CODE,
+  CENTRAL_OFFICE_DEPARTMENT_DESCRIPTION,
+  CENTRAL_OFFICE_DEPARTMENT_NAME,
+} from "@/features/application/lib/department-model";
+import {
   coerceOrganizationType,
   organizationSetupSchema,
+  slugifyOrganizationName,
   type CreateOrganizationActionState,
 } from "@/features/application/lib/organization-setup.shared";
 import { getCurrentOrganization } from "@/features/auth/utils/current-organization";
@@ -19,9 +31,10 @@ export async function createOrganizationAction(
 ): Promise<CreateOrganizationActionState> {
   const values = {
     name: String(formData.get("name") ?? "").trim(),
-    slug: String(formData.get("slug") ?? "")
-      .trim()
-      .toLowerCase(),
+    slug: (
+      String(formData.get("slug") ?? "").trim() ||
+      slugifyOrganizationName(String(formData.get("name") ?? ""))
+    ).toLowerCase(),
     type: String(formData.get("type") ?? ""),
   };
 
@@ -61,10 +74,8 @@ export async function createOrganizationAction(
   if (existingOrganization) {
     return {
       ok: false,
-      message: "That organization slug is already in use.",
-      fieldErrors: {
-        slug: ["That organization slug is already in use."],
-      },
+      message:
+        "We could not create the organization because its identifier is already in use.",
       values: parsed.data,
     };
   }
@@ -83,11 +94,27 @@ export async function createOrganizationAction(
         },
       });
 
+      const centralOffice = await tx.department.create({
+        data: {
+          organizationId: organization.id,
+          name: CENTRAL_OFFICE_DEPARTMENT_NAME,
+          code: CENTRAL_OFFICE_DEPARTMENT_CODE,
+          description: CENTRAL_OFFICE_DEPARTMENT_DESCRIPTION,
+          kind: DepartmentKind.CENTRAL_OFFICE,
+          status: DepartmentStatus.ACTIVE,
+        },
+        select: {
+          id: true,
+        },
+      });
+
       await tx.organizationMembership.create({
         data: {
           organizationId: organization.id,
           userId: user.id,
+          departmentId: centralOffice.id,
           role: UserRole.ORG_ADMIN,
+          roles: [UserRole.ORG_ADMIN],
           status: MembershipStatus.ACTIVE,
         },
       });
@@ -100,7 +127,8 @@ export async function createOrganizationAction(
 
     return {
       ok: true,
-      message: "Organization created successfully.",
+      message:
+        "Organization and central office created successfully. Your account is now the first ORG_ADMIN in that office.",
       values: parsed.data,
       data: {
         organizationId: created.id,
@@ -114,10 +142,8 @@ export async function createOrganizationAction(
     ) {
       return {
         ok: false,
-        message: "That organization slug is already in use.",
-        fieldErrors: {
-          slug: ["That organization slug is already in use."],
-        },
+        message:
+          "We could not create the organization because its identifier is already in use.",
         values: parsed.data,
       };
     }

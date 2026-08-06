@@ -36,7 +36,7 @@ export default async function DepartmentDetailPage({
     access.organization.id,
   );
   const canManageDepartments = hasFoundationPermission(
-    access.organizationRole,
+    access.organizationRoles,
     "departments.manage",
   );
   const showEditPanel = canManageDepartments && mode === "edit";
@@ -55,15 +55,15 @@ export default async function DepartmentDetailPage({
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
       <DepartmentHero
         department={department}
-        eyebrow="Department detail"
+        eyebrow="Entity detail"
         title={department.name}
-        description="Review the department structure, current head, and assigned members so routing and accountability remain explicit."
+        description="Review the entity structure, accountable lead, and assigned members so routing and accountability remain explicit."
         actions={
           canManageDepartments
             ? [
                 {
                   href: `/dashboard/departments/${department.id}?mode=edit`,
-                  label: "Edit department",
+                  label: "Edit entity",
                   primary: true,
                 },
                 {
@@ -72,13 +72,13 @@ export default async function DepartmentDetailPage({
                 },
                 {
                   href: `/dashboard/departments/${department.id}/head`,
-                  label: "Assign head",
+                  label: "Assign lead",
                 },
               ]
             : [
                 {
                   href: "/dashboard/departments",
-                  label: "Back to departments",
+                  label: "Back to entity register",
                 },
               ]
         }
@@ -128,13 +128,13 @@ export default async function DepartmentDetailPage({
           <Card className="rounded-[22px] border-slate-200 shadow-[0_14px_36px_rgba(15,23,42,0.06)]">
             <CardHeader className="px-6 py-5">
               <CardTitle className="text-[1.05rem] text-slate-950">
-                Department actions
+                Entity actions
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 px-6 pb-6">
               <DepartmentActionLink
                 href={`/dashboard/departments/${department.id}?mode=edit`}
-                label="Update department profile"
+                label="Update entity profile"
               />
               <DepartmentActionLink
                 href={`/dashboard/departments/${department.id}/members`}
@@ -142,13 +142,13 @@ export default async function DepartmentDetailPage({
               />
               <DepartmentActionLink
                 href={`/dashboard/departments/${department.id}/head`}
-                label="Assign department head"
+                label="Assign accountable lead"
               />
               <Link
                 href="/dashboard/departments"
                 className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
               >
-                Return to department directory
+                Return to entity register
               </Link>
             </CardContent>
           </Card>

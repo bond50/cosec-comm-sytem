@@ -7,19 +7,32 @@ import {
   verifyChallengeCodeAction,
   type ChallengeActionState,
 } from "@/features/auth/actions/challenge";
-import { AuthFeedback } from "@/features/auth/components/auth-feedback";
+import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { ChallengeResendForm } from "@/features/auth/components/challenge-resend-form";
 import { ChallengeVerifyForm } from "@/features/auth/components/challenge-verify-form";
 import { AuthShell } from "@/features/auth/components/auth-shell";
+import { Send } from "lucide-react";
 
 const initialState: ChallengeActionState = {};
+const INITIAL_CHALLENGE_RESEND_THROTTLE_MS = 60_000;
 
 type ChallengeFormProps = {
   next?: string;
   organizationName?: string;
+  challengeKey: string;
 };
 
-export function ChallengeForm({ next, organizationName }: ChallengeFormProps) {
+function getChallengeStorageKey(challengeKey: string) {
+  return `cosec:challenge-code-requested:${challengeKey}`;
+}
+
+export function ChallengeForm({
+  next,
+  organizationName,
+  challengeKey,
+}: ChallengeFormProps) {
+  const verifyFormId = "challenge-verify-form";
+  const resendFormId = "challenge-resend-form";
   const router = useRouter();
   const resendFormRef = useRef<HTMLFormElement>(null);
   const hasRequestedInitialCode = useRef(false);
@@ -37,6 +50,24 @@ export function ChallengeForm({ next, organizationName }: ChallengeFormProps) {
   const requestInitialCode = useEffectEvent(() => {
     if (hasRequestedInitialCode.current) {
       return;
+    }
+
+    if (typeof window !== "undefined") {
+      const storageKey = getChallengeStorageKey(challengeKey);
+      const lastRequestedAt = Number.parseInt(
+        window.sessionStorage.getItem(storageKey) ?? "",
+        10,
+      );
+
+      if (
+        Number.isFinite(lastRequestedAt) &&
+        Date.now() - lastRequestedAt < INITIAL_CHALLENGE_RESEND_THROTTLE_MS
+      ) {
+        hasRequestedInitialCode.current = true;
+        return;
+      }
+
+      window.sessionStorage.setItem(storageKey, String(Date.now()));
     }
 
     hasRequestedInitialCode.current = true;
@@ -59,30 +90,39 @@ export function ChallengeForm({ next, organizationName }: ChallengeFormProps) {
 
   return (
     <AuthShell
-      title="Security challenge"
-      description="Enter the verification code sent to your email to continue."
+      title="Verify sign-in"
+      description=""
       organizationName={organizationName}
     >
-      <div className="space-y-5">
-        <AuthFeedback
-          title="Additional verification required"
-          message="This extra step protects access to county communication workflows."
+      <div className="space-y-4">
+        <ChallengeVerifyForm
+          formId={verifyFormId}
+          action={verifyAction}
+          next={next}
+          error={serverError}
+          success={serverSuccess}
         />
 
-        <div className="space-y-5">
-          <ChallengeVerifyForm
-            action={verifyAction}
-            next={next}
-            error={serverError}
-            success={serverSuccess}
-          />
-
-          <ChallengeResendForm
-            formRef={resendFormRef}
-            action={resendAction}
-            next={next}
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <AuthSubmitButton form={verifyFormId} className="w-full min-w-0">
+            Verify
+          </AuthSubmitButton>
+          <AuthSubmitButton
+            form={resendFormId}
+            className="w-full min-w-0 whitespace-nowrap"
+            variant="outline"
+            icon={<Send />}
+          >
+            Resend code
+          </AuthSubmitButton>
         </div>
+
+        <ChallengeResendForm
+          formId={resendFormId}
+          formRef={resendFormRef}
+          action={resendAction}
+          next={next}
+        />
       </div>
     </AuthShell>
   );

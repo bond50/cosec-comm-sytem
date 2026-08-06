@@ -10,12 +10,19 @@ import {
   MissingOrganizationError,
   UnauthorizedError,
 } from "@/features/auth/utils/auth-errors";
+import {
+  EDITABLE_MEMBERSHIP_ROLES,
+  normalizeMembershipRoles,
+  resolvePrimaryRole,
+} from "@/features/auth/utils/roles";
+import { areMembershipRolesAllowedForDepartmentKind } from "@/features/application/lib/membership-role-policy";
 
 type AddMemberActionState = {
   ok: boolean;
   message: string;
   fieldErrors?: Record<string, string[] | undefined>;
   values?: Record<string, string>;
+  roleValues?: UserRole[];
   data?: {
     membershipId: string;
     organizationId: string;
@@ -23,20 +30,19 @@ type AddMemberActionState = {
   };
 };
 
-const memberRoleValues = [
-  UserRole.ORG_ADMIN,
-  UserRole.REGISTRY_OFFICER,
-  UserRole.REVIEWING_OFFICER,
-  UserRole.DEPARTMENT_USER,
-  UserRole.MANAGEMENT,
-  UserRole.USER,
-] as const;
+const memberRoleValues = EDITABLE_MEMBERSHIP_ROLES;
 
 const addMemberSchema = z.object({
   userId: z.string().trim().cuid({ message: "Select a valid user." }),
-  role: z.enum(memberRoleValues, {
-    message: "Select a valid role.",
-  }),
+  departmentId: z
+    .string()
+    .trim()
+    .cuid({ message: "Select a valid department." }),
+  roles: z
+    .array(z.enum(memberRoleValues), {
+      message: "Select at least one valid role.",
+    })
+    .min(1, { message: "Select at least one role." }),
 });
 
 export async function addMemberAction(
@@ -45,7 +51,13 @@ export async function addMemberAction(
 ): Promise<AddMemberActionState> {
   const values = {
     userId: String(formData.get("userId") ?? "").trim(),
-    role: String(formData.get("role") ?? ""),
+    departmentId: String(formData.get("departmentId") ?? "").trim(),
+    roles: normalizeMembershipRoles(
+      formData
+        .getAll("roles")
+        .map((value) => String(value))
+        .filter(Boolean) as UserRole[],
+    ),
   };
 
   const parsed = addMemberSchema.safeParse(values);
@@ -54,9 +66,15 @@ export async function addMemberAction(
       ok: false,
       message: "Please correct the highlighted fields.",
       fieldErrors: z.flattenError(parsed.error).fieldErrors,
-      values,
+      values: {
+        userId: values.userId,
+        departmentId: values.departmentId,
+      },
+      roleValues: values.roles,
     };
   }
+
+  const primaryRole = resolvePrimaryRole(parsed.data.roles) ?? UserRole.USER;
 
   let organizationId: string;
 
@@ -68,7 +86,11 @@ export async function addMemberAction(
       return {
         ok: false,
         message: "You must be signed in to add a member.",
-        values: parsed.data,
+        values: {
+          userId: parsed.data.userId,
+          departmentId: parsed.data.departmentId,
+        },
+        roleValues: parsed.data.roles,
       };
     }
 
@@ -76,7 +98,11 @@ export async function addMemberAction(
       return {
         ok: false,
         message: "An active organization is required before adding members.",
-        values: parsed.data,
+        values: {
+          userId: parsed.data.userId,
+          departmentId: parsed.data.departmentId,
+        },
+        roleValues: parsed.data.roles,
       };
     }
 
@@ -84,7 +110,11 @@ export async function addMemberAction(
       return {
         ok: false,
         message: "Your role cannot add members to this organization.",
-        values: parsed.data,
+        values: {
+          userId: parsed.data.userId,
+          departmentId: parsed.data.departmentId,
+        },
+        roleValues: parsed.data.roles,
       };
     }
 
@@ -92,11 +122,15 @@ export async function addMemberAction(
       ok: false,
       message:
         "We could not verify your organization right now. Please try again.",
-      values: parsed.data,
+      values: {
+        userId: parsed.data.userId,
+        departmentId: parsed.data.departmentId,
+      },
+      roleValues: parsed.data.roles,
     };
   }
 
-  const [user, existingMembership] = await Promise.all([
+  const [user, existingMembership, department] = await Promise.all([
     db.user.findUnique({
       where: {
         id: parsed.data.userId,
@@ -116,6 +150,16 @@ export async function addMemberAction(
         id: true,
       },
     }),
+    db.department.findFirst({
+      where: {
+        id: parsed.data.departmentId,
+        organizationId,
+      },
+      select: {
+        id: true,
+        kind: true,
+      },
+    }),
   ]);
 
   if (!user) {
@@ -125,7 +169,46 @@ export async function addMemberAction(
       fieldErrors: {
         userId: ["The selected user could not be found."],
       },
-      values: parsed.data,
+      values: {
+        userId: parsed.data.userId,
+        departmentId: parsed.data.departmentId,
+      },
+      roleValues: parsed.data.roles,
+    };
+  }
+
+  if (!department) {
+    return {
+      ok: false,
+      message: "The selected department could not be found.",
+      fieldErrors: {
+        departmentId: ["The selected department could not be found."],
+      },
+      values: {
+        userId: parsed.data.userId,
+        departmentId: parsed.data.departmentId,
+      },
+      roleValues: parsed.data.roles,
+    };
+  }
+
+  if (
+    !areMembershipRolesAllowedForDepartmentKind(
+      parsed.data.roles,
+      department.kind,
+    )
+  ) {
+    return {
+      ok: false,
+      message: "The selected roles are not valid for that department.",
+      fieldErrors: {
+        roles: ["The selected roles are not valid for that department."],
+      },
+      values: {
+        userId: parsed.data.userId,
+        departmentId: parsed.data.departmentId,
+      },
+      roleValues: parsed.data.roles,
     };
   }
 
@@ -136,7 +219,11 @@ export async function addMemberAction(
       fieldErrors: {
         userId: ["This user is already a member of the current organization."],
       },
-      values: parsed.data,
+      values: {
+        userId: parsed.data.userId,
+        departmentId: parsed.data.departmentId,
+      },
+      roleValues: parsed.data.roles,
     };
   }
 
@@ -145,7 +232,9 @@ export async function addMemberAction(
       data: {
         userId: user.id,
         organizationId,
-        role: parsed.data.role,
+        departmentId: department.id,
+        role: primaryRole,
+        roles: parsed.data.roles,
         status: MembershipStatus.ACTIVE,
       },
       select: {
@@ -158,15 +247,15 @@ export async function addMemberAction(
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/access");
     revalidatePath("/dashboard/members");
-    revalidatePath("/dashboard/members/add");
 
     return {
       ok: true,
       message: "Member added successfully.",
       values: {
         userId: "",
-        role: UserRole.USER,
+        departmentId: "",
       },
+      roleValues: [],
       data: {
         membershipId: membership.id,
         organizationId: membership.organizationId,
@@ -186,14 +275,22 @@ export async function addMemberAction(
             "This user is already a member of the current organization.",
           ],
         },
-        values: parsed.data,
+        values: {
+          userId: parsed.data.userId,
+          departmentId: parsed.data.departmentId,
+        },
+        roleValues: parsed.data.roles,
       };
     }
 
     return {
       ok: false,
       message: "We could not add the member right now. Please try again.",
-      values: parsed.data,
+      values: {
+        userId: parsed.data.userId,
+        departmentId: parsed.data.departmentId,
+      },
+      roleValues: parsed.data.roles,
     };
   }
 }

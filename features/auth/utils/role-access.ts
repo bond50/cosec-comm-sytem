@@ -1,4 +1,10 @@
 import { UserRole } from "@prisma/client";
+import {
+  hasMembershipRole,
+  normalizeMembershipRoles,
+  resolvePrimaryRole,
+  type MembershipRoleInput,
+} from "@/features/auth/utils/roles";
 
 export type FoundationPermission =
   | "dashboard.view"
@@ -7,6 +13,11 @@ export type FoundationPermission =
   | "members.manage"
   | "departments.view"
   | "departments.manage"
+  | "documents.view"
+  | "documents.manage"
+  | "documents.archive"
+  | "meetings.view"
+  | "meetings.manage"
   | "correspondence.register"
   | "correspondence.review"
   | "correspondence.dispatch"
@@ -32,17 +43,24 @@ export const FOUNDATION_PERMISSION_LABELS: Record<
   FoundationPermission,
   string
 > = {
-  "dashboard.view": "View dashboard and organization foundation pages",
+  "dashboard.view":
+    "View the county operations dashboard and office workspaces",
   "access.view": "View role matrix and access mapping",
-  "members.view": "View organization members, roles, and assignments",
-  "members.manage": "Create and manage organization memberships",
+  "members.view": "View county users, roles, and department placement",
+  "members.manage": "Create and manage county user access",
   "departments.view": "View departments and department structure",
   "departments.manage": "Create and manage departments and assignments",
+  "documents.view": "View the document registry and supporting records",
+  "documents.manage": "Create document categories and document records",
+  "documents.archive": "Archive completed or inactive document records",
+  "meetings.view": "View meetings and action point workspaces",
+  "meetings.manage": "Create and manage meetings",
   "correspondence.register": "Receive and register incoming correspondence",
   "correspondence.review": "Review correspondence and issue instructions",
-  "correspondence.dispatch": "Dispatch correspondence to responsible units",
-  "correspondence.work": "Work on assigned correspondence and submit feedback",
-  "correspondence.close": "Close correspondence after resolution and oversight",
+  "correspondence.dispatch":
+    "Route and dispatch correspondence to receiving offices",
+  "correspondence.work": "Acknowledge dispatches and return office feedback",
+  "correspondence.close": "Verify feedback and close or cancel correspondence",
 };
 
 export const FOUNDATION_PERMISSION_ROLES: Record<
@@ -61,11 +79,13 @@ export const FOUNDATION_PERMISSION_ROLES: Record<
   "access.view": [
     UserRole.SUPER_ADMIN,
     UserRole.ORG_ADMIN,
+    UserRole.REVIEWING_OFFICER,
     UserRole.MANAGEMENT,
   ],
   "members.view": [
     UserRole.SUPER_ADMIN,
     UserRole.ORG_ADMIN,
+    UserRole.REVIEWING_OFFICER,
     UserRole.MANAGEMENT,
   ],
   "members.manage": [UserRole.SUPER_ADMIN, UserRole.ORG_ADMIN],
@@ -78,26 +98,53 @@ export const FOUNDATION_PERMISSION_ROLES: Record<
     UserRole.MANAGEMENT,
   ],
   "departments.manage": [UserRole.SUPER_ADMIN, UserRole.ORG_ADMIN],
-  "correspondence.register": [
+  "documents.view": [
     UserRole.SUPER_ADMIN,
     UserRole.ORG_ADMIN,
     UserRole.REGISTRY_OFFICER,
+    UserRole.REVIEWING_OFFICER,
+    UserRole.DEPARTMENT_USER,
+    UserRole.MANAGEMENT,
   ],
-  "correspondence.review": [
+  "documents.manage": [
+    UserRole.SUPER_ADMIN,
+    UserRole.ORG_ADMIN,
+    UserRole.REGISTRY_OFFICER,
+    UserRole.REVIEWING_OFFICER,
+    UserRole.MANAGEMENT,
+  ],
+  "documents.archive": [
     UserRole.SUPER_ADMIN,
     UserRole.ORG_ADMIN,
     UserRole.REVIEWING_OFFICER,
     UserRole.MANAGEMENT,
   ],
-  "correspondence.dispatch": [
+  "meetings.view": [
     UserRole.SUPER_ADMIN,
     UserRole.ORG_ADMIN,
-    UserRole.REGISTRY_OFFICER,
     UserRole.REVIEWING_OFFICER,
+    UserRole.DEPARTMENT_USER,
+    UserRole.MANAGEMENT,
+  ],
+  "meetings.manage": [
+    UserRole.SUPER_ADMIN,
+    UserRole.ORG_ADMIN,
+    UserRole.REVIEWING_OFFICER,
+    UserRole.MANAGEMENT,
+  ],
+  "correspondence.register": [UserRole.SUPER_ADMIN, UserRole.REGISTRY_OFFICER],
+  "correspondence.review": [
+    UserRole.SUPER_ADMIN,
+    UserRole.REVIEWING_OFFICER,
+    UserRole.MANAGEMENT,
+  ],
+  "correspondence.dispatch": [
+    UserRole.SUPER_ADMIN,
+    UserRole.REVIEWING_OFFICER,
+    UserRole.MANAGEMENT,
   ],
   "correspondence.work": [
     UserRole.SUPER_ADMIN,
-    UserRole.ORG_ADMIN,
     UserRole.REVIEWING_OFFICER,
     UserRole.DEPARTMENT_USER,
     UserRole.MANAGEMENT,
@@ -131,29 +178,29 @@ export const ROLE_DEFINITIONS: RoleDefinition[] = [
     responsibilities: [
       "Create and maintain members, departments, and departmental leadership.",
       "Assign roles and keep memberships active, suspended, or inactive as needed.",
-      "Oversee correspondence configuration and accountability within the county workspace.",
+      "Maintain county structure and access without being the default operational authority for correspondence workflow decisions.",
     ],
   },
   {
     role: UserRole.REGISTRY_OFFICER,
     label: "Registry Officer",
     summary:
-      "Front-door intake role for official communication entering or leaving the organization.",
+      "Front-door intake role for official communication entering the county workflow through the central office.",
     responsibilities: [
       "Receive and register correspondence.",
-      "Prepare items for review and dispatch.",
-      "Use department structure for routing, but not manage governance data.",
+      "Prepare items for review by the central authority path.",
+      "Support routing preparation without owning the final dispatch decision by default.",
     ],
   },
   {
     role: UserRole.REVIEWING_OFFICER,
     label: "Reviewing Officer",
     summary:
-      "Review authority that interprets correspondence and issues the next operational instruction.",
+      "Main central-office workflow authority. This is the operational role that reviews correspondence and makes the routing decision.",
     responsibilities: [
       "Review newly registered correspondence.",
-      "Set instructions, recommend assignments, and support dispatch decisions.",
-      "Monitor progress on reviewed items.",
+      "Set instructions, assign responsibility, and make dispatch decisions.",
+      "Verify completion and drive closure decisions as the County Secretary workflow path.",
     ],
   },
   {
@@ -171,11 +218,11 @@ export const ROLE_DEFINITIONS: RoleDefinition[] = [
     role: UserRole.MANAGEMENT,
     label: "Management",
     summary:
-      "Oversight role focused on visibility, escalation, and closure decisions rather than foundation administration.",
+      "Oversight label for the same County Secretary authority path. Use this when the office wants visibility or control recorded as management as well.",
     responsibilities: [
       "Monitor movement and accountability across departments.",
-      "Participate in review, escalation, and closure decisions.",
-      "Consume dashboards and structure information without running governance CRUD.",
+      "Share review, dispatch, escalation, and closure authority with the reviewing path when assigned.",
+      "Use alongside Reviewing Officer when the same office holder needs both operational and oversight visibility.",
     ],
   },
   {
@@ -218,19 +265,19 @@ export const FOUNDATION_ACCESS_MAP: AccessMapEntry[] = [
   },
   {
     kind: "page",
+    target: "/dashboard/notifications",
+    permission: "dashboard.view",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["dashboard.view"],
+    description:
+      "Notification workspace for grouped workflow alerts, reminders, unread filtering, and personal delivery preferences.",
+  },
+  {
+    kind: "page",
     target: "/dashboard/members",
     permission: "members.view",
     allowedRoles: FOUNDATION_PERMISSION_ROLES["members.view"],
     description:
       "Organization membership directory with role, status, and department information.",
-  },
-  {
-    kind: "page",
-    target: "/dashboard/members/add",
-    permission: "members.manage",
-    allowedRoles: FOUNDATION_PERMISSION_ROLES["members.manage"],
-    description:
-      "Create a new member account or attach an existing user to the current organization.",
   },
   {
     kind: "page",
@@ -276,6 +323,70 @@ export const FOUNDATION_ACCESS_MAP: AccessMapEntry[] = [
     permission: "departments.manage",
     allowedRoles: FOUNDATION_PERMISSION_ROLES["departments.manage"],
     description: "Assign the department head from active organization members.",
+  },
+  {
+    kind: "page",
+    target: "/dashboard/documents",
+    permission: "documents.view",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["documents.view"],
+    description:
+      "Document registry for organization-scoped supporting records, categories, linked correspondence, and archive status.",
+  },
+  {
+    kind: "page",
+    target: "/dashboard/documents/[id]",
+    permission: "documents.view",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["documents.view"],
+    description:
+      "Open a single document record with linked correspondence, attachments, and archive state.",
+  },
+  {
+    kind: "page",
+    target: "/dashboard/meetings",
+    permission: "meetings.view",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["meetings.view"],
+    description:
+      "Meetings workspace for scheduling, listing, and later action point tracking inside the current organization.",
+  },
+  {
+    kind: "page",
+    target: "/dashboard/meetings/[id]",
+    permission: "meetings.view",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["meetings.view"],
+    description:
+      "Open a meeting record with its schedule, content summary, and action point tracking.",
+  },
+  {
+    kind: "page",
+    target: "/dashboard/correspondences",
+    permission: "dashboard.view",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["dashboard.view"],
+    description:
+      "County correspondence register for intake, review, dispatch, deadlines, feedback, and accountability.",
+  },
+  {
+    kind: "page",
+    target: "/dashboard/correspondences/register",
+    permission: "correspondence.register",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["correspondence.register"],
+    description:
+      "Register a new incoming correspondence record using the county intake fields.",
+  },
+  {
+    kind: "page",
+    target: "/dashboard/correspondences/[id]",
+    permission: "dashboard.view",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["dashboard.view"],
+    description:
+      "Full correspondence file with intake, review, routing, dispatch, feedback, verification, attachments, and accountability sections.",
+  },
+  {
+    kind: "page",
+    target: "/dashboard/correspondences/[id]?print=1",
+    permission: "dashboard.view",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["dashboard.view"],
+    description:
+      "Printable correspondence detail for office records, handover, and hard-copy filing.",
   },
   {
     kind: "action",
@@ -339,15 +450,197 @@ export const FOUNDATION_ACCESS_MAP: AccessMapEntry[] = [
     description:
       "Assign a department head from the active organization member pool.",
   },
+  {
+    kind: "action",
+    target: "updateNotificationPreferencesAction",
+    permission: "dashboard.view",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["dashboard.view"],
+    description:
+      "Update the current user's notification delivery preferences for the active organization.",
+  },
+  {
+    kind: "action",
+    target: "createDocumentCategoryAction",
+    permission: "documents.manage",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["documents.manage"],
+    description: "Create a document category for the current organization.",
+  },
+  {
+    kind: "action",
+    target: "createDocumentAction",
+    permission: "documents.manage",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["documents.manage"],
+    description:
+      "Create a standalone document registry record and optionally link it to correspondence.",
+  },
+  {
+    kind: "action",
+    target: "archiveDocumentAction",
+    permission: "documents.archive",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["documents.archive"],
+    description:
+      "Archive a document record while preserving the audit trail and organization scope.",
+  },
+  {
+    kind: "action",
+    target: "uploadDocumentAttachmentAction",
+    permission: "documents.manage",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["documents.manage"],
+    description:
+      "Upload supporting files directly onto a document registry record.",
+  },
+  {
+    kind: "action",
+    target: "createMeetingAction",
+    permission: "meetings.manage",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["meetings.manage"],
+    description: "Create a meeting record scoped to the current organization.",
+  },
+  {
+    kind: "action",
+    target: "createMeetingActionPointAction",
+    permission: "meetings.manage",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["meetings.manage"],
+    description:
+      "Create a meeting action point and optionally assign it to a department or user.",
+  },
+  {
+    kind: "action",
+    target: "updateMeetingActionPointAction",
+    permission: "meetings.manage",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["meetings.manage"],
+    description:
+      "Update action point assignee, due date, status, and remarks for the current meeting.",
+  },
+  {
+    kind: "action",
+    target: "createCorrespondenceAction",
+    permission: "correspondence.register",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["correspondence.register"],
+    description:
+      "Register correspondence and create the first movement and audit entries.",
+  },
+  {
+    kind: "action",
+    target: "reviewCorrespondenceAction",
+    permission: "correspondence.review",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["correspondence.review"],
+    description:
+      "Record County Secretary review instructions, timestamp, and reviewing officer identity for a correspondence item.",
+  },
+  {
+    kind: "action",
+    target: "assignCorrespondenceAction",
+    permission: "correspondence.dispatch",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["correspondence.dispatch"],
+    description:
+      "Record the central-office routing decision, receiving office, optional receiving officer, and mandatory due date.",
+  },
+  {
+    kind: "action",
+    target: "createDispatchAction",
+    permission: "correspondence.dispatch",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["correspondence.dispatch"],
+    description:
+      "Create an explicit central-office dispatch record after routing so the movement chain stays traceable.",
+  },
+  {
+    kind: "action",
+    target: "acknowledgeDispatchAction",
+    permission: "correspondence.work",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["correspondence.work"],
+    description:
+      "Confirm receipt of a dispatch as the receiving officer, receiving department, or oversight role.",
+  },
+  {
+    kind: "action",
+    target: "receiveDispatchFeedbackAction",
+    permission: "correspondence.work",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["correspondence.work"],
+    description:
+      "Return receiving-office feedback after acknowledgement and keep the movement trail explicit.",
+  },
+  {
+    kind: "action",
+    target: "uploadCorrespondenceAttachmentAction",
+    permission: "correspondence.work",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["correspondence.work"],
+    description:
+      "Upload supporting files to a correspondence record without collapsing into the documents module.",
+  },
+  {
+    kind: "action",
+    target: "closeCorrespondenceAction",
+    permission: "correspondence.close",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["correspondence.close"],
+    description:
+      "Verify returned feedback and close or cancel the correspondence file with an accountability note.",
+  },
+  {
+    kind: "action",
+    target: "reopenCorrespondenceAction",
+    permission: "correspondence.close",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["correspondence.close"],
+    description:
+      "Reopen closed or cancelled correspondence for another central-office review with a required justification.",
+  },
 ];
 
 export function hasFoundationPermission(
-  role: UserRole | null | undefined,
+  roles: MembershipRoleInput,
   permission: FoundationPermission,
 ): boolean {
-  if (!role) return false;
+  return normalizeMembershipRoles(roles).some((role) =>
+    FOUNDATION_PERMISSION_ROLES[permission].includes(role),
+  );
+}
 
-  return FOUNDATION_PERMISSION_ROLES[permission].includes(role);
+export function hasCorrespondenceWorkspaceAccess(
+  roles: MembershipRoleInput,
+): boolean {
+  return (
+    hasFoundationPermission(roles, "correspondence.register") ||
+    hasFoundationPermission(roles, "correspondence.review") ||
+    hasFoundationPermission(roles, "correspondence.dispatch") ||
+    hasFoundationPermission(roles, "correspondence.work") ||
+    hasFoundationPermission(roles, "correspondence.close")
+  );
+}
+
+export function hasCountySecretaryAuthority(
+  roles: MembershipRoleInput,
+): boolean {
+  return (
+    hasMembershipRole(roles, UserRole.SUPER_ADMIN) ||
+    hasMembershipRole(roles, UserRole.REVIEWING_OFFICER) ||
+    hasMembershipRole(roles, UserRole.MANAGEMENT)
+  );
+}
+
+export function hasRegistryDispatchCapability(
+  roles: MembershipRoleInput,
+): boolean {
+  return (
+    hasMembershipRole(roles, UserRole.REGISTRY_OFFICER) &&
+    hasFoundationPermission(roles, "correspondence.dispatch")
+  );
+}
+
+export function hasDocumentWorkspaceAccess(
+  roles: MembershipRoleInput,
+): boolean {
+  return (
+    hasFoundationPermission(roles, "documents.view") ||
+    hasFoundationPermission(roles, "documents.manage") ||
+    hasFoundationPermission(roles, "documents.archive")
+  );
+}
+
+export function hasMeetingWorkspaceAccess(roles: MembershipRoleInput): boolean {
+  return (
+    hasFoundationPermission(roles, "meetings.view") ||
+    hasFoundationPermission(roles, "meetings.manage")
+  );
 }
 
 export function getRoleDefinition(role: UserRole): RoleDefinition {
@@ -361,8 +654,15 @@ export function getRoleLabel(role: UserRole): string {
   return getRoleDefinition(role).label;
 }
 
-export function isFoundationAdminRole(
-  role: UserRole | null | undefined,
-): boolean {
-  return hasFoundationPermission(role, "members.manage");
+export function getRoleLabels(roles: MembershipRoleInput): string[] {
+  return normalizeMembershipRoles(roles).map((role) => getRoleLabel(role));
+}
+
+export function getPrimaryRoleLabel(roles: MembershipRoleInput): string {
+  const primaryRole = resolvePrimaryRole(roles);
+  return primaryRole ? getRoleLabel(primaryRole) : getRoleLabel(UserRole.USER);
+}
+
+export function isFoundationAdminRole(roles: MembershipRoleInput): boolean {
+  return hasFoundationPermission(roles, "members.manage");
 }

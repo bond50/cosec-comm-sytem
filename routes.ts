@@ -16,6 +16,7 @@ export const apiAuthPrefix = "/api/auth";
 export const DEFAULT_LOGIN_REDIRECT = "/dashboard";
 
 export const mfaRoute = "/auth/2fa";
+export const changePasswordRoute = "/auth/change-password";
 export const forbiddenRoute = "/forbidden"; // OAuth denied
 export const unauthorizedRoute = "/auth/unauthorized"; // Credentials denied
 
