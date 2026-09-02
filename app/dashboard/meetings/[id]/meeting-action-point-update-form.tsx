@@ -38,6 +38,7 @@ export function MeetingActionPointUpdateForm({
   actionPoint,
   users,
   departments,
+  restricted = false,
 }: {
   actionPoint: {
     id: string;
@@ -57,6 +58,8 @@ export function MeetingActionPointUpdateForm({
   };
   users: { id: string; label: string }[];
   departments: { id: string; label: string }[];
+  /** Assignee/department self-service mode: only status and remarks are editable. */
+  restricted?: boolean;
 }) {
   const [state, formAction] = useActionState(updateMeetingActionPointAction, {
     ...initialMeetingActionPointUpdateState,
@@ -84,81 +87,106 @@ export function MeetingActionPointUpdateForm({
     >
       <input type="hidden" name="actionPointId" value={actionPoint.id} />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Field>
-          <FieldLabel htmlFor={`action-point-user-${actionPoint.id}`}>
-            Assignee
-          </FieldLabel>
+      {restricted ? (
+        <>
           <input
-            ref={userInputRef}
             type="hidden"
             name="assignedToUserId"
-            defaultValue={values.assignedToUserId ?? ""}
+            value={values.assignedToUserId ?? ""}
           />
-          <Select
-            key={`action-point-user-${values.assignedToUserId ?? "__empty__"}`}
-            defaultValue={values.assignedToUserId || "__none__"}
-            onValueChange={(value) => {
-              if (userInputRef.current) {
-                userInputRef.current.value = value === "__none__" ? "" : value;
-              }
-            }}
-          >
-            <SelectTrigger
-              id={`action-point-user-${actionPoint.id}`}
-              className="h-11 w-full rounded-[10px] border-slate-200 bg-white text-[14px] shadow-none"
-            >
-              <SelectValue placeholder="Select assignee" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">No assignee</SelectItem>
-              {users.map((user) => (
-                <SelectItem key={user.id} value={user.id}>
-                  {user.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FieldError>{fieldErrors.assignedToUserId?.[0]}</FieldError>
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor={`action-point-department-${actionPoint.id}`}>
-            Department
-          </FieldLabel>
           <input
-            ref={departmentInputRef}
             type="hidden"
             name="assignedToDepartmentId"
-            defaultValue={values.assignedToDepartmentId ?? ""}
+            value={values.assignedToDepartmentId ?? ""}
           />
-          <Select
-            key={`action-point-department-${values.assignedToDepartmentId ?? "__empty__"}`}
-            defaultValue={values.assignedToDepartmentId || "__none__"}
-            onValueChange={(value) => {
-              if (departmentInputRef.current) {
-                departmentInputRef.current.value =
-                  value === "__none__" ? "" : value;
-              }
-            }}
-          >
-            <SelectTrigger
-              id={`action-point-department-${actionPoint.id}`}
-              className="h-11 w-full rounded-[10px] border-slate-200 bg-white text-[14px] shadow-none"
-            >
-              <SelectValue placeholder="Select department" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">No department</SelectItem>
-              {departments.map((department) => (
-                <SelectItem key={department.id} value={department.id}>
-                  {department.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FieldError>{fieldErrors.assignedToDepartmentId?.[0]}</FieldError>
-        </Field>
+          <input type="hidden" name="dueDate" value={values.dueDate ?? ""} />
+          <p className="text-xs text-slate-500">
+            Assignee, department, and due date are set by a meeting manager. You
+            can update status and remarks.
+          </p>
+        </>
+      ) : null}
+
+      <div className={restricted ? "grid gap-4" : "grid gap-4 lg:grid-cols-3"}>
+        {restricted ? null : (
+          <>
+            <Field>
+              <FieldLabel htmlFor={`action-point-user-${actionPoint.id}`}>
+                Assignee
+              </FieldLabel>
+              <input
+                ref={userInputRef}
+                type="hidden"
+                name="assignedToUserId"
+                defaultValue={values.assignedToUserId ?? ""}
+              />
+              <Select
+                key={`action-point-user-${values.assignedToUserId ?? "__empty__"}`}
+                defaultValue={values.assignedToUserId || "__none__"}
+                onValueChange={(value) => {
+                  if (userInputRef.current) {
+                    userInputRef.current.value =
+                      value === "__none__" ? "" : value;
+                  }
+                }}
+              >
+                <SelectTrigger
+                  id={`action-point-user-${actionPoint.id}`}
+                  className="h-11 w-full rounded-[10px] border-slate-200 bg-white text-[14px] shadow-none"
+                >
+                  <SelectValue placeholder="Select assignee" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">No assignee</SelectItem>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError>{fieldErrors.assignedToUserId?.[0]}</FieldError>
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor={`action-point-department-${actionPoint.id}`}>
+                Department
+              </FieldLabel>
+              <input
+                ref={departmentInputRef}
+                type="hidden"
+                name="assignedToDepartmentId"
+                defaultValue={values.assignedToDepartmentId ?? ""}
+              />
+              <Select
+                key={`action-point-department-${values.assignedToDepartmentId ?? "__empty__"}`}
+                defaultValue={values.assignedToDepartmentId || "__none__"}
+                onValueChange={(value) => {
+                  if (departmentInputRef.current) {
+                    departmentInputRef.current.value =
+                      value === "__none__" ? "" : value;
+                  }
+                }}
+              >
+                <SelectTrigger
+                  id={`action-point-department-${actionPoint.id}`}
+                  className="h-11 w-full rounded-[10px] border-slate-200 bg-white text-[14px] shadow-none"
+                >
+                  <SelectValue placeholder="Select department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">No department</SelectItem>
+                  {departments.map((department) => (
+                    <SelectItem key={department.id} value={department.id}>
+                      {department.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError>{fieldErrors.assignedToDepartmentId?.[0]}</FieldError>
+            </Field>
+          </>
+        )}
 
         <Field>
           <FieldLabel htmlFor={`action-point-status-${actionPoint.id}`}>
@@ -196,26 +224,37 @@ export function MeetingActionPointUpdateForm({
           <FieldError>{fieldErrors.status?.[0]}</FieldError>
         </Field>
       </div>
-      <p className="text-xs text-slate-500">
-        Action points must remain assigned to a user, a department, or both.
-      </p>
+      {restricted ? null : (
+        <p className="text-xs text-slate-500">
+          Action points must remain assigned to a user, a department, or both.
+        </p>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-[200px_minmax(0,1fr)]">
-        <Field>
-          <FieldLabel
-            htmlFor={`action-point-due-date-${actionPoint.id}`}
-            required
-          >
-            Due date
-          </FieldLabel>
-          <Input
-            id={`action-point-due-date-${actionPoint.id}`}
-            name="dueDate"
-            type="date"
-            defaultValue={values.dueDate ?? ""}
-          />
-          <FieldError>{fieldErrors.dueDate?.[0]}</FieldError>
-        </Field>
+        {restricted ? (
+          <Field>
+            <FieldLabel>Due date</FieldLabel>
+            <p className="flex h-11 items-center text-sm text-slate-700">
+              {values.dueDate || "Not set"}
+            </p>
+          </Field>
+        ) : (
+          <Field>
+            <FieldLabel
+              htmlFor={`action-point-due-date-${actionPoint.id}`}
+              required
+            >
+              Due date
+            </FieldLabel>
+            <Input
+              id={`action-point-due-date-${actionPoint.id}`}
+              name="dueDate"
+              type="date"
+              defaultValue={values.dueDate ?? ""}
+            />
+            <FieldError>{fieldErrors.dueDate?.[0]}</FieldError>
+          </Field>
+        )}
 
         <Field>
           <FieldLabel htmlFor={`action-point-remarks-${actionPoint.id}`}>

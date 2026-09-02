@@ -10,6 +10,7 @@ import {
   type MeetingActionPointUpdateActionState,
 } from "@/features/meetings/lib/meetings.shared";
 import { requireOrganizationPermission } from "@/features/auth/utils/require-organization-permission";
+import { hasFoundationPermission } from "@/features/auth/utils/role-access";
 import {
   ForbiddenError,
   MissingOrganizationError,
@@ -60,36 +61,52 @@ export async function updateMeetingActionPointAction(
   }
 
   try {
-    const access = await requireOrganizationPermission("meetings.manage");
+    const access = await requireOrganizationPermission("meetings.view");
+    const isManager = hasFoundationPermission(
+      access.organizationRoles,
+      "meetings.manage",
+    );
 
-    const actionPoint = await db.meetingActionPoint.findFirst({
-      where: {
-        id: parsed.data.actionPointId,
-        organizationId: access.organization.id,
-      },
-      select: {
-        id: true,
-        meetingId: true,
-        actionPoint: true,
-        status: true,
-        dueDate: true,
-        assignedToUserId: true,
-        assignedToDepartmentId: true,
-        remarks: true,
-        assignedToUser: {
-          select: {
-            name: true,
-            email: true,
+    const [actionPoint, callerMembership] = await Promise.all([
+      db.meetingActionPoint.findFirst({
+        where: {
+          id: parsed.data.actionPointId,
+          organizationId: access.organization.id,
+        },
+        select: {
+          id: true,
+          meetingId: true,
+          actionPoint: true,
+          status: true,
+          dueDate: true,
+          assignedToUserId: true,
+          assignedToDepartmentId: true,
+          remarks: true,
+          assignedToUser: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+          assignedToDepartment: {
+            select: {
+              name: true,
+              code: true,
+            },
           },
         },
-        assignedToDepartment: {
-          select: {
-            name: true,
-            code: true,
-          },
-        },
-      },
-    });
+      }),
+      isManager
+        ? Promise.resolve(null)
+        : db.organizationMembership.findFirst({
+            where: {
+              organizationId: access.organization.id,
+              userId: access.userId,
+              status: "ACTIVE",
+            },
+            select: { departmentId: true },
+          }),
+    ]);
 
     if (!actionPoint) {
       return {
@@ -97,6 +114,29 @@ export async function updateMeetingActionPointAction(
         message: "That action point no longer exists.",
         values: parsed.data,
       };
+    }
+
+    if (!isManager) {
+      const isAssignee = actionPoint.assignedToUserId === access.userId;
+      const isDepartmentMember =
+        !!actionPoint.assignedToDepartmentId &&
+        callerMembership?.departmentId === actionPoint.assignedToDepartmentId;
+
+      if (!isAssignee && !isDepartmentMember) {
+        return {
+          ok: false,
+          message:
+            "Only the assignee, their department, or a meeting manager can update this action point.",
+          values: parsed.data,
+        };
+      }
+
+      // Self-service updates from the assignee/department may only change
+      // status and remarks — reassignment and due date stay manager-only.
+      parsed.data.assignedToUserId = actionPoint.assignedToUserId ?? "";
+      parsed.data.assignedToDepartmentId =
+        actionPoint.assignedToDepartmentId ?? "";
+      parsed.data.dueDate = actionPoint.dueDate.toISOString().slice(0, 10);
     }
 
     const [assignee, department] = await Promise.all([

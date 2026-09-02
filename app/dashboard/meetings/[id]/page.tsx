@@ -15,6 +15,7 @@ import {
 } from "@/features/meetings/queries/meetings";
 import { requirePagePermission } from "@/features/auth/utils/require-organization-permission";
 import { hasFoundationPermission } from "@/features/auth/utils/role-access";
+import { getActiveMembershipByUserId } from "@/features/application/queries/memberships";
 
 function formatDateTime(value: Date | null | undefined) {
   if (!value) return "Not recorded";
@@ -82,6 +83,10 @@ export default async function MeetingDetailPage({
     access.organizationRoles,
     "meetings.manage",
   );
+  const viewerMembership = canManage
+    ? null
+    : await getActiveMembershipByUserId(access.userId, access.organization.id);
+  const viewerDepartmentId = viewerMembership?.departmentId ?? null;
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-5">
@@ -279,11 +284,21 @@ export default async function MeetingDetailPage({
                           </div>
                         </div>
 
-                        {canManage ? (
+                        {(() => {
+                          const canSelfUpdate =
+                            !canManage &&
+                            (actionPoint.assignedToUser?.id === access.userId ||
+                              (!!actionPoint.assignedToDepartment?.id &&
+                                actionPoint.assignedToDepartment.id ===
+                                  viewerDepartmentId));
+
+                          return canManage || canSelfUpdate;
+                        })() ? (
                           <MeetingActionPointUpdateForm
                             actionPoint={actionPoint}
                             users={createOptions.users}
                             departments={createOptions.departments}
+                            restricted={!canManage}
                           />
                         ) : actionPoint.remarks ? (
                           <div className="text-sm text-slate-600">
@@ -402,7 +417,7 @@ export default async function MeetingDetailPage({
                   {meeting.attachments.map((attachment) => (
                     <a
                       key={attachment.id}
-                      href={attachment.storagePath}
+                      href={`/api/attachments/${attachment.id}`}
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-start justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:bg-slate-100"
