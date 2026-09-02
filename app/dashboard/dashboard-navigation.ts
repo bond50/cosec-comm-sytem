@@ -76,8 +76,8 @@ export function getDashboardNavigation(
             pathname.startsWith("/dashboard/reports"),
         },
         {
-          label: "UAT test guide",
-          href: "/uat-pass-playbook.html",
+          label: "User guide",
+          href: "/user-guide.html",
           icon: ClipboardCheck,
           external: true,
           match: () => false,

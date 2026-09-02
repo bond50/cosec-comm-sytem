@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>COSEC User Guide</title>
+    <style>
+      :root {
+        --bg: #f1f5f9;
+        --panel: #ffffff;
+        --ink: #0f172a;
+        --muted: #475569;
+        --faint: #94a3b8;
+        --line: #e2e8f0;
+        --accent: #1868a6;
+        --accent-ink: #124f7d;
+        --accent-soft: #e6f1f8;
+        --accent-line: #c7ddea;
+        --accent-tint: #fbfdff;
+        --ok: #0f6b3a;
+        --ok-soft: #e7f6ee;
+        --ok-line: #b7e4c7;
+        --warn: #92400e;
+        --warn-soft: #fef3c7;
+        --warn-line: #f2d38a;
+        --shadow-lg: 0 18px 48px rgba(15, 23, 42, 0.06);
+        --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          "Segoe UI",
+          Inter,
+          -apple-system,
+          Arial,
+          sans-serif;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .page {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 32px 20px 72px;
+      }
+
+      .hero,
+      .toc {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: var(--shadow-lg);
+      }
+
+      .section {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: none;
+      }
+
+      .hero {
+        padding: 30px 34px 34px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          var(--accent-soft) 0%,
+          transparent 55%
+        );
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      .hero > * {
+        position: relative;
+      }
+
+      .brand-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .brand-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 0.74rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        box-shadow: 0 10px 20px rgba(24, 104, 166, 0.28);
+      }
+
+      .brand-name {
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--faint);
+      }
+
+      .hero h1 {
+        margin: 14px 0 10px;
+        font-size: 2.1rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.12;
+        color: var(--ink);
+      }
+
+      .hero p {
+        margin: 0;
+        max-width: 980px;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.65;
+      }
+
+      .meta {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .meta-card {
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--accent-line);
+        background: var(--accent-tint);
+        font-size: 0.92rem;
+        font-weight: 500;
+      }
+
+      .meta-label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--accent-ink);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .section {
+        margin-top: 16px;
+        padding: 26px 28px 30px;
+        scroll-margin-top: 88px;
+      }
+
+      h2,
+      h3 {
+        margin: 0;
+      }
+
+      h2 {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 16px;
+        font-size: 1.22rem;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+        color: var(--ink);
+      }
+
+      h2::before {
+        content: "";
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--accent);
+        flex-shrink: 0;
+      }
+
+      h3 {
+        margin-top: 26px;
+        margin-bottom: 11px;
+        font-size: 1.02rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+        padding-top: 18px;
+        border-top: 1px solid var(--line);
+      }
+
+      h3:first-of-type {
+        padding-top: 0;
+        border-top: none;
+        margin-top: 4px;
+      }
+
+      p {
+        margin: 10px 0;
+        color: var(--ink);
+      }
+
+      .lede {
+        color: var(--muted);
+        margin-top: 0;
+        font-size: 1rem;
+      }
+
+      .grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .card h3 {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+        font-size: 0.96rem;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 13px;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .pill.accent {
+        background: var(--accent-soft);
+        color: var(--accent-ink);
+      }
+
+      .callout,
+      .warning {
+        margin-top: 14px;
+        padding: 14px 18px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        font-size: 0.94rem;
+      }
+
+      .callout {
+        background: var(--accent-tint);
+        border-color: var(--accent-line);
+      }
+
+      .warning {
+        background: var(--warn-soft);
+        border-color: var(--warn-line);
+      }
+
+      code {
+        padding: 2px 7px;
+        border-radius: 6px;
+        background: var(--accent-soft);
+        color: var(--accent-ink);
+        font-family: Consolas, "SFMono-Regular", Menlo, monospace;
+        font-size: 0.88em;
+        font-weight: 600;
+      }
+
+      table {
+        width: 100%;
+        margin-top: 14px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        border-right: 1px solid var(--line);
+        padding: 12px 14px;
+        vertical-align: top;
+        text-align: left;
+        font-size: 0.94rem;
+      }
+
+      th:last-child,
+      td:last-child {
+        border-right: none;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      th {
+        background: #f8fafc;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      tbody tr:nth-child(even) {
+        background: #fbfdff;
+      }
+
+      ul,
+      ol {
+        margin: 10px 0 0 20px;
+        padding: 0;
+      }
+
+      li + li {
+        margin-top: 8px;
+      }
+
+      li {
+        color: var(--ink);
+      }
+
+      .small {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .toc {
+        margin-top: 16px;
+        padding: 24px 28px 28px;
+      }
+
+      .toc .lede {
+        margin-bottom: 0;
+      }
+
+      .toc-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .toc-grid a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 14px;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1px solid var(--line);
+        color: var(--ink);
+        text-decoration: none;
+        font-size: 0.86rem;
+        font-weight: 600;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          transform 0.15s ease;
+      }
+
+      .toc-grid a .toc-index {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+        border-radius: 7px;
+        background: var(--accent-soft);
+        color: var(--accent-ink);
+        font-size: 0.72rem;
+        font-weight: 800;
+      }
+
+      .toc-grid a:hover {
+        background: var(--accent-soft);
+        border-color: var(--accent-line);
+        transform: translateY(-1px);
+      }
+
+      .toc-grid a:hover .toc-index {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .quickstart .card {
+        border-color: var(--accent-line);
+        background: var(--accent-tint);
+      }
+
+      .quickstart .step-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.84rem;
+        margin-bottom: 10px;
+      }
+
+      @media (max-width: 980px) {
+        .meta,
+        .grid-3,
+        .grid-2,
+        .grid-4 {
+          grid-template-columns: 1fr;
+        }
+
+        .toc-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 560px) {
+        .toc-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media print {
+        body {
+          background: #ffffff;
+        }
+
+        .page {
+          max-width: none;
+          padding: 0;
+        }
+
+        .hero,
+        .section,
+        .card {
+          box-shadow: none;
+          break-inside: avoid;
+        }
+
+        .toc {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <div class="brand-row">
+          <span class="brand-badge">CS</span>
+          <span class="brand-name">COSEC</span>
+        </div>
+        <span class="pill accent">User Guide</span>
+        <h1>Using the COSEC Correspondence &amp; Documents System</h1>
+        <p>
+          COSEC keeps track of every letter, memo, and file that comes into or
+          goes out of the county office — who received it, who is handling it,
+          what was decided, and when it was closed. This guide walks you through
+          using the system day to day. No technical background is needed.
+        </p>
+        <div class="meta">
+          <div class="meta-card">
+            <span class="meta-label">Workspace</span>
+            County Government of Vihiga
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">Central Office</span>
+            Office of the County Secretary and Head of Public Service
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">Who this is for</span>
+            Everyone using the system day to day
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">What it covers</span>
+            Signing in, correspondence, documents, meetings, notifications
+          </div>
+        </div>
+      </section>
+
+      <section class="section quickstart">
+        <h2>Before You Start</h2>
+        <p class="lede">Four things worth knowing before you dive in.</p>
+        <div class="grid grid-4">
+          <div class="card">
+            <span class="step-num">1</span>
+            <h3>One shared workspace</h3>
+            <p class="small">
+              There is a single county workspace. You never need to "create an
+              organization" — signing up simply adds you to it.
+            </p>
+          </div>
+          <div class="card">
+            <span class="step-num">2</span>
+            <h3>Your role decides what you see</h3>
+            <p class="small">
+              The menu on the left only shows the pages your role is allowed to
+              use. If something described here is missing for you, that is
+              expected, not a fault.
+            </p>
+          </div>
+          <div class="card">
+            <span class="step-num">3</span>
+            <h3>An administrator sets you up</h3>
+            <p class="small">
+              After you sign up, an administrator assigns your department and
+              role. Until that happens you may see limited options.
+            </p>
+          </div>
+          <div class="card">
+            <span class="step-num">4</span>
+            <h3>Every action is recorded</h3>
+            <p class="small">
+              Every step a correspondence goes through — who touched it and when
+              — is kept automatically, so nothing gets lost in between offices.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <nav class="section toc">
+        <h2>Jump To A Section</h2>
+        <p class="small">Click any tile to jump straight there.</p>
+        <div class="toc-grid">
+          <a href="#s1"><span class="toc-index">1</span> Signing In</a>
+          <a href="#s2"><span class="toc-index">2</span> Your Role</a>
+          <a href="#s3"
+            ><span class="toc-index">3</span> Around The Dashboard</a
+          >
+          <a href="#s4"
+            ><span class="toc-index">4</span> Handling Correspondence</a
+          >
+          <a href="#s5"><span class="toc-index">5</span> Documents</a>
+          <a href="#s6"
+            ><span class="toc-index">6</span> Meetings &amp; Action Points</a
+          >
+          <a href="#s7"><span class="toc-index">7</span> Notifications</a>
+          <a href="#s8"><span class="toc-index">8</span> Searching</a>
+          <a href="#s9"><span class="toc-index">9</span> Reports</a>
+          <a href="#s10"><span class="toc-index">10</span> Getting Help</a>
+        </div>
+      </nav>
+
+      <section class="section" id="s1">
+        <h2>1. Signing In</h2>
+        <h3>Creating your account</h3>
+        <p>
+          Open the COSEC website and choose to register. Enter your work email
+          address and create a password (or continue with your Google account,
+          if that option is offered). You'll be asked to confirm your email —
+          open the link sent to your inbox to activate your account.
+        </p>
+        <p>Expect the following the first time:</p>
+        <ul>
+          <li>
+            You are automatically added to the county workspace — there is
+            nothing to set up on your side.
+          </li>
+          <li>
+            Your account starts with basic access only. An administrator still
+            needs to place you in your department and give you the right role
+            before you can register, review, or dispatch correspondence.
+          </li>
+        </ul>
+
+        <h3>Signing in afterwards</h3>
+        <p>
+          Return to the login page, enter your email and password. Senior roles
+          (administrators, the County Secretary/reviewing role) are asked for an
+          extra one-time code sent to their email — this is a security step, not
+          an error.
+        </p>
+
+        <h3>Forgot your password?</h3>
+        <p>
+          Use the "Forgot password" link on the login page and enter your email.
+          If an account exists for that email, you'll receive a link to set a
+          new password.
+        </p>
+        <div class="callout small">
+          The first time an administrator creates your account for you directly
+          (instead of you self-registering), you'll be given a temporary
+          password and asked to set your own the moment you first sign in.
+        </div>
+      </section>
+
+      <section class="section" id="s2">
+        <h2>2. Understanding Your Role</h2>
+        <p class="lede">
+          What you can do in COSEC depends on the role your administrator has
+          given you.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>What they typically do</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Registry Officer</td>
+              <td>
+                Receives incoming mail and registers it into the system as the
+                first step of the workflow.
+              </td>
+            </tr>
+            <tr>
+              <td>Reviewing Officer / County Secretary</td>
+              <td>
+                Reviews newly registered correspondence, gives instructions,
+                routes it to the right department, issues dispatch, and closes
+                it once feedback is accepted.
+              </td>
+            </tr>
+            <tr>
+              <td>Department User</td>
+              <td>
+                Works within one department: acknowledges correspondence
+                dispatched to that department and submits feedback once action
+                is taken.
+              </td>
+            </tr>
+            <tr>
+              <td>Management</td>
+              <td>
+                Broader oversight of correspondence and reporting, usually
+                alongside a reviewing role.
+              </td>
+            </tr>
+            <tr>
+              <td>Organization Admin</td>
+              <td>
+                Manages departments, members, and roles for the whole workspace.
+              </td>
+            </tr>
+            <tr>
+              <td>Regular user</td>
+              <td>
+                Limited, view-focused access until an administrator assigns a
+                fuller role.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="small">
+          If you're not sure what your role can do, open
+          <strong>Roles &amp; access</strong> from the sidebar (if visible to
+          you) — it explains, in plain terms, what each role is meant for and
+          exactly which pages and actions it unlocks.
+        </p>
+      </section>
+
+      <section class="section" id="s3">
+        <h2>3. Around The Dashboard</h2>
+        <p class="lede">
+          Once signed in, three things stay on screen wherever you go:
+        </p>
+        <div class="grid grid-3">
+          <div class="card">
+            <h3>Left sidebar</h3>
+            <p class="small">
+              Your navigation menu. Only shows the areas your role is allowed to
+              use — Dashboard, Correspondence, Documents, Meetings, and, for
+              administrators, People &amp; structure.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Top header</h3>
+            <p class="small">
+              Search bar, the notification bell, and your account menu (name,
+              organization, sign out).
+            </p>
+          </div>
+          <div class="card">
+            <h3>Dashboard home</h3>
+            <p class="small">
+              A summary of what needs attention right now — urgent items,
+              pending dispatches, and recent activity, all clickable.
+            </p>
+          </div>
+        </div>
+        <p class="small">
+          A number reading "0" on the dashboard isn't necessarily wrong — a tile
+          only counts records that currently match its exact condition (for
+          example, "Pending dispatch" only counts correspondence that is
+          genuinely mid-dispatch right now).
+        </p>
+      </section>
+
+      <section class="section" id="s4">
+        <h2>4. Handling Correspondence</h2>
+        <p class="lede">
+          This is the core of COSEC: every piece of incoming mail moves through
+          the same journey, and the system keeps a full record at every stage.
+        </p>
+        <div class="callout small">
+          Receive → Register → Review → Dispatch → Action → Feedback → Close
+        </div>
+
+        <h3>Registering incoming mail (Registry Officer)</h3>
+        <p>
+          Open <strong>Correspondence → Register</strong>. Fill in the sender's
+          details, subject, description, how it was delivered, and how urgent
+          and confidential it is. If it came from within the county government,
+          choose "Internal county office" and pick the sending department; if it
+          came from outside, choose "External sender" and type in the sender's
+          office.
+        </p>
+        <p>
+          Once saved, the system gives it a reference number automatically —
+          this is how it will be tracked and referred to from now on.
+        </p>
+
+        <h3>
+          Reviewing and instructing (Reviewing Officer / County Secretary)
+        </h3>
+        <p>
+          Open the newly registered item from
+          <strong>Correspondence → All correspondence</strong>. Add any
+          instructions for how it should be handled, then decide which
+          department and officer should act on it, and by when.
+        </p>
+
+        <h3>Dispatching</h3>
+        <p>
+          Once routing is decided, issue the dispatch with a short note. This
+          formally hands the correspondence to the receiving department and
+          starts their due date.
+        </p>
+
+        <h3>Acknowledging and acting (Department User)</h3>
+        <p>
+          When something is dispatched to your department, you'll see
+          <strong>Confirm receipt</strong> on its detail page — click it to
+          acknowledge you've received it. Once your department has taken action,
+          submit your feedback describing what was done.
+        </p>
+
+        <h3>Closing (Reviewing Officer / County Secretary)</h3>
+        <p>
+          Once feedback has been submitted and reviewed, close the
+          correspondence. If more work turns out to be needed later, an
+          amber-coloured <strong>Reopen</strong> button lets an authorized
+          reviewer send it through another round.
+        </p>
+        <p class="small">
+          Every one of these steps — registration, review, dispatch,
+          acknowledgement, feedback, closure — is kept on the record's movement
+          history, so anyone can see exactly who handled it and when.
+        </p>
+      </section>
+
+      <section class="section" id="s5">
+        <h2>5. Documents</h2>
+        <p>
+          Open <strong>Documents</strong> from the sidebar to register physical
+          or digital files separately from correspondence — for example a
+          physical file that needs to be tracked by location and holder. Group
+          documents into categories, link a document to the correspondence it
+          relates to, upload a scanned copy, and archive a document once it's no
+          longer active. Archived documents stay searchable but become
+          read-only.
+        </p>
+      </section>
+
+      <section class="section" id="s6">
+        <h2>6. Meetings &amp; Action Points</h2>
+        <p>
+          Open <strong>Meetings</strong> to schedule a meeting with its agenda,
+          venue, and time. After the meeting is held, record the discussion
+          summary and resolutions. Action points can be created under a meeting
+          and assigned to a person or department with a due date — assigned
+          staff can then update their own action points' status from
+          <strong>My action points</strong> in the sidebar. A meeting can also
+          be linked to a specific correspondence so the two stay connected.
+        </p>
+      </section>
+
+      <section class="section" id="s7">
+        <h2>7. Notifications</h2>
+        <p>
+          The bell icon in the top header alerts you whenever something needs
+          your attention — a correspondence awaiting your review, a dispatch
+          sent to your department, feedback returned, or an action point
+          assigned to you. Click a notification to jump straight to the related
+          item, and use "Mark all as read" to clear your list.
+        </p>
+      </section>
+
+      <section class="section" id="s8">
+        <h2>8. Searching</h2>
+        <p>
+          Use the search bar in the top header to find correspondence,
+          documents, members, or pages by typing a subject, a name, a
+          department, or a status like "urgent". Search only shows results
+          you're allowed to see.
+        </p>
+      </section>
+
+      <section class="section" id="s9">
+        <h2>9. Reports</h2>
+        <p>
+          Open <strong>Reports</strong> from the sidebar for a summary view: how
+          much correspondence is pending review, pending acknowledgement, or
+          overdue, broken down by status, priority, and department, plus a
+          monthly intake trend. Use the export button to download a print-ready
+          summary.
+        </p>
+      </section>
+
+      <section class="section" id="s10">
+        <h2>10. Getting Help</h2>
+        <p>
+          If something in COSEC isn't behaving as this guide describes, or
+          you're missing access you believe you should have, contact your
+          organization administrator — they can check or adjust your role and
+          department from <strong>People &amp; structure</strong>, or escalate
+          it further if it turns out to be a system issue.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
