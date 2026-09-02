@@ -12,6 +12,7 @@ import {
 } from "@/features/documents/queries/documents";
 import { requirePagePermission } from "@/features/auth/utils/require-organization-permission";
 import { hasFoundationPermission } from "@/features/auth/utils/role-access";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 function getDocumentMediumLabel(medium: string) {
   switch (medium) {
@@ -141,9 +142,7 @@ export default async function DocumentDetailPage({
               <span className="font-medium text-slate-950">
                 Current holder:
               </span>{" "}
-              {document.currentHolderUser?.name ||
-                document.currentHolderUser?.email ||
-                "Not assigned"}
+              {formatUserLabel(document.currentHolderUser, "Not assigned")}
             </div>
             <div>
               <span className="font-medium text-slate-950">
@@ -167,9 +166,7 @@ export default async function DocumentDetailPage({
             </div>
             <div>
               <span className="font-medium text-slate-950">Created by:</span>{" "}
-              {document.createdByUser?.name ||
-                document.createdByUser?.email ||
-                "System"}
+              {formatUserLabel(document.createdByUser, "System")}
             </div>
             <div>
               <span className="font-medium text-slate-950">Archived at:</span>{" "}
@@ -185,9 +182,7 @@ export default async function DocumentDetailPage({
             </div>
             <div>
               <span className="font-medium text-slate-950">Archived by:</span>{" "}
-              {document.archivedByUser?.name ||
-                document.archivedByUser?.email ||
-                "Not archived"}
+              {formatUserLabel(document.archivedByUser, "Not archived")}
             </div>
           </CardContent>
         </Card>
@@ -259,9 +254,7 @@ export default async function DocumentDetailPage({
                   </div>
                   <div className="mt-1 text-xs text-slate-500">
                     Uploaded {attachment.createdAt.toLocaleString()} by{" "}
-                    {attachment.uploadedByUser?.name ||
-                      attachment.uploadedByUser?.email ||
-                      "Unknown user"}
+                    {formatUserLabel(attachment.uploadedByUser, "Unknown user")}
                   </div>
                 </a>
               ))

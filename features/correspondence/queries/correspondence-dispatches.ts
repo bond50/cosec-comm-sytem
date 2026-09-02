@@ -27,6 +27,7 @@ export const correspondenceDispatchSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   acknowledgedByUser: {
@@ -34,6 +35,7 @@ export const correspondenceDispatchSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   createdByUser: {
@@ -41,6 +43,7 @@ export const correspondenceDispatchSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
 } satisfies Prisma.CorrespondenceDispatchSelect;

@@ -124,6 +124,7 @@ const OVERDUE_CORRESPONDENCE_SELECT = {
     select: {
       name: true,
       email: true,
+      designation: true,
     },
   },
 } satisfies Prisma.CorrespondenceSelect;
@@ -149,6 +150,7 @@ const PENDING_DISPATCH_SELECT = {
     select: {
       name: true,
       email: true,
+      designation: true,
     },
   },
 } satisfies Prisma.CorrespondenceDispatchSelect;
@@ -174,6 +176,7 @@ const PENDING_ACTION_POINT_SELECT = {
     select: {
       name: true,
       email: true,
+      designation: true,
     },
   },
 } satisfies Prisma.MeetingActionPointSelect;

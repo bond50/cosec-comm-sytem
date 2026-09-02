@@ -17,6 +17,7 @@ export const departmentSummarySelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   createdAt: true,

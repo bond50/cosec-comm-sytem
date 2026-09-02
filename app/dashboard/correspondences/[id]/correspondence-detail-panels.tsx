@@ -27,6 +27,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { formatUserLabel as formatUserLabelWithDesignation } from "@/features/application/lib/user-label";
 import { CorrespondenceAssignForm } from "@/app/dashboard/correspondences/[id]/correspondence-assign-form";
 import { CorrespondenceAttachmentUploadForm } from "@/app/dashboard/correspondences/[id]/correspondence-attachment-upload-form";
 import { CorrespondenceDispatchAcknowledgeForm } from "@/app/dashboard/correspondences/[id]/correspondence-dispatch-ack-form";
@@ -161,8 +162,10 @@ function formatAssignmentLabel(correspondence: CorrespondenceDetailWithSla) {
   const department = correspondence.assignedToDepartment?.code
     ? `${correspondence.assignedToDepartment.name} (${correspondence.assignedToDepartment.code})`
     : correspondence.assignedToDepartment?.name;
-  const user =
-    correspondence.assignedToUser?.name || correspondence.assignedToUser?.email;
+  const user = formatUserLabelWithDesignation(
+    correspondence.assignedToUser,
+    null,
+  );
 
   if (department && user) {
     return `${department} / ${user}`;
@@ -186,9 +189,12 @@ function formatDueDateState(correspondence: CorrespondenceDetailWithSla) {
 }
 
 function formatUserLabel(
-  user: { name: string | null; email: string | null } | null | undefined,
+  user:
+    | { name: string | null; email: string | null; designation?: string | null }
+    | null
+    | undefined,
 ) {
-  return user?.name || user?.email || null;
+  return formatUserLabelWithDesignation(user, null);
 }
 
 function formatDispatchTargetLabel(
@@ -375,10 +381,10 @@ function getLastMovementClue(movements: CorrespondenceMovementItem[]) {
 
   if (!latestMovement) return "No movement history recorded yet.";
 
-  const actor =
-    latestMovement.createdByUser?.name ||
-    latestMovement.createdByUser?.email ||
-    "System";
+  const actor = formatUserLabelWithDesignation(
+    latestMovement.createdByUser,
+    "System",
+  );
   const target = getMovementTargetLabel(latestMovement);
 
   return `Last moved: ${latestMovement.status.replaceAll("_", " ")} to ${target} by ${actor} on ${formatDateTime(latestMovement.movedAt)}.`;
@@ -454,7 +460,7 @@ function getDispatchActionState({
 
 function getMovementTargetLabel(movement: CorrespondenceMovementItem) {
   const department = movement.toDepartment?.name;
-  const user = movement.toUser?.name || movement.toUser?.email;
+  const user = formatUserLabelWithDesignation(movement.toUser, null);
 
   if (department && user) {
     return `${department} / ${user}`;
@@ -465,8 +471,7 @@ function getMovementTargetLabel(movement: CorrespondenceMovementItem) {
 
 function getDispatchTargetLabel(dispatch: CorrespondenceDispatchItem) {
   const department = dispatch.dispatchedToDepartment?.name;
-  const user =
-    dispatch.dispatchedToUser?.name || dispatch.dispatchedToUser?.email;
+  const user = formatUserLabelWithDesignation(dispatch.dispatchedToUser, null);
 
   if (department && user) {
     return `${department} / ${user}`;
@@ -495,7 +500,7 @@ function getMovementSourceLabel(
   }
 
   const department = movement.fromDepartment?.name;
-  const user = movement.fromUser?.name || movement.fromUser?.email;
+  const user = formatUserLabelWithDesignation(movement.fromUser, null);
 
   if (department && user) {
     return `${department} / ${user}`;
@@ -856,9 +861,10 @@ export function CorrespondenceSummaryCards({
               {correspondence.assignedToDepartment?.name || "Unassigned"}
             </p>
             <p className="mt-1 text-sm text-slate-600">
-              {correspondence.assignedToUser?.name ||
-                correspondence.assignedToUser?.email ||
-                "No named receiving officer"}
+              {formatUserLabelWithDesignation(
+                correspondence.assignedToUser,
+                "No named receiving officer",
+              )}
             </p>
           </div>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e6f1f8] text-[#1868a6]">
@@ -976,11 +982,10 @@ export function CorrespondenceRegistrationCard({
         />
         <DetailStat
           label="Received by"
-          value={
-            correspondence.receivedByUser?.name ||
-            correspondence.receivedByUser?.email ||
-            "Not recorded"
-          }
+          value={formatUserLabelWithDesignation(
+            correspondence.receivedByUser,
+            "Not recorded",
+          )}
         />
         <div className="space-y-1 sm:col-span-2">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
@@ -1046,11 +1051,10 @@ export function CorrespondenceReviewCard({
         />
         <DetailStat
           label="Reviewed by"
-          value={
-            correspondence.reviewedByUser?.name ||
-            correspondence.reviewedByUser?.email ||
-            "Pending review"
-          }
+          value={formatUserLabelWithDesignation(
+            correspondence.reviewedByUser,
+            "Pending review",
+          )}
         />
         {showForm ? (
           canReviewNow ? (
@@ -1100,19 +1104,17 @@ export function CorrespondenceAssignmentCard({
         />
         <DetailStat
           label="Receiving officer"
-          value={
-            correspondence.assignedToUser?.name ||
-            correspondence.assignedToUser?.email ||
-            "No named receiving officer"
-          }
+          value={formatUserLabelWithDesignation(
+            correspondence.assignedToUser,
+            "No named receiving officer",
+          )}
         />
         <DetailStat
           label="Routed by"
-          value={
-            correspondence.assignedByUser?.name ||
-            correspondence.assignedByUser?.email ||
-            "Not recorded"
-          }
+          value={formatUserLabelWithDesignation(
+            correspondence.assignedByUser,
+            "Not recorded",
+          )}
         />
         {showForm ? (
           canAssignNow ? (
@@ -1223,19 +1225,17 @@ export function CorrespondenceDispatchCard({
               <div className="grid gap-3 sm:grid-cols-2">
                 <DetailStat
                   label="Dispatch recorded by"
-                  value={
-                    dispatch.createdByUser?.name ||
-                    dispatch.createdByUser?.email ||
-                    "System"
-                  }
+                  value={formatUserLabelWithDesignation(
+                    dispatch.createdByUser,
+                    "System",
+                  )}
                 />
                 <DetailStat
                   label="Receipt confirmed by"
-                  value={
-                    dispatch.acknowledgedByUser?.name ||
-                    dispatch.acknowledgedByUser?.email ||
-                    "Pending acknowledgement"
-                  }
+                  value={formatUserLabelWithDesignation(
+                    dispatch.acknowledgedByUser,
+                    "Pending acknowledgement",
+                  )}
                 />
               </div>
               {dispatch.feedbackNote ? (
@@ -1420,11 +1420,10 @@ export function CorrespondenceMovementCard({
                     />
                     <DetailStat
                       label="Recorded by"
-                      value={
-                        movement.createdByUser?.name ||
-                        movement.createdByUser?.email ||
-                        "System"
-                      }
+                      value={formatUserLabelWithDesignation(
+                        movement.createdByUser,
+                        "System",
+                      )}
                     />
                   </div>
                 </>
@@ -1606,9 +1605,10 @@ export function CorrespondenceAttachmentsCard({
                         </p>
                         <p className="text-xs text-slate-500">
                           Uploaded {formatDateTime(attachment.createdAt)} by{" "}
-                          {attachment.uploadedByUser?.name ||
-                            attachment.uploadedByUser?.email ||
-                            "System"}
+                          {formatUserLabelWithDesignation(
+                            attachment.uploadedByUser,
+                            "System",
+                          )}
                         </p>
                       </div>
                       <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
@@ -1745,9 +1745,10 @@ export function CorrespondenceAuditCard({
                     {auditLog.message || "No audit message recorded."}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {auditLog.actorUser?.name ||
-                      auditLog.actorUser?.email ||
-                      "System actor"}
+                    {formatUserLabelWithDesignation(
+                      auditLog.actorUser,
+                      "System actor",
+                    )}
                   </p>
                 </div>
                 <p className="text-xs font-medium uppercase tracking-[0.12em] text-slate-400">

@@ -19,13 +19,14 @@ export const getUserById = async (id: string | undefined) => {
 };
 
 export const getUsersForSelect = async (): Promise<
-  { id: string; name: string; email: string }[]
+  { id: string; name: string; email: string; designation: string | null }[]
 > => {
   const users = await db.user.findMany({
     select: {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
     orderBy: { name: "asc" },
   });
@@ -34,6 +35,7 @@ export const getUsersForSelect = async (): Promise<
     id: user.id,
     name: user.name || "Unnamed",
     email: user.email ?? "",
+    designation: user.designation,
   }));
 };
 

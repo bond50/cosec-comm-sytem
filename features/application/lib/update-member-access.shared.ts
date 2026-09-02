@@ -17,6 +17,12 @@ export const updateMemberAccessSchema = z.object({
     .trim()
     .min(2, { message: "Name is required." })
     .max(120, { message: "Name is too long." }),
+  designation: z
+    .string()
+    .trim()
+    .max(120, { message: "Designation is too long." })
+    .optional()
+    .transform((value) => value || null),
   email: z.email({ message: "Enter a valid email address." }),
   roles: z
     .array(z.enum(editableMemberRoleValues), {

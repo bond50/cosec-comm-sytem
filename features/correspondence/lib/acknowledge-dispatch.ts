@@ -20,6 +20,7 @@ import {
   UnauthorizedError,
 } from "@/features/auth/utils/auth-errors";
 import { notifyCorrespondenceAcknowledged } from "@/features/correspondence/lib/correspondence-notifications";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 export async function acknowledgeDispatchAction(
   _previousState: CorrespondenceDispatchAcknowledgeActionState,
@@ -114,6 +115,7 @@ export async function acknowledgeDispatchAction(
             id: true,
             name: true,
             email: true,
+            designation: true,
           },
         },
         correspondence: {
@@ -171,8 +173,7 @@ export async function acknowledgeDispatchAction(
 
   const acknowledgedAt = new Date(parsed.data.acknowledgedAt);
   const noteTarget =
-    dispatch.dispatchedToUser?.name ||
-    dispatch.dispatchedToUser?.email ||
+    formatUserLabel(dispatch.dispatchedToUser, null) ||
     dispatch.dispatchedToDepartment?.name ||
     "the receiving desk";
 

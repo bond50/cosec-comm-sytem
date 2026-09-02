@@ -7,6 +7,7 @@ import {
   Users,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 import {
   Table,
   TableBody,
@@ -185,7 +186,7 @@ export function DepartmentSummaryCards({
               Accountable lead
             </p>
             <p className="mt-3 text-[1.15rem] font-semibold tracking-[-0.03em] text-slate-950">
-              {currentHead?.name || currentHead?.email || "Not assigned"}
+              {formatUserLabel(currentHead, "Not assigned")}
             </p>
             <p className="mt-1 text-sm text-slate-600">
               Current accountable lead
@@ -281,7 +282,7 @@ export function DepartmentHeadCard({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="text-sm font-semibold text-slate-950">
-                  {currentHead.name || currentHead.email || currentHead.userId}
+                  {formatUserLabel(currentHead, currentHead.userId)}
                 </div>
                 <div className="mt-1 text-sm text-slate-500">
                   {currentHead.email || "No email"}
@@ -339,7 +340,7 @@ export function DepartmentMembersCard({
               {members.map((member) => (
                 <TableRow key={member.userId} className="border-slate-200">
                   <TableCell className="px-6 py-4 font-medium text-slate-950">
-                    {member.name || member.email || member.userId}
+                    {formatUserLabel(member, member.userId)}
                   </TableCell>
                   <TableCell className="py-4 text-slate-600">
                     {member.email || "No email"}

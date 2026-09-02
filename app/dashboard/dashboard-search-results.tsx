@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardSearchClientControls } from "@/app/dashboard/dashboard-search-client-controls";
 import { DashboardSearchHighlight } from "@/app/dashboard/dashboard-search-highlight";
 import { getPrimaryRoleLabel } from "@/features/auth/utils/role-access";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 import type { WorkspaceSearchResults } from "@/features/application/queries/workspace-search";
 import {
   getWorkspaceSearchHighlightTerms,
@@ -680,10 +681,7 @@ export function DashboardSearchResults({
                 {item.assignedToDepartment?.code ||
                   item.assignedToDepartment?.name ||
                   "No department"}{" "}
-                ·{" "}
-                {item.assignedToUser?.name ||
-                  item.assignedToUser?.email ||
-                  "No named user"}
+                · {formatUserLabel(item.assignedToUser, "No named user")}
               </p>
               <WhyMatched reasons={item.whyMatched} />
             </Link>
@@ -709,9 +707,7 @@ export function DashboardSearchResults({
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-900">
                     <DashboardSearchHighlight
-                      text={
-                        item.user.name || item.user.email || "Unnamed member"
-                      }
+                      text={formatUserLabel(item.user, "Unnamed member")}
                       query={query}
                     />
                   </p>

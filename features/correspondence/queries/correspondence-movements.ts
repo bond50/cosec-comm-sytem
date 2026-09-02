@@ -23,6 +23,7 @@ export const correspondenceMovementSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   toDepartment: {
@@ -37,6 +38,7 @@ export const correspondenceMovementSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   createdByUser: {
@@ -44,6 +46,7 @@ export const correspondenceMovementSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
 } satisfies Prisma.CorrespondenceMovementSelect;

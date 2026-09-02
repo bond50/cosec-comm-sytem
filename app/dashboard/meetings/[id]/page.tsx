@@ -16,6 +16,7 @@ import {
 import { requirePagePermission } from "@/features/auth/utils/require-organization-permission";
 import { hasFoundationPermission } from "@/features/auth/utils/role-access";
 import { getActiveMembershipByUserId } from "@/features/application/queries/memberships";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 function formatDateTime(value: Date | null | undefined) {
   if (!value) return "Not recorded";
@@ -242,9 +243,10 @@ export default async function MeetingDetailPage({
                             </div>
                             <div className="text-xs text-slate-500">
                               Created {formatDateTime(actionPoint.createdAt)} by{" "}
-                              {actionPoint.createdByUser?.name ||
-                                actionPoint.createdByUser?.email ||
-                                "Unknown user"}
+                              {formatUserLabel(
+                                actionPoint.createdByUser,
+                                "Unknown user",
+                              )}
                             </div>
                           </div>
                           <Badge className="rounded-full bg-[#e6f1f8] text-[#1868a6]">
@@ -257,9 +259,10 @@ export default async function MeetingDetailPage({
                             <span className="font-medium text-slate-950">
                               User:
                             </span>{" "}
-                            {actionPoint.assignedToUser?.name ||
-                              actionPoint.assignedToUser?.email ||
-                              "Not assigned"}
+                            {formatUserLabel(
+                              actionPoint.assignedToUser,
+                              "Not assigned",
+                            )}
                           </div>
                           <div>
                             <span className="font-medium text-slate-950">
@@ -335,9 +338,10 @@ export default async function MeetingDetailPage({
                                   </p>
                                   <p className="mt-1 text-xs text-slate-500">
                                     {formatDateTime(auditLog.createdAt)} by{" "}
-                                    {auditLog.actorUser?.name ||
-                                      auditLog.actorUser?.email ||
-                                      "System"}
+                                    {formatUserLabel(
+                                      auditLog.actorUser,
+                                      "System",
+                                    )}
                                   </p>
                                 </div>
                               ))}
@@ -432,9 +436,10 @@ export default async function MeetingDetailPage({
                         </p>
                         <p className="text-xs text-slate-500">
                           Uploaded {formatDateTime(attachment.createdAt)} by{" "}
-                          {attachment.uploadedByUser?.name ||
-                            attachment.uploadedByUser?.email ||
-                            "Unknown user"}
+                          {formatUserLabel(
+                            attachment.uploadedByUser,
+                            "Unknown user",
+                          )}
                         </p>
                       </div>
                       <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-slate-400" />

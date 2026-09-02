@@ -39,6 +39,7 @@ export const correspondenceDetailSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   reviewedByUser: {
@@ -46,6 +47,7 @@ export const correspondenceDetailSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   assignedToDepartment: {
@@ -59,6 +61,7 @@ export const correspondenceDetailSelect = {
           id: true,
           name: true,
           email: true,
+          designation: true,
         },
       },
     },
@@ -68,6 +71,7 @@ export const correspondenceDetailSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   assignedByUser: {
@@ -75,6 +79,7 @@ export const correspondenceDetailSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   _count: {

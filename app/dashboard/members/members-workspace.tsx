@@ -24,6 +24,7 @@ type MembersWorkspaceProps = {
     id: string;
     name: string;
     email: string;
+    designation: string | null;
   }[];
   initialCreateOpen?: boolean;
 };

@@ -10,6 +10,12 @@ export const provisionMemberSchema = z
       .trim()
       .min(2, { message: "Name is required." })
       .max(120, { message: "Name is too long." }),
+    designation: z
+      .string()
+      .trim()
+      .max(120, { message: "Designation is too long." })
+      .optional()
+      .transform((value) => value || null),
     email: z.email({ message: "Enter a valid email address." }),
     // Deliberately relaxed: this is a temporary password an administrator
     // hands to someone else. The account is forced to set a real password
@@ -56,6 +62,7 @@ export const initialProvisionMemberState: ProvisionMemberActionState = {
   fieldErrors: {},
   values: {
     name: "",
+    designation: "",
     email: "",
     password: "",
     confirmPassword: "",

@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 import {
   Select,
   SelectContent,
@@ -110,7 +111,7 @@ export function HeadAssignmentForm({
               <SelectContent>
                 {candidates.map((candidate) => (
                   <SelectItem key={candidate.userId} value={candidate.userId}>
-                    {candidate.name || candidate.email || candidate.userId}
+                    {formatUserLabel(candidate, candidate.userId)}
                     {" - "}
                     {candidate.role.replaceAll("_", " ")}
                   </SelectItem>

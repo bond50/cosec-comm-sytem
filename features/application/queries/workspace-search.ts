@@ -23,6 +23,7 @@ import {
   hasMeetingWorkspaceAccess,
 } from "@/features/auth/utils/role-access";
 import { buildCorrespondenceVisibilityWhere } from "@/features/correspondence/lib/correspondence-access";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 type WorkspaceSearchArgs = {
   organizationId: string;
@@ -163,6 +164,7 @@ export type WorkspaceMemberHit = {
   user: {
     name: string | null;
     email: string | null;
+    designation: string | null;
   };
   department: {
     id: string;
@@ -657,6 +659,7 @@ export async function getWorkspaceSearchResults({
                 id: true,
                 name: true,
                 email: true,
+                designation: true,
               },
             },
             meetings: {
@@ -831,6 +834,7 @@ export async function getWorkspaceSearchResults({
                 id: true,
                 name: true,
                 email: true,
+                designation: true,
               },
             },
           },
@@ -879,6 +883,7 @@ export async function getWorkspaceSearchResults({
               select: {
                 name: true,
                 email: true,
+                designation: true,
               },
             },
             department: {
@@ -890,7 +895,7 @@ export async function getWorkspaceSearchResults({
               },
             },
           },
-        }) as Promise<Omit<WorkspaceMemberHit, "score">[]>)
+        }) as unknown as Promise<Omit<WorkspaceMemberHit, "score">[]>)
       : Promise.resolve([] as Omit<WorkspaceMemberHit, "score">[]),
     canViewDepartments
       ? (db.department.findMany({
@@ -1297,7 +1302,7 @@ export async function getWorkspaceSearchResults({
   if (command.action === "open" && command.entity === "member" && members[0]) {
     dynamicActions.push({
       id: `open-member-${members[0].userId}`,
-      title: `Open ${members[0].user.name || members[0].user.email || "member"}`,
+      title: `Open ${formatUserLabel(members[0].user, "member")}`,
       description: "Jump straight to the matched member record.",
       href: `/dashboard/members/${members[0].userId}`,
     });
@@ -1357,7 +1362,7 @@ export async function getWorkspaceSearchResults({
     ...members.map((item) => ({
       id: item.userId,
       kind: "member" as const,
-      title: item.user.name || item.user.email || "Unnamed member",
+      title: formatUserLabel(item.user, "Unnamed member"),
       subtitle: item.department?.name || "No department assigned",
       href: `/dashboard/members/${item.userId}`,
       score: item.score,

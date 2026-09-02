@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
+import { formatUserLabel as formatUserLabelWithDesignation } from "@/features/application/lib/user-label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CorrespondenceAssignForm } from "@/app/dashboard/correspondences/[id]/correspondence-assign-form";
@@ -118,9 +119,12 @@ function getDispatchActionState({
 }
 
 function formatUserLabel(
-  user: { name: string | null; email: string | null } | null | undefined,
+  user:
+    | { name: string | null; email: string | null; designation?: string | null }
+    | null
+    | undefined,
 ) {
-  return user?.name || user?.email || null;
+  return formatUserLabelWithDesignation(user, null);
 }
 
 function formatAssignmentLabel(correspondence: CorrespondenceDetailWithSla) {

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { MembershipDepartmentField } from "@/components/forms/membership-department-field";
 import { MembershipRoleGroup } from "@/components/forms/membership-role-group";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -102,6 +103,14 @@ export function MemberDetailsCard({
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
           <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+            Designation
+          </div>
+          <div className="mt-2 text-sm font-semibold text-slate-950">
+            {member.user.designation || "Not set"}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
             Email
           </div>
           <div className="mt-2 text-sm font-semibold text-slate-950">
@@ -166,7 +175,7 @@ function MemberSummaryPanel({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-3">
             <h2 className="text-[1.5rem] font-semibold leading-tight tracking-[-0.04em] text-slate-950">
-              {member.user.name || member.user.email || member.userId}
+              {formatUserLabel(member.user, member.userId)}
             </h2>
             <div className="flex flex-wrap gap-2">
               {getRoleLabels(member.roles).map((roleLabel) => (
@@ -296,6 +305,7 @@ export function UpdateMemberForm({
   const values = state.values ?? {
     userId: member.userId,
     name: member.user.name ?? "",
+    designation: member.user.designation ?? "",
     email: member.user.email ?? "",
     roles: member.roles,
     status: member.status,
@@ -347,6 +357,17 @@ export function UpdateMemberForm({
             placeholder="Jane Doe"
           />
           <FieldError>{fieldErrors.name?.[0]}</FieldError>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="member-designation-edit">Designation</FieldLabel>
+          <Input
+            id="member-designation-edit"
+            name="designation"
+            defaultValue={values.designation ?? ""}
+            placeholder="ICT Officer, HRIO, Chief Officer Health..."
+          />
+          <FieldError>{fieldErrors.designation?.[0]}</FieldError>
         </Field>
 
         <Field>

@@ -101,6 +101,7 @@ export async function receiveDispatchFeedbackAction(
           id: true,
           name: true,
           email: true,
+          designation: true,
         },
       },
       correspondence: {

@@ -16,6 +16,7 @@ export const correspondenceAttachmentSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
 } satisfies Prisma.AttachmentSelect;

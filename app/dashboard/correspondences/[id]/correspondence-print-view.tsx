@@ -4,6 +4,7 @@ import type { CorrespondenceAuditItem } from "@/features/correspondence/queries/
 import type { CorrespondenceDetailWithSla } from "@/features/correspondence/queries/correspondence-detail";
 import type { CorrespondenceDispatchItem } from "@/features/correspondence/queries/correspondence-dispatches";
 import type { CorrespondenceMovementItem } from "@/features/correspondence/queries/correspondence-movements";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 type CorrespondencePrintViewProps = {
   organizationName: string;
@@ -110,11 +111,10 @@ export function CorrespondencePrintView({
             />
             <DetailRow
               label="Received by"
-              value={
-                correspondence.receivedByUser?.name ||
-                correspondence.receivedByUser?.email ||
-                "Not recorded"
-              }
+              value={formatUserLabel(
+                correspondence.receivedByUser,
+                "Not recorded",
+              )}
             />
             <DetailRow
               label="Description"
@@ -134,11 +134,10 @@ export function CorrespondencePrintView({
             />
             <DetailRow
               label="Reviewed by"
-              value={
-                correspondence.reviewedByUser?.name ||
-                correspondence.reviewedByUser?.email ||
-                "Pending review"
-              }
+              value={formatUserLabel(
+                correspondence.reviewedByUser,
+                "Pending review",
+              )}
             />
             <DetailRow
               label="Instructions"
@@ -150,19 +149,17 @@ export function CorrespondencePrintView({
             />
             <DetailRow
               label="Receiving officer"
-              value={
-                correspondence.assignedToUser?.name ||
-                correspondence.assignedToUser?.email ||
-                "No named receiving officer"
-              }
+              value={formatUserLabel(
+                correspondence.assignedToUser,
+                "No named receiving officer",
+              )}
             />
             <DetailRow
               label="Routed by"
-              value={
-                correspondence.assignedByUser?.name ||
-                correspondence.assignedByUser?.email ||
-                "Not recorded"
-              }
+              value={formatUserLabel(
+                correspondence.assignedByUser,
+                "Not recorded",
+              )}
             />
             <DetailRow
               label="Due date"
@@ -204,9 +201,10 @@ export function CorrespondencePrintView({
                         Receiving office:
                       </span>{" "}
                       {dispatch.dispatchedToDepartment?.name ||
-                        dispatch.dispatchedToUser?.name ||
-                        dispatch.dispatchedToUser?.email ||
-                        "Not recorded"}
+                        formatUserLabel(
+                          dispatch.dispatchedToUser,
+                          "Not recorded",
+                        )}
                     </div>
                     <div className="text-sm text-slate-700">
                       <span className="font-semibold text-slate-950">
@@ -224,9 +222,7 @@ export function CorrespondencePrintView({
                       <span className="font-semibold text-slate-950">
                         Created by:
                       </span>{" "}
-                      {dispatch.createdByUser?.name ||
-                        dispatch.createdByUser?.email ||
-                        "System"}
+                      {formatUserLabel(dispatch.createdByUser, "System")}
                     </div>
                   </div>
                   <div className="mt-3 text-sm leading-6 text-slate-700">

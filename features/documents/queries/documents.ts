@@ -2,6 +2,7 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 export const documentRegistrySelect = {
   id: true,
@@ -31,6 +32,7 @@ export const documentRegistrySelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   _count: {
@@ -97,6 +99,7 @@ export const documentDetailSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   archivedByUser: {
@@ -104,6 +107,7 @@ export const documentDetailSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   createdByUser: {
@@ -111,6 +115,7 @@ export const documentDetailSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   attachments: {
@@ -128,6 +133,7 @@ export const documentDetailSelect = {
           id: true,
           name: true,
           email: true,
+          designation: true,
         },
       },
     },
@@ -199,6 +205,7 @@ export async function getDocumentCreateOptions(organizationId: string) {
             select: {
               name: true,
               email: true,
+              designation: true,
             },
           },
         },
@@ -223,10 +230,7 @@ export async function getDocumentCreateOptions(organizationId: string) {
     correspondences,
     holders: holders.map((membership) => ({
       id: membership.userId,
-      label:
-        membership.user.name ||
-        membership.user.email ||
-        "Unnamed document holder",
+      label: formatUserLabel(membership.user, "Unnamed document holder"),
     })),
     sourceDepartmentOptions: sourceDepartments.map((department) => ({
       id: department.id,

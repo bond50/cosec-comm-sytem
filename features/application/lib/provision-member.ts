@@ -39,6 +39,7 @@ export async function provisionMemberAction(
 
   const values = {
     name: String(formData.get("name") ?? "").trim(),
+    designation: String(formData.get("designation") ?? "").trim(),
     email: String(formData.get("email") ?? "")
       .trim()
       .toLowerCase(),
@@ -178,6 +179,7 @@ export async function provisionMemberAction(
       const user = await tx.user.create({
         data: {
           name: parsed.data.name,
+          designation: parsed.data.designation,
           email: parsed.data.email,
           password: hashedPassword,
           emailVerified: new Date(),
@@ -214,6 +216,7 @@ export async function provisionMemberAction(
       message: "Member account created and added to the organization.",
       values: {
         name: "",
+        designation: "",
         email: "",
         password: "",
         confirmPassword: "",

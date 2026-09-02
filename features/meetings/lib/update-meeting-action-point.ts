@@ -22,17 +22,12 @@ import {
   getDirectUserRecipient,
   getExecutionRecipients,
 } from "@/features/notifications/lib/notification-routing";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 function formatDate(value: Date) {
   return new Intl.DateTimeFormat("en-KE", {
     dateStyle: "medium",
   }).format(value);
-}
-
-function formatUserLabel(
-  user: { name: string | null; email: string | null } | null | undefined,
-) {
-  return user?.name || user?.email || "Not assigned";
 }
 
 function formatDepartmentLabel(
@@ -86,6 +81,7 @@ export async function updateMeetingActionPointAction(
             select: {
               name: true,
               email: true,
+              designation: true,
             },
           },
           assignedToDepartment: {
@@ -153,6 +149,7 @@ export async function updateMeetingActionPointAction(
                 select: {
                   name: true,
                   email: true,
+                  designation: true,
                 },
               },
             },

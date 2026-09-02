@@ -121,6 +121,18 @@ export function CreateMemberAccountForm({
       </Field>
 
       <Field>
+        <FieldLabel htmlFor="member-designation">Designation</FieldLabel>
+        <Input
+          id="member-designation"
+          name="designation"
+          defaultValue={values.designation ?? ""}
+          placeholder="ICT Officer, HRIO, Chief Officer Health..."
+          autoComplete="organization-title"
+        />
+        <FieldError>{fieldErrors.designation?.[0]}</FieldError>
+      </Field>
+
+      <Field>
         <FieldLabel htmlFor="member-email" required>
           Email
         </FieldLabel>

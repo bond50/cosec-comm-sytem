@@ -39,6 +39,7 @@ export async function updateMemberAccessAction(
   const values = {
     userId: String(formData.get("userId") ?? "").trim(),
     name: String(formData.get("name") ?? "").trim(),
+    designation: String(formData.get("designation") ?? "").trim(),
     email: String(formData.get("email") ?? "")
       .trim()
       .toLowerCase(),
@@ -56,6 +57,7 @@ export async function updateMemberAccessAction(
       values: {
         userId: values.userId,
         name: values.name,
+        designation: values.designation,
         email: values.email,
         roles: values.roles.length > 0 ? values.roles : [UserRole.USER],
         status:
@@ -231,6 +233,7 @@ export async function updateMemberAccessAction(
         },
         data: {
           name: parsed.data.name,
+          designation: parsed.data.designation,
           email: parsed.data.email,
         },
       });

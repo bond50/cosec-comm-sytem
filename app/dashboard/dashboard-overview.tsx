@@ -25,6 +25,7 @@ import {
   hasFoundationPermission,
 } from "@/features/auth/utils/role-access";
 import type { CorrespondenceDashboardMetrics } from "@/features/correspondence/queries/correspondence-dashboard";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 type DashboardOverviewProps = {
   organizationName: string;
@@ -284,8 +285,7 @@ export function DashboardOverview({
                   <div className="mt-2 text-xs text-rose-700">
                     Due {formatDateLabel(item.dueDate)} ·{" "}
                     {item.assignedToDepartment?.name ||
-                      item.assignedToUser?.name ||
-                      "Unassigned"}
+                      formatUserLabel(item.assignedToUser, "Unassigned")}
                   </div>
                 </Link>
               ))

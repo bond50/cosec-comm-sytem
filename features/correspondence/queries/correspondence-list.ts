@@ -63,6 +63,7 @@ export const correspondenceListSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   reviewedByUser: {
@@ -70,6 +71,7 @@ export const correspondenceListSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   receivedByUser: {
@@ -77,6 +79,7 @@ export const correspondenceListSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   createdAt: true,

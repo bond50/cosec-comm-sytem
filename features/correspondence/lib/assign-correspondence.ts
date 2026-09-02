@@ -17,6 +17,7 @@ import {
   UnauthorizedError,
 } from "@/features/auth/utils/auth-errors";
 import { notifyCorrespondenceRoutingRecorded } from "@/features/correspondence/lib/correspondence-notifications";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 export async function assignCorrespondenceAction(
   _previousState: CorrespondenceAssignActionState,
@@ -128,6 +129,7 @@ export async function assignCorrespondenceAction(
               id: true,
               name: true,
               email: true,
+              designation: true,
             },
           })
         : Promise.resolve(null),
@@ -273,7 +275,7 @@ export async function assignCorrespondenceAction(
       actorUserId,
       auditLogId: auditLog.id,
       departmentName: department.name,
-      assignedUserName: assigneeUser?.name || assigneeUser?.email || null,
+      assignedUserName: formatUserLabel(assigneeUser, null),
       dueDateLabel,
     });
   });

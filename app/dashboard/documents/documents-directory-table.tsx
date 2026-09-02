@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import { ArchiveDocumentButton } from "@/app/dashboard/documents/archive-document-button";
 import type { DocumentRegistryItem } from "@/features/documents/queries/documents";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 function getDocumentMediumLabel(medium: DocumentMedium) {
   switch (medium) {
@@ -123,15 +124,10 @@ export function DocumentsDirectoryTable({
     },
     {
       id: "currentHolderUser.name",
-      accessorFn: (row) =>
-        row.currentHolderUser?.name ||
-        row.currentHolderUser?.email ||
-        "Unassigned",
+      accessorFn: (row) => formatUserLabel(row.currentHolderUser, "Unassigned"),
       header: "Current holder",
       cell: ({ row }) =>
-        row.original.currentHolderUser?.name ||
-        row.original.currentHolderUser?.email ||
-        "Unassigned",
+        formatUserLabel(row.original.currentHolderUser, "Unassigned"),
     },
     {
       id: "currentLocation",

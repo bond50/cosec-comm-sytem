@@ -54,6 +54,7 @@ const organizationMembershipListSelect = {
     select: {
       name: true,
       email: true,
+      designation: true,
     },
   },
 } satisfies Prisma.OrganizationMembershipSelect;
@@ -75,6 +76,7 @@ const organizationMembershipListSelectWithoutRoles = {
     select: {
       name: true,
       email: true,
+      designation: true,
     },
   },
 } satisfies Prisma.OrganizationMembershipSelect;
@@ -107,6 +109,7 @@ const membershipDetailSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
 } satisfies Prisma.OrganizationMembershipSelect;
@@ -133,6 +136,7 @@ const membershipDetailSelectWithoutRoles = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
 } satisfies Prisma.OrganizationMembershipSelect;
@@ -148,6 +152,7 @@ export const assignableDepartmentHeadCandidateSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   role: true,
@@ -160,6 +165,7 @@ const assignableDepartmentHeadCandidateSelectWithoutRoles = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
   role: true,

@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ExportActions } from "@/components/ui/export-actions";
 import { requireMeetingWorkspaceAccess } from "@/features/auth/utils/require-organization-permission";
 import { getMyMeetingActionPoints } from "@/features/meetings/queries/meetings";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 function formatDate(value: Date) {
   return new Intl.DateTimeFormat("en-KE", {
@@ -29,9 +30,7 @@ export default async function MyMeetingActionPointsPage() {
     actionPoint.status.replaceAll("_", " "),
     formatDate(actionPoint.dueDate),
     actionPoint.assignedToDepartment?.name ?? "Not assigned",
-    actionPoint.assignedToUser?.name ||
-      actionPoint.assignedToUser?.email ||
-      "Not assigned",
+    formatUserLabel(actionPoint.assignedToUser, "Not assigned"),
     isOverdue(actionPoint.dueDate, actionPoint.status) ? "Overdue" : "On time",
   ]);
 
@@ -112,9 +111,10 @@ export default async function MyMeetingActionPointsPage() {
                         "No department"}
                     </div>
                     <div>
-                      {actionPoint.assignedToUser?.name ||
-                        actionPoint.assignedToUser?.email ||
-                        "No named user"}
+                      {formatUserLabel(
+                        actionPoint.assignedToUser,
+                        "No named user",
+                      )}
                     </div>
                   </div>
                   {actionPoint.remarks ? (

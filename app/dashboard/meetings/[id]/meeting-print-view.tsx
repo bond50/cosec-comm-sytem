@@ -1,5 +1,6 @@
 import { MeetingPrintToolbar } from "@/app/dashboard/meetings/[id]/meeting-print-toolbar";
 import type { MeetingDetailItem } from "@/features/meetings/queries/meetings";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 function formatDateTime(value: Date | null | undefined) {
   if (!value) return "Not recorded";
@@ -99,9 +100,10 @@ export function MeetingPrintView({
                       {actionPoint.actionPoint}
                     </td>
                     <td className="border border-slate-300 p-2">
-                      {actionPoint.assignedToUser?.name ||
-                        actionPoint.assignedToUser?.email ||
-                        "Not assigned"}
+                      {formatUserLabel(
+                        actionPoint.assignedToUser,
+                        "Not assigned",
+                      )}
                     </td>
                     <td className="border border-slate-300 p-2">
                       {actionPoint.assignedToDepartment?.name || "Not assigned"}

@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { CorrespondenceListItemWithSla } from "@/features/correspondence/queries/correspondence-list";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 type CorrespondencesDirectoryTableProps = {
   correspondences: CorrespondenceListItemWithSla[];
@@ -207,15 +208,11 @@ export function CorrespondencesDirectoryTable({
       id: "assigned",
       accessorFn: (row) =>
         row.assignedToDepartment?.name ||
-        row.assignedToUser?.name ||
-        row.assignedToUser?.email ||
-        "",
+        formatUserLabel(row.assignedToUser, ""),
       header: "Routed to",
       cell: ({ row }) => {
         const department = row.original.assignedToDepartment?.name;
-        const user =
-          row.original.assignedToUser?.name ||
-          row.original.assignedToUser?.email;
+        const user = formatUserLabel(row.original.assignedToUser, "");
 
         return (
           <div className="min-w-0">

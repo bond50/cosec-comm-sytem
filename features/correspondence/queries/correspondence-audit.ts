@@ -13,6 +13,7 @@ export const correspondenceAuditSelect = {
       id: true,
       name: true,
       email: true,
+      designation: true,
     },
   },
 } satisfies Prisma.AuditLogSelect;

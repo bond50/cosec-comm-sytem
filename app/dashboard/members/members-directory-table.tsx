@@ -25,6 +25,7 @@ import { getRoleLabel, getRoleLabels } from "@/features/auth/utils/role-access";
 import { resolvePrimaryRole } from "@/features/auth/utils/roles";
 import type { DepartmentSummary } from "@/features/application/queries/departments";
 import type { OrganizationMembershipListItem } from "@/features/application/queries/memberships";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 type MembersDirectoryTableProps = {
   memberships: OrganizationMembershipListItem[];
@@ -117,8 +118,7 @@ export function MembersDirectoryTable({
       header: "User",
       cell: ({ row }) => {
         const membership = row.original;
-        const displayName =
-          membership.user.name || membership.user.email || membership.userId;
+        const displayName = formatUserLabel(membership.user, membership.userId);
 
         return (
           <div className="flex items-center gap-3">
@@ -203,7 +203,7 @@ export function MembersDirectoryTable({
             type="button"
             onClick={() => setViewMember(row.original)}
             className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
-            aria-label={`View ${row.original.user.name || row.original.user.email || "member"}`}
+            aria-label={`View ${formatUserLabel(row.original.user, "member")}`}
             title="View member"
           >
             <Eye className="h-4 w-4 text-slate-400" />
@@ -213,7 +213,7 @@ export function MembersDirectoryTable({
               type="button"
               onClick={() => setEditMember(row.original)}
               className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
-              aria-label={`Edit ${row.original.user.name || row.original.user.email || "member"}`}
+              aria-label={`Edit ${formatUserLabel(row.original.user, "member")}`}
               title="Edit member"
             >
               <PencilLine className="h-4 w-4 text-slate-500" />

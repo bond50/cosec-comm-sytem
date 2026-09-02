@@ -20,6 +20,7 @@ import {
   UnauthorizedError,
 } from "@/features/auth/utils/auth-errors";
 import { notifyCorrespondenceDispatchIssued } from "@/features/correspondence/lib/correspondence-notifications";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 export async function createDispatchAction(
   _previousState: CorrespondenceDispatchActionState,
@@ -107,6 +108,7 @@ export async function createDispatchAction(
           id: true,
           name: true,
           email: true,
+          designation: true,
           isActive: true,
         },
       },
@@ -193,11 +195,7 @@ export async function createDispatchAction(
     parsed.data.note?.trim() ||
     `Central office dispatch sent to ${correspondence.assignedToDepartment.name}${
       correspondence.assignedToUser
-        ? ` and ${
-            correspondence.assignedToUser.name ||
-            correspondence.assignedToUser.email ||
-            "the selected user"
-          }`
+        ? ` and ${formatUserLabel(correspondence.assignedToUser, "the selected user")}`
         : ""
     }.`;
 

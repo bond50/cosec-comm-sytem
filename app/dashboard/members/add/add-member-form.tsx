@@ -32,12 +32,14 @@ import {
   getMembershipRolePolicyHint,
 } from "@/features/application/lib/membership-role-policy";
 import type { DepartmentSummary } from "@/features/application/queries/departments";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 import { EDITABLE_MEMBERSHIP_ROLES } from "@/features/auth/utils/roles";
 
 type AddMemberCandidate = {
   id: string;
   name: string;
   email: string;
+  designation: string | null;
 };
 
 type AddMemberFormProps = {
@@ -170,8 +172,7 @@ export function AddMemberForm({
           <SelectContent>
             {users.map((user) => (
               <SelectItem key={user.id} value={user.id}>
-                {user.name || user.email || user.id} -{" "}
-                {user.email || "No email"}
+                {formatUserLabel(user, user.id)} - {user.email || "No email"}
               </SelectItem>
             ))}
           </SelectContent>

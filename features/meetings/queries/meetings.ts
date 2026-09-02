@@ -2,6 +2,7 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 export const meetingRegistrySelect = {
   id: true,
@@ -66,6 +67,7 @@ export async function getMeetingCreateOptions(organizationId: string) {
           select: {
             name: true,
             email: true,
+            designation: true,
           },
         },
       },
@@ -99,7 +101,7 @@ export async function getMeetingCreateOptions(organizationId: string) {
   return {
     users: memberships.map((membership) => ({
       id: membership.userId,
-      label: membership.user.name || membership.user.email || "Unnamed member",
+      label: formatUserLabel(membership.user, "Unnamed member"),
     })),
     departments: departments.map((department) => ({
       id: department.id,
@@ -148,6 +150,7 @@ export const meetingDetailSelect = {
           id: true,
           name: true,
           email: true,
+          designation: true,
         },
       },
     },
@@ -166,6 +169,7 @@ export const meetingDetailSelect = {
           id: true,
           name: true,
           email: true,
+          designation: true,
         },
       },
       assignedToDepartment: {
@@ -180,6 +184,7 @@ export const meetingDetailSelect = {
           id: true,
           name: true,
           email: true,
+          designation: true,
         },
       },
     },
@@ -258,6 +263,7 @@ export async function getMeetingActionPointAuditLogs(
           id: true,
           name: true,
           email: true,
+          designation: true,
         },
       },
     },
@@ -310,6 +316,7 @@ export async function getMyMeetingActionPoints(
           id: true,
           name: true,
           email: true,
+          designation: true,
         },
       },
       assignedToDepartment: {

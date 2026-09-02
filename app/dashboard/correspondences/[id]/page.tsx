@@ -21,6 +21,7 @@ import {
 } from "@/app/dashboard/correspondences/[id]/correspondence-detail-panels";
 import { getDepartmentsByOrganization } from "@/features/application/queries/departments";
 import { getMembershipsByOrganization } from "@/features/application/queries/memberships";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 import { requireCorrespondenceWorkspaceAccess } from "@/features/auth/utils/require-organization-permission";
 import {
   hasCountySecretaryAuthority,
@@ -145,10 +146,10 @@ export default async function CorrespondenceDetailPage({
     )
     .map((membership) => ({
       id: membership.userId,
-      label:
-        membership.user.name ||
-        membership.user.email ||
+      label: formatUserLabel(
+        membership.user,
         `Member ${membership.userId.slice(0, 6)}`,
+      ),
       departmentId: membership.departmentId,
     }));
   const currentUserDepartmentId =

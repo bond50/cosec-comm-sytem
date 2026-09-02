@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { assignMemberToDepartmentAction } from "@/features/application/lib/assign-member-to-department";
 import type { AssignableDepartmentHeadCandidate } from "@/features/application/queries/memberships";
+import { formatUserLabel } from "@/features/application/lib/user-label";
 
 type AssignMemberToDepartmentFormProps = {
   departmentId: string;
@@ -112,9 +113,7 @@ export function MemberAssignmentForm({
               <SelectContent>
                 {candidates.map((candidate) => (
                   <SelectItem key={candidate.user.id} value={candidate.user.id}>
-                    {candidate.user.name ||
-                      candidate.user.email ||
-                      candidate.user.id}
+                    {formatUserLabel(candidate.user, candidate.user.id)}
                     {" - "}
                     {candidate.role.replaceAll("_", " ")}
                   </SelectItem>

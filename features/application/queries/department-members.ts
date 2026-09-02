@@ -13,6 +13,7 @@ const departmentMemberSelect = {
     select: {
       name: true,
       email: true,
+      designation: true,
     },
   },
 } satisfies Prisma.OrganizationMembershipSelect;
@@ -25,6 +26,7 @@ const departmentMemberSelectWithoutRoles = {
     select: {
       name: true,
       email: true,
+      designation: true,
     },
   },
 } satisfies Prisma.OrganizationMembershipSelect;
@@ -33,6 +35,7 @@ export type DepartmentMember = {
   userId: string;
   name: string | null;
   email: string | null;
+  designation: string | null;
   role: UserRole;
   roles: UserRole[];
   status: MembershipStatus;
@@ -104,6 +107,7 @@ export async function getDepartmentMembers(
     userId: membership.userId,
     name: membership.user.name,
     email: membership.user.email,
+    designation: membership.user.designation,
     role: membership.role,
     roles:
       "roles" in membership &&
