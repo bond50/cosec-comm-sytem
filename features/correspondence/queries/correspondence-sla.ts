@@ -1,6 +1,14 @@
 import "server-only";
 
+import { CorrespondenceStatus } from "@prisma/client";
+
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
+export const FINAL_CORRESPONDENCE_STATUSES: CorrespondenceStatus[] = [
+  CorrespondenceStatus.COMPLETED,
+  CorrespondenceStatus.CANCELLED,
+  CorrespondenceStatus.CLOSED,
+];
 
 export type CorrespondenceSlaSnapshot = {
   dueDate: Date | null;
@@ -29,15 +37,18 @@ export function getCorrespondenceSla(
   };
 }
 
-export function withCorrespondenceSla<T extends { dueDate: Date | null }>(
+export function withCorrespondenceSla<
+  T extends { dueDate: Date | null; status: CorrespondenceStatus },
+>(
   item: T,
   now: Date = new Date(),
 ): T & Pick<CorrespondenceSlaSnapshot, "isOverdue" | "daysRemaining"> {
   const { isOverdue, daysRemaining } = getCorrespondenceSla(item.dueDate, now);
+  const isFinal = FINAL_CORRESPONDENCE_STATUSES.includes(item.status);
 
   return {
     ...item,
-    isOverdue,
+    isOverdue: isFinal ? false : isOverdue,
     daysRemaining,
   };
 }

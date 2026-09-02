@@ -8,13 +8,66 @@ import {
   type Prisma,
 } from "@prisma/client";
 import { db } from "@/lib/db";
-import { getCorrespondenceSla } from "@/features/correspondence/queries/correspondence-sla";
+import {
+  FINAL_CORRESPONDENCE_STATUSES,
+  getCorrespondenceSla,
+} from "@/features/correspondence/queries/correspondence-sla";
 
-const FINAL_CORRESPONDENCE_STATUSES = [
-  CorrespondenceStatus.COMPLETED,
-  CorrespondenceStatus.CANCELLED,
-  CorrespondenceStatus.CLOSED,
-] as CorrespondenceStatus[];
+export type DashboardVisibilityScope = {
+  userId: string;
+  departmentId: string | null;
+  orgWide: boolean;
+};
+
+function buildCorrespondenceVisibilityWhere(
+  scope: DashboardVisibilityScope | undefined,
+): Prisma.CorrespondenceWhereInput | undefined {
+  if (!scope || scope.orgWide) return undefined;
+
+  const or: Prisma.CorrespondenceWhereInput[] = [
+    { assignedToUserId: scope.userId },
+    { receivedByUserId: scope.userId },
+    { reviewedByUserId: scope.userId },
+  ];
+  if (scope.departmentId) {
+    or.push({ assignedToDepartmentId: scope.departmentId });
+  }
+
+  return { OR: or };
+}
+
+function buildDispatchVisibilityWhere(
+  scope: DashboardVisibilityScope | undefined,
+): Prisma.CorrespondenceDispatchWhereInput | undefined {
+  if (!scope || scope.orgWide) return undefined;
+
+  const or: Prisma.CorrespondenceDispatchWhereInput[] = [
+    { dispatchedToUserId: scope.userId },
+    { acknowledgedByUserId: scope.userId },
+    { createdByUserId: scope.userId },
+  ];
+  if (scope.departmentId) {
+    or.push({ dispatchedToDepartmentId: scope.departmentId });
+  }
+
+  return { OR: or };
+}
+
+function buildActionPointVisibilityWhere(
+  scope: DashboardVisibilityScope | undefined,
+): Prisma.MeetingActionPointWhereInput | undefined {
+  if (!scope || scope.orgWide) return undefined;
+
+  const or: Prisma.MeetingActionPointWhereInput[] = [
+    { assignedToUserId: scope.userId },
+    { createdByUserId: scope.userId },
+  ];
+  if (scope.departmentId) {
+    or.push({ assignedToDepartmentId: scope.departmentId });
+  }
+
+  return { OR: or };
+}
 
 const URGENT_PRIORITIES = [
   CorrespondencePriority.URGENT,
@@ -353,6 +406,7 @@ function getMonthlyIntakeBreakdown(receivedAtValues: Date[], now: Date) {
 
 export async function getCorrespondenceDashboardMetrics(
   organizationId: string,
+  viewer?: DashboardVisibilityScope,
 ): Promise<CorrespondenceDashboardMetrics> {
   if (!organizationId) {
     return {
@@ -383,6 +437,9 @@ export async function getCorrespondenceDashboardMetrics(
 
   const now = new Date();
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  const correspondenceVisibility = buildCorrespondenceVisibilityWhere(viewer);
+  const dispatchVisibility = buildDispatchVisibilityWhere(viewer);
+  const actionPointVisibility = buildActionPointVisibilityWhere(viewer);
 
   const [
     totalCount,
@@ -409,6 +466,7 @@ export async function getCorrespondenceDashboardMetrics(
     db.correspondence.count({
       where: {
         organizationId,
+        ...correspondenceVisibility,
       },
     }),
     db.correspondence.count({
@@ -420,6 +478,7 @@ export async function getCorrespondenceDashboardMetrics(
         priority: {
           in: URGENT_PRIORITIES,
         },
+        ...correspondenceVisibility,
       },
     }),
     db.correspondence.count({
@@ -431,6 +490,7 @@ export async function getCorrespondenceDashboardMetrics(
         dueDate: {
           lt: now,
         },
+        ...correspondenceVisibility,
       },
     }),
     db.correspondence.count({
@@ -442,6 +502,7 @@ export async function getCorrespondenceDashboardMetrics(
         dueDate: {
           not: null,
         },
+        ...correspondenceVisibility,
       },
     }),
     db.correspondence.count({
@@ -453,6 +514,7 @@ export async function getCorrespondenceDashboardMetrics(
         dueDate: {
           gte: now,
         },
+        ...correspondenceVisibility,
       },
     }),
     db.correspondence.count({
@@ -461,6 +523,7 @@ export async function getCorrespondenceDashboardMetrics(
         status: {
           in: PENDING_REVIEW_STATUSES,
         },
+        ...correspondenceVisibility,
       },
     }),
     db.correspondenceDispatch.count({
@@ -473,12 +536,14 @@ export async function getCorrespondenceDashboardMetrics(
             DispatchStatus.IN_PROGRESS,
           ],
         },
+        ...dispatchVisibility,
       },
     }),
     db.correspondenceDispatch.count({
       where: {
         organizationId,
         status: DispatchStatus.SENT,
+        ...dispatchVisibility,
       },
     }),
     db.meetingActionPoint.count({
@@ -487,6 +552,7 @@ export async function getCorrespondenceDashboardMetrics(
         status: {
           in: ["OPEN", "IN_PROGRESS", "OVERDUE"],
         },
+        ...actionPointVisibility,
       },
     }),
     db.meetingActionPoint.count({
@@ -498,6 +564,7 @@ export async function getCorrespondenceDashboardMetrics(
         dueDate: {
           lt: now,
         },
+        ...actionPointVisibility,
       },
     }),
     db.correspondence.findMany({
@@ -509,27 +576,33 @@ export async function getCorrespondenceDashboardMetrics(
         assignedToDepartmentId: {
           not: null,
         },
+        ...correspondenceVisibility,
       },
       select: ACTIVE_WORKLOAD_SELECT,
     }),
     db.correspondence.findMany({
       where: {
         organizationId,
-        OR: [
+        AND: [
           {
-            closedAt: {
-              not: null,
-            },
-          },
-          {
-            dispatches: {
-              some: {
-                feedbackReceivedAt: {
+            OR: [
+              {
+                closedAt: {
                   not: null,
                 },
               },
-            },
+              {
+                dispatches: {
+                  some: {
+                    feedbackReceivedAt: {
+                      not: null,
+                    },
+                  },
+                },
+              },
+            ],
           },
+          ...(correspondenceVisibility ? [correspondenceVisibility] : []),
         ],
       },
       select: RESPONSE_TIME_SELECT,
@@ -537,6 +610,7 @@ export async function getCorrespondenceDashboardMetrics(
     db.correspondence.findMany({
       where: {
         organizationId,
+        ...correspondenceVisibility,
       },
       orderBy: [{ receivedAt: "desc" }],
       take: 5,
@@ -551,6 +625,7 @@ export async function getCorrespondenceDashboardMetrics(
         dueDate: {
           lt: now,
         },
+        ...correspondenceVisibility,
       },
       orderBy: [{ dueDate: "asc" }],
       take: 5,
@@ -566,6 +641,7 @@ export async function getCorrespondenceDashboardMetrics(
             DispatchStatus.IN_PROGRESS,
           ],
         },
+        ...dispatchVisibility,
       },
       orderBy: [{ dispatchDate: "asc" }],
       take: 5,
@@ -577,6 +653,7 @@ export async function getCorrespondenceDashboardMetrics(
         status: {
           in: ["OPEN", "IN_PROGRESS", "OVERDUE"],
         },
+        ...actionPointVisibility,
       },
       orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
       take: 5,
@@ -586,6 +663,7 @@ export async function getCorrespondenceDashboardMetrics(
       by: ["status"],
       where: {
         organizationId,
+        ...correspondenceVisibility,
       },
       _count: {
         _all: true,
@@ -595,6 +673,7 @@ export async function getCorrespondenceDashboardMetrics(
       by: ["priority"],
       where: {
         organizationId,
+        ...correspondenceVisibility,
       },
       _count: {
         _all: true,
@@ -606,6 +685,7 @@ export async function getCorrespondenceDashboardMetrics(
         receivedAt: {
           gte: sixMonthsAgo,
         },
+        ...correspondenceVisibility,
       },
       select: {
         receivedAt: true,

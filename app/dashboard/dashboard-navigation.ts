@@ -68,13 +68,17 @@ export function getDashboardNavigation(
           icon: LayoutDashboard,
           match: (pathname: string) => pathname === "/dashboard",
         },
-        {
-          label: "Reports",
-          href: "/dashboard/reports",
-          icon: PieChart,
-          match: (pathname: string) =>
-            pathname.startsWith("/dashboard/reports"),
-        },
+        ...(hasFoundationPermission(organizationRoles, "reports.view")
+          ? [
+              {
+                label: "Reports",
+                href: "/dashboard/reports",
+                icon: PieChart,
+                match: (pathname: string) =>
+                  pathname.startsWith("/dashboard/reports"),
+              },
+            ]
+          : []),
         {
           label: "User guide",
           href: "/user-guide.html",

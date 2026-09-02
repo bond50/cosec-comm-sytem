@@ -1,45 +1,13 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/auth";
 import { ReportsOverview } from "@/app/dashboard/reports/reports-overview";
-import {
-  MissingOrganizationError,
-  UnauthorizedError,
-} from "@/features/auth/utils/auth-errors";
-import { requireCurrentOrganization } from "@/features/auth/utils/current-organization";
-import { resolveOrganizationEntry } from "@/features/auth/utils/organization-entry";
+import { requirePagePermission } from "@/features/auth/utils/require-organization-permission";
 import { getCorrespondenceDashboardMetrics } from "@/features/correspondence/queries/correspondence-dashboard";
 
 export default async function ReportsPage() {
-  const session = await auth();
+  const access = await requirePagePermission("reports.view");
 
-  if (!session?.user) {
-    redirect("/auth/login");
-  }
-
-  const organizationEntry = await resolveOrganizationEntry(session.user.id);
-  if (organizationEntry === "NO_ORG") {
-    redirect("/dashboard/organization/setup");
-  }
-
-  let organizationId: string;
-
-  try {
-    const organization = await requireCurrentOrganization();
-    organizationId = organization.id;
-  } catch (error) {
-    if (error instanceof MissingOrganizationError) {
-      redirect("/dashboard/organization/setup");
-    }
-
-    if (error instanceof UnauthorizedError) {
-      redirect("/auth/login");
-    }
-
-    throw error;
-  }
-
-  const correspondenceMetrics =
-    await getCorrespondenceDashboardMetrics(organizationId);
+  const correspondenceMetrics = await getCorrespondenceDashboardMetrics(
+    access.organization.id,
+  );
 
   return <ReportsOverview correspondenceMetrics={correspondenceMetrics} />;
 }

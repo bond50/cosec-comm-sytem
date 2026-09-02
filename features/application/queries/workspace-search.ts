@@ -21,6 +21,7 @@ import {
   hasDocumentWorkspaceAccess,
   hasFoundationPermission,
   hasMeetingWorkspaceAccess,
+  hasOrgWideCorrespondenceVisibility,
 } from "@/features/auth/utils/role-access";
 
 type WorkspaceSearchArgs = {
@@ -495,6 +496,21 @@ export async function getWorkspaceSearchResults({
       })
     : null;
 
+  const correspondenceOrgWide = hasOrgWideCorrespondenceVisibility(roles);
+  const correspondenceVisibilityFilter: Prisma.CorrespondenceWhereInput | null =
+    correspondenceOrgWide || !userId
+      ? null
+      : {
+          OR: [
+            { assignedToUserId: userId },
+            { receivedByUserId: userId },
+            { reviewedByUserId: userId },
+            ...(membership?.departmentId
+              ? [{ assignedToDepartmentId: membership.departmentId }]
+              : []),
+          ],
+        };
+
   const meetingSearchOrFilters: Prisma.MeetingWhereInput[] = [
     ...buildContainsFilters(searchTerms, (term) => ({
       title: containsInsensitive(term),
@@ -577,44 +593,51 @@ export async function getWorkspaceSearchResults({
                   },
                 }
               : {}),
-            OR: [
-              ...buildContainsFilters(searchTerms, (term) => ({
-                referenceNumber: containsInsensitive(term),
-              })),
-              ...buildContainsFilters(searchTerms, (term) => ({
-                subject: containsInsensitive(term),
-              })),
-              ...buildContainsFilters(searchTerms, (term) => ({
-                senderName: containsInsensitive(term),
-              })),
-              ...buildContainsFilters(searchTerms, (term) => ({
-                senderOffice: containsInsensitive(term),
-              })),
-              ...buildContainsFilters(searchTerms, (term) => ({
-                description: containsInsensitive(term),
-              })),
-              ...buildContainsFilters(searchTerms, (term) => ({
-                deliveredBy: containsInsensitive(term),
-              })),
-              ...buildContainsFilters(searchTerms, (term) => ({
-                assignedToDepartment: {
-                  name: containsInsensitive(term),
-                },
-              })),
-              ...buildContainsFilters(searchTerms, (term) => ({
-                assignedToUser: {
-                  name: containsInsensitive(term),
-                },
-              })),
-              ...(statusTokens.correspondenceStatuses.length > 0
-                ? statusTokens.correspondenceStatuses.map((status) => ({
-                    status,
-                  }))
-                : []),
-              ...(statusTokens.correspondencePriorities.length > 0
-                ? statusTokens.correspondencePriorities.map((priority) => ({
-                    priority,
-                  }))
+            AND: [
+              {
+                OR: [
+                  ...buildContainsFilters(searchTerms, (term) => ({
+                    referenceNumber: containsInsensitive(term),
+                  })),
+                  ...buildContainsFilters(searchTerms, (term) => ({
+                    subject: containsInsensitive(term),
+                  })),
+                  ...buildContainsFilters(searchTerms, (term) => ({
+                    senderName: containsInsensitive(term),
+                  })),
+                  ...buildContainsFilters(searchTerms, (term) => ({
+                    senderOffice: containsInsensitive(term),
+                  })),
+                  ...buildContainsFilters(searchTerms, (term) => ({
+                    description: containsInsensitive(term),
+                  })),
+                  ...buildContainsFilters(searchTerms, (term) => ({
+                    deliveredBy: containsInsensitive(term),
+                  })),
+                  ...buildContainsFilters(searchTerms, (term) => ({
+                    assignedToDepartment: {
+                      name: containsInsensitive(term),
+                    },
+                  })),
+                  ...buildContainsFilters(searchTerms, (term) => ({
+                    assignedToUser: {
+                      name: containsInsensitive(term),
+                    },
+                  })),
+                  ...(statusTokens.correspondenceStatuses.length > 0
+                    ? statusTokens.correspondenceStatuses.map((status) => ({
+                        status,
+                      }))
+                    : []),
+                  ...(statusTokens.correspondencePriorities.length > 0
+                    ? statusTokens.correspondencePriorities.map((priority) => ({
+                        priority,
+                      }))
+                    : []),
+                ],
+              },
+              ...(correspondenceVisibilityFilter
+                ? [correspondenceVisibilityFilter]
                 : []),
             ],
           },

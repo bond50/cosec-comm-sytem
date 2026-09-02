@@ -8,6 +8,7 @@ import {
 
 export type FoundationPermission =
   | "dashboard.view"
+  | "reports.view"
   | "access.view"
   | "members.view"
   | "members.manage"
@@ -45,6 +46,7 @@ export const FOUNDATION_PERMISSION_LABELS: Record<
 > = {
   "dashboard.view":
     "View the county operations dashboard and office workspaces",
+  "reports.view": "View organization-wide correspondence reports and analytics",
   "access.view": "View role matrix and access mapping",
   "members.view": "View county users, roles, and department placement",
   "members.manage": "Create and manage county user access",
@@ -75,6 +77,12 @@ export const FOUNDATION_PERMISSION_ROLES: Record<
     UserRole.DEPARTMENT_USER,
     UserRole.MANAGEMENT,
     UserRole.USER,
+  ],
+  "reports.view": [
+    UserRole.SUPER_ADMIN,
+    UserRole.ORG_ADMIN,
+    UserRole.REVIEWING_OFFICER,
+    UserRole.MANAGEMENT,
   ],
   "access.view": [
     UserRole.SUPER_ADMIN,
@@ -254,6 +262,14 @@ export const FOUNDATION_ACCESS_MAP: AccessMapEntry[] = [
     allowedRoles: FOUNDATION_PERMISSION_ROLES["dashboard.view"],
     description:
       "Foundation dashboard summarizing members, departments, and next steps.",
+  },
+  {
+    kind: "page",
+    target: "/dashboard/reports",
+    permission: "reports.view",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["reports.view"],
+    description:
+      "Organization-wide correspondence SLA, workload, and trend reporting.",
   },
   {
     kind: "page",
@@ -604,6 +620,15 @@ export function hasCorrespondenceWorkspaceAccess(
     hasFoundationPermission(roles, "correspondence.dispatch") ||
     hasFoundationPermission(roles, "correspondence.work") ||
     hasFoundationPermission(roles, "correspondence.close")
+  );
+}
+
+export function hasOrgWideCorrespondenceVisibility(
+  roles: MembershipRoleInput,
+): boolean {
+  return (
+    hasFoundationPermission(roles, "reports.view") ||
+    hasMembershipRole(roles, UserRole.REGISTRY_OFFICER)
   );
 }
 

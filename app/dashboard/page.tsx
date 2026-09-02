@@ -11,6 +11,8 @@ import {
 import { requireCurrentOrganization } from "@/features/auth/utils/current-organization";
 import { getCurrentUser } from "@/features/auth/utils/current-user";
 import { resolveOrganizationEntry } from "@/features/auth/utils/organization-entry";
+import { hasOrgWideCorrespondenceVisibility } from "@/features/auth/utils/role-access";
+import { getActiveMembershipByUserId } from "@/features/application/queries/memberships";
 import { getCorrespondenceDashboardMetrics } from "@/features/correspondence/queries/correspondence-dashboard";
 import { getUserNotifications } from "@/features/notifications/queries/notifications";
 
@@ -53,10 +55,24 @@ export default async function DashboardPage({
   const workspaceQuery = resolvedSearchParams?.q?.trim() ?? "";
   const workspaceScope = resolvedSearchParams?.scope?.trim() ?? "all";
 
-  const [user, correspondenceMetrics] = await Promise.all([
-    getCurrentUser(),
-    getCorrespondenceDashboardMetrics(organizationId),
-  ]);
+  const user = await getCurrentUser();
+  const orgWide = hasOrgWideCorrespondenceVisibility(
+    user?.organization?.roles ?? null,
+  );
+  const membership = orgWide
+    ? null
+    : await getActiveMembershipByUserId(session.user.id, organizationId);
+
+  const correspondenceMetrics = await getCorrespondenceDashboardMetrics(
+    organizationId,
+    user
+      ? {
+          userId: user.id,
+          departmentId: membership?.departmentId ?? null,
+          orgWide,
+        }
+      : undefined,
+  );
 
   if (workspaceQuery.length > 0) {
     const [results, searchHistory] = await Promise.all([
