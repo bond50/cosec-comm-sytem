@@ -120,6 +120,8 @@ export async function updateMemberAccessAction(
         organizationId: true,
         userId: true,
         departmentId: true,
+        roles: true,
+        status: true,
       },
     }),
     db.department.findFirst({
@@ -189,6 +191,36 @@ export async function updateMemberAccessAction(
       },
       values: parsed.data,
     };
+  }
+
+  const wasActiveOrgAdmin =
+    membership.status === MembershipStatus.ACTIVE &&
+    membership.roles.includes(UserRole.ORG_ADMIN);
+  const staysActiveOrgAdmin =
+    parsed.data.status === MembershipStatus.ACTIVE &&
+    parsed.data.roles.includes(UserRole.ORG_ADMIN);
+
+  if (wasActiveOrgAdmin && !staysActiveOrgAdmin) {
+    const otherActiveOrgAdmins = await db.organizationMembership.count({
+      where: {
+        organizationId,
+        status: MembershipStatus.ACTIVE,
+        roles: { has: UserRole.ORG_ADMIN },
+        userId: { not: parsed.data.userId },
+      },
+    });
+
+    if (otherActiveOrgAdmins === 0) {
+      return {
+        ok: false,
+        message:
+          "This is the only active organization admin. Assign ORG_ADMIN to another active member first.",
+        fieldErrors: {
+          roles: ["At least one active member must keep the ORG_ADMIN role."],
+        },
+        values: parsed.data,
+      };
+    }
   }
 
   try {
