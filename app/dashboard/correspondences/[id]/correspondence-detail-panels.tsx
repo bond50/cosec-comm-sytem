@@ -75,7 +75,6 @@ type CorrespondenceAssignmentCardProps = {
   correspondence: CorrespondenceDetailWithSla;
   canAssign: boolean;
   showForm?: boolean;
-  currentUserId: string;
   departmentOptions: {
     id: string;
     label: string;
@@ -1076,7 +1075,6 @@ export function CorrespondenceAssignmentCard({
   correspondence,
   canAssign,
   showForm = true,
-  currentUserId,
   departmentOptions,
   assigneeOptions,
 }: CorrespondenceAssignmentCardProps) {
@@ -1125,7 +1123,6 @@ export function CorrespondenceAssignmentCard({
               }
               assignedToUserId={correspondence.assignedToUser?.id ?? null}
               dueDate={correspondence.dueDate}
-              currentUserId={currentUserId}
               departmentOptions={departmentOptions}
               assigneeOptions={assigneeOptions}
             />
@@ -1267,7 +1264,6 @@ export function CorrespondenceDispatchCard({
             {canAcknowledge && latestDispatch ? (
               <CorrespondenceDispatchAcknowledgeForm
                 dispatchId={latestDispatch.id}
-                currentUserId={currentUserId}
                 acknowledgedAt={latestDispatch.acknowledgedAt}
               />
             ) : null}
@@ -1594,7 +1590,7 @@ export function CorrespondenceAttachmentsCard({
                   {attachments.map((attachment) => (
                     <a
                       key={attachment.id}
-                      href={attachment.storagePath}
+                      href={`/api/attachments/${attachment.id}`}
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-start justify-between rounded-xl border border-[#c7ddea] bg-[#fbfdff] px-4 py-4 transition hover:bg-[#eef7fb]"

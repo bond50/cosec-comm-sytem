@@ -269,7 +269,6 @@ export function CorrespondenceCurrentStepCard({
           }
           assignedToUserId={correspondence.assignedToUser?.id ?? null}
           dueDate={correspondence.dueDate}
-          currentUserId={currentUserId}
           departmentOptions={departmentOptions}
           assigneeOptions={assigneeOptions}
         />
@@ -307,7 +306,6 @@ export function CorrespondenceCurrentStepCard({
         >
           <CorrespondenceDispatchAcknowledgeForm
             dispatchId={dispatchAction.latestDispatch.id}
-            currentUserId={currentUserId}
             acknowledgedAt={dispatchAction.latestDispatch.acknowledgedAt}
           />
         </CorrespondenceCurrentStepAction>

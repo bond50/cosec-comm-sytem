@@ -219,7 +219,6 @@ export default async function CorrespondenceDetailPage({
                               correspondence={correspondence}
                               canAssign={canAssign}
                               showForm={false}
-                              currentUserId={access.userId}
                               departmentOptions={departmentOptions}
                               assigneeOptions={assigneeOptions}
                             />

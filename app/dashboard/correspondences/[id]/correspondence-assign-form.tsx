@@ -36,7 +36,6 @@ type CorrespondenceAssignFormProps = {
   assignedToDepartmentId: string | null;
   assignedToUserId: string | null;
   dueDate: Date | null;
-  currentUserId: string;
   departmentOptions: DepartmentOption[];
   assigneeOptions: AssigneeOption[];
 };
@@ -69,7 +68,6 @@ export function CorrespondenceAssignForm({
   assignedToDepartmentId,
   assignedToUserId,
   dueDate,
-  currentUserId,
   departmentOptions,
   assigneeOptions,
 }: CorrespondenceAssignFormProps) {
@@ -86,7 +84,6 @@ export function CorrespondenceAssignForm({
       correspondenceId,
       assignedToDepartmentId: assignedToDepartmentId ?? "",
       assignedToUserId: assignedToUserId ?? "",
-      assignedByUserId: currentUserId,
       dueDate: toDateTimeLocalValue(dueDate),
       status: "DISPATCHED",
     },
@@ -116,7 +113,6 @@ export function CorrespondenceAssignForm({
     >
       <input type="hidden" name="correspondenceId" value={correspondenceId} />
       <input type="hidden" name="status" value="DISPATCHED" />
-      <input type="hidden" name="assignedByUserId" value={currentUserId} />
       <input
         type="hidden"
         name="assignedToDepartmentId"

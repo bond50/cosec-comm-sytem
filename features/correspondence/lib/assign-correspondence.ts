@@ -78,7 +78,7 @@ export async function assignCorrespondenceAction(
     };
   }
 
-  const assignedByUserId = parsed.data.assignedByUserId ?? actorUserId;
+  const assignedByUserId = actorUserId;
 
   const [assignerMembership, department, correspondence, assigneeUser] =
     await Promise.all([
@@ -137,12 +137,7 @@ export async function assignCorrespondenceAction(
     return {
       ok: false,
       message:
-        "The assigning user must be an active member of the current organization.",
-      fieldErrors: {
-        assignedByUserId: [
-          "The assigning user must be an active member of the current organization.",
-        ],
-      },
+        "Your membership in the current organization could not be verified.",
       values: parsed.data,
     };
   }
@@ -152,11 +147,6 @@ export async function assignCorrespondenceAction(
       ok: false,
       message:
         "Only the County Secretary authority path can record a routing decision for correspondence.",
-      fieldErrors: {
-        assignedByUserId: [
-          "Choose an assigning user from the Reviewing Officer / Management authority path.",
-        ],
-      },
       values: parsed.data,
     };
   }
@@ -297,7 +287,6 @@ export async function assignCorrespondenceAction(
     message: "Routing decision saved successfully.",
     values: {
       ...parsed.data,
-      assignedByUserId,
       dueDate: parsed.data.dueDate,
       status: CorrespondenceStatus.DISPATCHED,
     },

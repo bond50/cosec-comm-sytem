@@ -38,13 +38,11 @@ function AcknowledgeSubmitButton() {
 
 type CorrespondenceDispatchAcknowledgeFormProps = {
   dispatchId: string;
-  currentUserId: string;
   acknowledgedAt: Date | null;
 };
 
 export function CorrespondenceDispatchAcknowledgeForm({
   dispatchId,
-  currentUserId,
   acknowledgedAt,
 }: CorrespondenceDispatchAcknowledgeFormProps) {
   const router = useRouter();
@@ -53,7 +51,6 @@ export function CorrespondenceDispatchAcknowledgeForm({
     values: {
       dispatchId,
       acknowledgedAt: toDateTimeLocalValue(acknowledgedAt ?? new Date()),
-      acknowledgedByUserId: currentUserId,
       status: "ACKNOWLEDGED",
     },
   };
@@ -78,7 +75,6 @@ export function CorrespondenceDispatchAcknowledgeForm({
       className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4"
     >
       <input type="hidden" name="dispatchId" value={dispatchId} />
-      <input type="hidden" name="acknowledgedByUserId" value={currentUserId} />
       <input type="hidden" name="status" value="ACKNOWLEDGED" />
 
       <Field>

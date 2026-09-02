@@ -79,7 +79,7 @@ export async function acknowledgeDispatchAction(
     };
   }
 
-  const acknowledgedByUserId = parsed.data.acknowledgedByUserId || actorUserId;
+  const acknowledgedByUserId = actorUserId;
   const [acknowledgerMembership, dispatch] = await Promise.all([
     db.organizationMembership.findFirst({
       where: {
@@ -131,12 +131,7 @@ export async function acknowledgeDispatchAction(
     return {
       ok: false,
       message:
-        "The acknowledging user must be an active member of the current organization.",
-      fieldErrors: {
-        acknowledgedByUserId: [
-          "The acknowledging user must be an active member of the current organization.",
-        ],
-      },
+        "Your membership in the current organization could not be verified.",
       values: parsed.data,
     };
   }
@@ -250,7 +245,6 @@ export async function acknowledgeDispatchAction(
     message: "Dispatch acknowledged successfully.",
     values: {
       ...parsed.data,
-      acknowledgedByUserId,
       acknowledgedAt: parsed.data.acknowledgedAt,
       status: DispatchStatus.ACKNOWLEDGED,
     },

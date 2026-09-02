@@ -66,15 +66,6 @@ function optionalTrimmedString(max: number, message: string) {
     .transform((value) => value || undefined);
 }
 
-function optionalCuid(message: string) {
-  return z
-    .string()
-    .trim()
-    .optional()
-    .transform((value) => value || undefined)
-    .refine((value) => !value || /^c[a-z0-9]{24,}$/i.test(value), { message });
-}
-
 function requiredRecordId(message: string) {
   return z.string().trim().min(1, { message });
 }
@@ -233,7 +224,6 @@ export const correspondenceAssignSchema = z.object({
   correspondenceId: requiredRecordId("Invalid correspondence identifier."),
   assignedToDepartmentId: requiredRecordId("Select a valid department."),
   assignedToUserId: optionalRecordId(),
-  assignedByUserId: optionalRecordId(),
   dueDate: requiredDateString(
     "Due date is required before dispatching correspondence.",
   ),
@@ -266,7 +256,6 @@ export const correspondenceDispatchAcknowledgeSchema = z.object({
   acknowledgedAt: requiredDateString(
     "Acknowledgement date and time is required.",
   ),
-  acknowledgedByUserId: optionalCuid("Select a valid acknowledging user."),
   status: z
     .enum(acknowledgeStatusValues, {
       message: "Acknowledgement must move the dispatch into an active state.",
@@ -403,7 +392,6 @@ export type CorrespondenceAssignFormValues = {
   correspondenceId: string;
   assignedToDepartmentId: string;
   assignedToUserId: string;
-  assignedByUserId: string;
   dueDate: string;
   status: string;
 };
@@ -423,7 +411,6 @@ export type CorrespondenceDispatchFormValues = {
 export type CorrespondenceDispatchAcknowledgeFormValues = {
   dispatchId: string;
   acknowledgedAt: string;
-  acknowledgedByUserId: string;
   status: string;
 };
 
@@ -573,7 +560,6 @@ export function getCorrespondenceAssignValuesFromFormData(
       "assignedToDepartmentId",
     ).trim(),
     assignedToUserId: getString(formData, "assignedToUserId").trim(),
-    assignedByUserId: getString(formData, "assignedByUserId").trim(),
     dueDate: getString(formData, "dueDate"),
     status: getString(formData, "status"),
   };
@@ -596,7 +582,6 @@ export function getCorrespondenceDispatchAcknowledgeValuesFromFormData(
   return {
     dispatchId: getString(formData, "dispatchId").trim(),
     acknowledgedAt: getString(formData, "acknowledgedAt"),
-    acknowledgedByUserId: getString(formData, "acknowledgedByUserId").trim(),
     status: getString(formData, "status"),
   };
 }
@@ -694,7 +679,6 @@ export const initialCorrespondenceAssignState: CorrespondenceAssignActionState =
       correspondenceId: "",
       assignedToDepartmentId: "",
       assignedToUserId: "",
-      assignedByUserId: "",
       dueDate: "",
       status: CorrespondenceStatus.DISPATCHED,
     },
@@ -721,7 +705,6 @@ export const initialCorrespondenceDispatchAcknowledgeState: CorrespondenceDispat
     values: {
       dispatchId: "",
       acknowledgedAt: "",
-      acknowledgedByUserId: "",
       status: DispatchStatus.ACKNOWLEDGED,
     },
   };
