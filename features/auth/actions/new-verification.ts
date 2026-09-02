@@ -4,6 +4,7 @@
 import { db } from "@/lib/db";
 import { getUserByEmail } from "@/features/auth/queries/user";
 import { getVerificationTokenByToken } from "@/features/auth/queries/verification-token";
+import { autoJoinSoleOrganization } from "@/features/application/lib/auto-join-organization";
 
 export async function verifyEmailToken(token?: string | null) {
   if (!token) {
@@ -31,6 +32,8 @@ export async function verifyEmailToken(token?: string | null) {
       data: { emailVerified: new Date() },
     });
   }
+
+  await autoJoinSoleOrganization(existingUser.id);
 
   await db.verificationToken.delete({ where: { id: existingToken.id } });
 

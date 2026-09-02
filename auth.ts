@@ -8,6 +8,7 @@ import { getUserById } from "@/features/auth/queries/user";
 import { getActiveOrganizationMembershipByUserId } from "@/features/auth/queries/organization-membership";
 import { getTwoFactorConfirmationByUserId } from "@/features/auth/queries/two-factor-confirmation";
 import { getAccountByUserId } from "@/features/auth/queries/account";
+import { autoJoinSoleOrganization } from "@/features/application/lib/auto-join-organization";
 import {
   isAdminRole,
   normalizeMembershipRoles,
@@ -30,12 +31,14 @@ export const { auth, handlers, signIn, signOut, unstable_update } = NextAuth({
 
     async createUser({ user }) {
       const email = (user?.email ?? "").toLowerCase();
-      if (!email) return;
+      if (!email || !user.id) return;
 
       await db.user.update({
         where: { id: user.id },
         data: { emailVerified: new Date() },
       });
+
+      await autoJoinSoleOrganization(user.id);
     },
   },
 

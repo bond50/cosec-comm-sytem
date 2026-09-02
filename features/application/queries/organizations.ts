@@ -38,3 +38,12 @@ export async function getOrganizationBySlug(
     select: organizationSummarySelect,
   });
 }
+
+export async function getSoleOrganization(): Promise<OrganizationSummary | null> {
+  const organizations = await db.organization.findMany({
+    take: 2,
+    select: organizationSummarySelect,
+  });
+
+  return organizations.length === 1 ? organizations[0] : null;
+}
