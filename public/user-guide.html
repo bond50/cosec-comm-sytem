@@ -303,6 +303,23 @@
         font-weight: 600;
       }
 
+      code.copyable {
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+
+      code.copyable:hover {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      code.copyable[data-copied="1"] {
+        background: var(--ok);
+        color: #fff;
+      }
+
       table {
         width: 100%;
         margin-top: 14px;
@@ -478,7 +495,8 @@
           break-inside: avoid;
         }
 
-        .toc {
+        .toc,
+        .copy-btn {
           display: none;
         }
       }
@@ -496,8 +514,12 @@
         <p>
           COSEC keeps track of every letter, memo, and file that comes into or
           goes out of the county office — who received it, who is handling it,
-          what was decided, and when it was closed. This guide walks you through
-          using the system day to day. No technical background is needed.
+          what was decided, and when it was closed. This guide walks through the
+          whole system with real example data, so you can follow along in the
+          live app. Anything shown as
+          <code class="copyable" data-demo="1">a highlighted chip</code> is
+          example text you can click to copy, then paste into the matching
+          field.
         </p>
         <div class="meta">
           <div class="meta-card">
@@ -514,13 +536,13 @@
           </div>
           <div class="meta-card">
             <span class="meta-label">What it covers</span>
-            Signing in, correspondence, documents, meetings, notifications
+            Every module, start to finish, with worked examples
           </div>
         </div>
       </section>
 
       <section class="section quickstart">
-        <h2>Before You Start</h2>
+        <h2>How To Use This Guide</h2>
         <p class="lede">Four things worth knowing before you dive in.</p>
         <div class="grid grid-4">
           <div class="card">
@@ -535,17 +557,18 @@
             <span class="step-num">2</span>
             <h3>Your role decides what you see</h3>
             <p class="small">
-              The menu on the left only shows the pages your role is allowed to
-              use. If something described here is missing for you, that is
-              expected, not a fault.
+              The sidebar only shows the pages your role is allowed to use. If a
+              section here is missing for you, that's expected, not a fault —
+              see <a href="#s3">Understanding Your Role</a>.
             </p>
           </div>
           <div class="card">
             <span class="step-num">3</span>
-            <h3>An administrator sets you up</h3>
+            <h3>Example data is fictional</h3>
             <p class="small">
-              After you sign up, an administrator assigns your department and
-              role. Until that happens you may see limited options.
+              Every name, office, and note used as an example below is
+              fictional, meant only to show you what a real entry looks like.
+              Use your own real data day to day.
             </p>
           </div>
           <div class="card">
@@ -563,36 +586,79 @@
         <h2>Jump To A Section</h2>
         <p class="small">Click any tile to jump straight there.</p>
         <div class="toc-grid">
-          <a href="#s1"><span class="toc-index">1</span> Signing In</a>
-          <a href="#s2"><span class="toc-index">2</span> Your Role</a>
+          <a href="#s1"><span class="toc-index">1</span> What COSEC Covers</a>
+          <a href="#s2"><span class="toc-index">2</span> Signing In</a>
           <a href="#s3"
-            ><span class="toc-index">3</span> Around The Dashboard</a
+            ><span class="toc-index">3</span> Understanding Your Role</a
           >
-          <a href="#s4"
-            ><span class="toc-index">4</span> Handling Correspondence</a
+          <a href="#s4"><span class="toc-index">4</span> Departments</a>
+          <a href="#s5"><span class="toc-index">5</span> Members &amp; Roles</a>
+          <a href="#s6"><span class="toc-index">6</span> How Access Works</a>
+          <a href="#s7"
+            ><span class="toc-index">7</span> Correspondence Lifecycle</a
           >
-          <a href="#s5"><span class="toc-index">5</span> Documents</a>
-          <a href="#s6"
-            ><span class="toc-index">6</span> Meetings &amp; Action Points</a
+          <a href="#s8"><span class="toc-index">8</span> Document Registry</a>
+          <a href="#s9"
+            ><span class="toc-index">9</span> Meetings &amp; Actions</a
           >
-          <a href="#s7"><span class="toc-index">7</span> Notifications</a>
-          <a href="#s8"><span class="toc-index">8</span> Searching</a>
-          <a href="#s9"><span class="toc-index">9</span> Reports</a>
-          <a href="#s10"><span class="toc-index">10</span> Getting Help</a>
+          <a href="#s10"><span class="toc-index">10</span> Notifications</a>
+          <a href="#s11"><span class="toc-index">11</span> Search</a>
+          <a href="#s12"
+            ><span class="toc-index">12</span> Dashboard &amp; Reports</a
+          >
+          <a href="#s13"><span class="toc-index">13</span> Getting Help</a>
         </div>
       </nav>
 
       <section class="section" id="s1">
-        <h2>1. Signing In</h2>
+        <h2>1. What COSEC Covers</h2>
+        <p class="lede">
+          COSEC follows the county's correspondence from first contact to final
+          close-out.
+        </p>
+        <div class="grid grid-3">
+          <div class="card">
+            <h3>Foundation</h3>
+            <p class="small">
+              Signing in, departments, members, roles, and what each role can
+              and can't do.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Business flow</h3>
+            <p class="small">
+              Correspondence registration, review, routing, dispatch,
+              acknowledgement, feedback, closure, and reopening.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Supporting modules</h3>
+            <p class="small">
+              Documents, meetings, action points, notifications, search,
+              dashboard, and reports.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="s2">
+        <h2>2. Signing In</h2>
         <h3>Creating your account</h3>
         <p>
-          Open the COSEC website and choose to register. Enter your work email
-          address and create a password (or continue with your Google account,
-          if that option is offered). You'll be asked to confirm your email —
-          open the link sent to your inbox to activate your account.
+          Open <code>correspondences.vihiga.go.ke</code> and choose to register.
+          Enter your full name, work email address, and create a password (or
+          continue with your Google account, if offered).
         </p>
         <p>Expect the following the first time:</p>
         <ul>
+          <li>
+            A Turnstile bot-check widget appears under the form — complete it
+            before submitting.
+          </li>
+          <li>
+            You'll be asked to confirm your email — open the link sent to your
+            inbox to activate your account.
+          </li>
           <li>
             You are automatically added to the county workspace — there is
             nothing to set up on your side.
@@ -600,7 +666,8 @@
           <li>
             Your account starts with basic access only. An administrator still
             needs to place you in your department and give you the right role
-            before you can register, review, or dispatch correspondence.
+            (see <a href="#s5">Members &amp; Roles</a>) before you can register,
+            review, or dispatch correspondence.
           </li>
         </ul>
 
@@ -608,25 +675,29 @@
         <p>
           Return to the login page, enter your email and password. Senior roles
           (administrators, the County Secretary/reviewing role) are asked for an
-          extra one-time code sent to their email — this is a security step, not
-          an error.
+          extra one-time code sent to their email right after password sign-in,
+          before the dashboard opens — this is a required security step, not an
+          error, and it can't be skipped by navigating straight to the
+          dashboard.
         </p>
 
         <h3>Forgot your password?</h3>
         <p>
           Use the "Forgot password" link on the login page and enter your email.
           If an account exists for that email, you'll receive a link to set a
-          new password.
+          new password. The confirmation message is the same either way, so this
+          never reveals whether an email has an account.
         </p>
         <div class="callout small">
-          The first time an administrator creates your account for you directly
-          (instead of you self-registering), you'll be given a temporary
-          password and asked to set your own the moment you first sign in.
+          If an administrator creates your account for you directly (see
+          <a href="#s5">Members &amp; Roles</a>) instead of you self-
+          registering, you'll be given a temporary password and forced onto a
+          "Set your password" screen the moment you first sign in.
         </div>
       </section>
 
-      <section class="section" id="s2">
-        <h2>2. Understanding Your Role</h2>
+      <section class="section" id="s3">
+        <h2>3. Understanding Your Role</h2>
         <p class="lede">
           What you can do in COSEC depends on the role your administrator has
           given you.
@@ -657,9 +728,9 @@
             <tr>
               <td>Department User</td>
               <td>
-                Works within one department: acknowledges correspondence
-                dispatched to that department and submits feedback once action
-                is taken.
+                Works within one department: acknowledges correspondence and
+                action points assigned to that department, and submits feedback
+                once action is taken.
               </td>
             </tr>
             <tr>
@@ -684,182 +755,785 @@
             </tr>
           </tbody>
         </table>
-        <p class="small">
-          If you're not sure what your role can do, open
-          <strong>Roles &amp; access</strong> from the sidebar (if visible to
-          you) — it explains, in plain terms, what each role is meant for and
-          exactly which pages and actions it unlocks.
-        </p>
-      </section>
-
-      <section class="section" id="s3">
-        <h2>3. Around The Dashboard</h2>
-        <p class="lede">
-          Once signed in, three things stay on screen wherever you go:
-        </p>
-        <div class="grid grid-3">
-          <div class="card">
-            <h3>Left sidebar</h3>
-            <p class="small">
-              Your navigation menu. Only shows the areas your role is allowed to
-              use — Dashboard, Correspondence, Documents, Meetings, and, for
-              administrators, People &amp; structure.
-            </p>
-          </div>
-          <div class="card">
-            <h3>Top header</h3>
-            <p class="small">
-              Search bar, the notification bell, and your account menu (name,
-              organization, sign out).
-            </p>
-          </div>
-          <div class="card">
-            <h3>Dashboard home</h3>
-            <p class="small">
-              A summary of what needs attention right now — urgent items,
-              pending dispatches, and recent activity, all clickable.
-            </p>
-          </div>
+        <div class="callout small">
+          A reserved <code>SUPER_ADMIN</code> role also exists for emergency
+          recovery, but it can only be set directly in the database — you won't
+          see it as an option anywhere in the app, and that's by design.
         </div>
         <p class="small">
-          A number reading "0" on the dashboard isn't necessarily wrong — a tile
-          only counts records that currently match its exact condition (for
-          example, "Pending dispatch" only counts correspondence that is
-          genuinely mid-dispatch right now).
+          If you're not sure what your own role can do, open
+          <strong>Roles &amp; access</strong> from the sidebar (if visible to
+          you) — see <a href="#s6">How Access Works</a> below.
         </p>
       </section>
 
       <section class="section" id="s4">
-        <h2>4. Handling Correspondence</h2>
+        <h2>4. Departments</h2>
+        <p class="lede">
+          The county's structure is one central office plus any number of
+          execution departments. This was already set up when the workspace was
+          created; this section is for the ongoing admin work of keeping it
+          current.
+        </p>
+        <h3>The central office</h3>
+        <p>
+          Every workspace has exactly one central office, created automatically
+          when the organization was first set up:
+        </p>
+        <table>
+          <tbody>
+            <tr>
+              <th>Name</th>
+              <td>Office of the County Secretary and Head of Public Service</td>
+            </tr>
+            <tr>
+              <th>Code</th>
+              <td><code>OCS-HPS</code></td>
+            </tr>
+            <tr>
+              <th>Kind</th>
+              <td>Central office</td>
+            </tr>
+            <tr>
+              <th>Description</th>
+              <td>
+                Central control office for registration, review, dispatch,
+                oversight, and closure.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Adding an execution department</h3>
+        <p>
+          Open <strong>People &amp; structure → Manage entities</strong> and use
+          "Add entity". For example:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Code</th>
+              <th>Kind</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <code class="copyable">Department of Health Services</code>
+              </td>
+              <td><code class="copyable">HLT</code></td>
+              <td>Execution unit</td>
+            </tr>
+            <tr>
+              <td>
+                <code class="copyable"
+                  >Department of Transport and Infrastructure</code
+                >
+              </td>
+              <td><code class="copyable">TRN</code></td>
+              <td>Execution unit</td>
+            </tr>
+            <tr>
+              <td>
+                <code class="copyable"
+                  >Department of Finance and Economic Planning</code
+                >
+              </td>
+              <td><code class="copyable">FIN</code></td>
+              <td>Execution unit</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Execution departments become available as routing destinations for
+          correspondence and as assignment targets for action points as soon as
+          they're saved.
+        </p>
+        <div class="callout small">
+          Deactivating a department (instead of deleting it) is the normal way
+          to retire one — its history stays intact, but it stops appearing as a
+          routing choice for new correspondence.
+        </div>
+      </section>
+
+      <section class="section" id="s5">
+        <h2>5. Members &amp; Roles</h2>
+        <h3>Adding a member</h3>
+        <p>
+          Open <strong>People &amp; structure → Members</strong> and click "Add
+          member" (or go straight to <code>/dashboard/members?create=1</code>).
+          This sets a working password directly and marks the email pre-verified
+          — no activation email needed. For example:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Department</th>
+              <th>Roles</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code class="copyable">Registry Officer</code></td>
+              <td>Office of the County Secretary and Head of Public Service</td>
+              <td><code>REGISTRY_OFFICER</code></td>
+            </tr>
+            <tr>
+              <td>
+                <code class="copyable"
+                  >Reviewing Officer / County Secretary</code
+                >
+              </td>
+              <td>Office of the County Secretary and Head of Public Service</td>
+              <td><code>REVIEWING_OFFICER</code> + <code>MANAGEMENT</code></td>
+            </tr>
+            <tr>
+              <td><code class="copyable">Health Officer</code></td>
+              <td>Department of Health Services</td>
+              <td><code>DEPARTMENT_USER</code></td>
+            </tr>
+            <tr>
+              <td><code class="copyable">Transport Officer</code></td>
+              <td>Department of Transport and Infrastructure</td>
+              <td><code>DEPARTMENT_USER</code></td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Rules the form enforces for you:</p>
+        <ul>
+          <li>
+            Central-office roles (<code>REGISTRY_OFFICER</code>,
+            <code>REVIEWING_OFFICER</code>) only appear when the central office
+            department is selected.
+          </li>
+          <li>
+            Execution departments only offer execution-appropriate roles such as
+            <code>DEPARTMENT_USER</code>.
+          </li>
+          <li>Department is mandatory for an active member.</li>
+        </ul>
+        <div class="callout small">
+          Admin-set passwords can be short (like <code>1234</code>) since
+          they're temporary and handed off directly — the new member is forced
+          onto a "Set your password" screen the first time they sign in, before
+          reaching the dashboard.
+        </div>
+        <div class="warning">
+          Double-check spelling as you type a member's name — it shows up
+          everywhere that account is displayed later: movement history, meeting
+          organizer/chairperson, action point assignee.
+        </div>
+
+        <h3>Editing a member</h3>
+        <p>
+          Open a member's detail page to change their name, email, roles,
+          department, or status (Active / Suspended / Inactive). The system will
+          refuse to let the workspace's
+          <strong>last active ORG_ADMIN</strong> be demoted or suspended —
+          assign ORG_ADMIN to someone else first if that's genuinely what you
+          need to do.
+        </p>
+
+        <h3>Resetting your own password</h3>
+        <p>
+          From <code>/auth/reset</code>, enter your email to receive a reset
+          link. Opening it lets you set a new password immediately; the old one
+          stops working right away.
+        </p>
+      </section>
+
+      <section class="section" id="s6">
+        <h2>6. How Access Works</h2>
+        <h3>The mandatory code step for admin roles</h3>
+        <p>
+          Signing in as an <code>ORG_ADMIN</code> (or another admin-level role)
+          sends you to a one-time code challenge right after your password is
+          accepted — the dashboard is not reachable until that code is entered,
+          even by navigating directly to <code>/dashboard</code> in a new tab.
+        </p>
+
+        <h3>Wrong-destination blocking</h3>
+        <p>
+          Roles outside the central office (for example a
+          <code>DEPARTMENT_USER</code>) cannot open member management, access
+          policy, or the correspondence registration page — those routes
+          redirect away or are blocked outright rather than exposing controls
+          the role isn't meant to use. The same accounts can freely open the
+          dashboard, correspondence list, documents, and meetings, just with
+          management controls hidden.
+        </p>
+
+        <h3>The Access page</h3>
+        <p>
+          If your role allows it, open
+          <strong>Administration → Roles &amp; access</strong> for a plain-
+          language role guide: pick any role in the filter list to see its
+          summary, placement, and responsibilities, which pages and actions it
+          unlocks, and the underlying page/action permission table. It's the
+          same source of truth the app itself enforces, so what it shows always
+          matches what that role can actually do.
+        </p>
+      </section>
+
+      <section class="section" id="s7">
+        <h2>7. Correspondence Lifecycle</h2>
         <p class="lede">
           This is the core of COSEC: every piece of incoming mail moves through
-          the same journey, and the system keeps a full record at every stage.
+          the same journey, and the system keeps a full movement and audit
+          record at every stage.
         </p>
         <div class="callout small">
           Receive → Register → Review → Dispatch → Action → Feedback → Close
+          (with Reopen available if more work turns out to be needed)
         </div>
 
         <h3>Registering incoming mail (Registry Officer)</h3>
         <p>
-          Open <strong>Correspondence → Register</strong>. Fill in the sender's
-          details, subject, description, how it was delivered, and how urgent
-          and confidential it is. If it came from within the county government,
-          choose "Internal county office" and pick the sending department; if it
-          came from outside, choose "External sender" and type in the sender's
-          office.
+          Open <strong>Correspondence → Register</strong>. This form is
+          <strong>incoming-only</strong> — every record registered here is
+          automatically type <code>Incoming</code>.
         </p>
         <p>
-          Once saved, the system gives it a reference number automatically —
-          this is how it will be tracked and referred to from now on.
+          The first field after the received date is
+          <strong>Source type</strong> — a two-button choice between
+          <code>Internal county office</code> and <code>External sender</code>.
+          For an external letter, use data like this:
         </p>
+        <table>
+          <tbody>
+            <tr>
+              <th>Received date and time</th>
+              <td>Now</td>
+            </tr>
+            <tr>
+              <th>Source type</th>
+              <td>External sender</td>
+            </tr>
+            <tr>
+              <th>Subject</th>
+              <td>
+                <code class="copyable"
+                  >Request for road repair status update</code
+                >
+              </td>
+            </tr>
+            <tr>
+              <th>Description</th>
+              <td>
+                <code class="copyable"
+                  >Requesting a status update on road repair works in
+                  Vihiga.</code
+                >
+              </td>
+            </tr>
+            <tr>
+              <th>Sender name</th>
+              <td><code class="copyable">Jane Atieno</code></td>
+            </tr>
+            <tr>
+              <th>Sender office</th>
+              <td><code class="copyable">Office of the Governor</code></td>
+            </tr>
+            <tr>
+              <th>Delivered by</th>
+              <td><code class="copyable">John Courier</code></td>
+            </tr>
+            <tr>
+              <th>Registry receiver</th>
+              <td>
+                Leave as "Use current signed-in user" — this is who the record's
+                "received by" is set to.
+              </td>
+            </tr>
+            <tr>
+              <th>Delivery method</th>
+              <td>Hand delivery</td>
+            </tr>
+            <tr>
+              <th>Priority</th>
+              <td>Urgent</td>
+            </tr>
+            <tr>
+              <th>Confidentiality</th>
+              <td>Internal</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Once saved:</p>
+        <ul>
+          <li>
+            A reference number is generated automatically, for example
+            <code>VCG/OCS/2026/04/000001</code>.
+          </li>
+          <li>Status starts as <code>NEW</code>.</li>
+          <li>Received by is set to the Registry Officer who registered it.</li>
+          <li>A first audit entry and first movement entry are created.</li>
+          <li>
+            The detail page's "Source" field reads
+            <code>Office of the Governor · External sender</code>.
+          </li>
+        </ul>
+        <div class="callout small">
+          Choosing <strong>Internal county office</strong> instead lets you pick
+          an executing department from a dropdown rather than typing a sender
+          office by hand — the "Source" field then reads something like
+          <code
+            >Department of Transport and Infrastructure (TRN) · Internal county
+            office</code
+          >, a real structured link to that department rather than free text.
+        </div>
 
         <h3>
           Reviewing and instructing (Reviewing Officer / County Secretary)
         </h3>
         <p>
           Open the newly registered item from
-          <strong>Correspondence → All correspondence</strong>. Add any
-          instructions for how it should be handled, then decide which
-          department and officer should act on it, and by when.
+          <strong>Correspondence → All correspondence</strong> and add
+          instructions, for example:
+        </p>
+        <pre
+          style="
+            margin: 12px 0 0;
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid var(--line);
+            white-space: pre-wrap;
+          "
+        >
+Please verify road repair progress and return feedback with current status.</pre>
+        <p>
+          Saving this moves status to <code>UNDER_REVIEW</code>, records the
+          reviewer's identity, and adds the instructions to the review block.
+        </p>
+
+        <h3>Routing (Reviewing Officer / County Secretary)</h3>
+        <p>Decide who should act on it, for example:</p>
+        <ul>
+          <li>
+            Destination department: Department of Transport and Infrastructure
+          </li>
+          <li>Receiving officer: Transport Officer</li>
+          <li>Due date: a near-future date</li>
+        </ul>
+        <p>
+          This makes the assigned department/user and due date visible on the
+          record and moves it toward dispatch.
         </p>
 
         <h3>Dispatching</h3>
+        <p>Issue the dispatch with a short note, for example:</p>
+        <pre
+          style="
+            margin: 12px 0 0;
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid var(--line);
+            white-space: pre-wrap;
+          "
+        >
+Kindly act and submit feedback before the due date.</pre>
         <p>
-          Once routing is decided, issue the dispatch with a short note. This
-          formally hands the correspondence to the receiving department and
-          starts their due date.
+          This formally hands the correspondence to the receiving department,
+          moves status to <code>DISPATCHED</code>, and starts the due-date
+          clock. The receiving side becomes the accountable next actor.
         </p>
 
         <h3>Acknowledging and acting (Department User)</h3>
         <p>
           When something is dispatched to your department, you'll see
-          <strong>Confirm receipt</strong> on its detail page — click it to
-          acknowledge you've received it. Once your department has taken action,
-          submit your feedback describing what was done.
+          <strong>Confirm receipt</strong> on its detail page (review, routing,
+          and close controls stay hidden from you). Clicking it records the
+          acknowledgement timestamp and moves status to
+          <code>IN_PROGRESS</code>.
+        </p>
+        <p>
+          Once your department has taken action, submit feedback, for example:
+        </p>
+        <pre
+          style="
+            margin: 12px 0 0;
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid var(--line);
+            white-space: pre-wrap;
+          "
+        >
+Road repair progress verified. Works are ongoing and the department will submit the final completion report after site confirmation.</pre>
+        <p>
+          This stores the feedback timestamp and note and moves status to
+          <code>AWAITING_FEEDBACK</code>.
         </p>
 
         <h3>Closing (Reviewing Officer / County Secretary)</h3>
         <p>
-          Once feedback has been submitted and reviewed, close the
-          correspondence. If more work turns out to be needed later, an
-          amber-coloured <strong>Reopen</strong> button lets an authorized
-          reviewer send it through another round.
+          Close controls appear only once feedback exists. Closing with a note,
+          for example:
+        </p>
+        <pre
+          style="
+            margin: 12px 0 0;
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid var(--line);
+            white-space: pre-wrap;
+          "
+        >
+Feedback reviewed and accepted. Correspondence closed after Transport Department response.</pre>
+        <p>
+          moves status to <code>CLOSED</code>. The only control left after that
+          is a deliberately amber-colored <strong>Reopen</strong> button, styled
+          differently so it isn't clicked by accident.
+        </p>
+
+        <h3>Reopening for another round</h3>
+        <p>
+          If more work turns out to be needed, reopen with a required
+          justification, for example:
+        </p>
+        <pre
+          style="
+            margin: 12px 0 0;
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid var(--line);
+            white-space: pre-wrap;
+          "
+        >
+Additional clarification requested after closure. Reopening for follow-up review and routing.</pre>
+        <p>
+          Only the closure-authority role sees this control. Status returns to
+          <code>UNDER_REVIEW</code>, and you can route and dispatch again — the
+          previous cycle's history stays fully visible alongside the new one, so
+          nothing from the first round is lost.
         </p>
         <p class="small">
-          Every one of these steps — registration, review, dispatch,
-          acknowledgement, feedback, closure — is kept on the record's movement
-          history, so anyone can see exactly who handled it and when.
-        </p>
-      </section>
-
-      <section class="section" id="s5">
-        <h2>5. Documents</h2>
-        <p>
-          Open <strong>Documents</strong> from the sidebar to register physical
-          or digital files separately from correspondence — for example a
-          physical file that needs to be tracked by location and holder. Group
-          documents into categories, link a document to the correspondence it
-          relates to, upload a scanned copy, and archive a document once it's no
-          longer active. Archived documents stay searchable but become
-          read-only.
-        </p>
-      </section>
-
-      <section class="section" id="s6">
-        <h2>6. Meetings &amp; Action Points</h2>
-        <p>
-          Open <strong>Meetings</strong> to schedule a meeting with its agenda,
-          venue, and time. After the meeting is held, record the discussion
-          summary and resolutions. Action points can be created under a meeting
-          and assigned to a person or department with a due date — assigned
-          staff can then update their own action points' status from
-          <strong>My action points</strong> in the sidebar. A meeting can also
-          be linked to a specific correspondence so the two stay connected.
-        </p>
-      </section>
-
-      <section class="section" id="s7">
-        <h2>7. Notifications</h2>
-        <p>
-          The bell icon in the top header alerts you whenever something needs
-          your attention — a correspondence awaiting your review, a dispatch
-          sent to your department, feedback returned, or an action point
-          assigned to you. Click a notification to jump straight to the related
-          item, and use "Mark all as read" to clear your list.
+          Every one of these steps — registration, review, routing, dispatch,
+          acknowledgement, feedback, closure, reopening — is kept on the
+          record's movement history, so anyone can see exactly who handled it
+          and when.
         </p>
       </section>
 
       <section class="section" id="s8">
-        <h2>8. Searching</h2>
+        <h2>8. Document Registry</h2>
         <p>
-          Use the search bar in the top header to find correspondence,
-          documents, members, or pages by typing a subject, a name, a
-          department, or a status like "urgent". Search only shows results
-          you're allowed to see.
+          Open <strong>Documents</strong> from the sidebar to register physical
+          or digital files separately from correspondence — for example a
+          physical file that needs to be tracked by holder and location.
+        </p>
+
+        <h3>Categories</h3>
+        <p>
+          Click "Manage categories" to organize documents, for example into
+          <code class="copyable">Official Letters</code>,
+          <code class="copyable">Internal Memos</code>, and
+          <code class="copyable">Reports and Returns</code>. Each category shows
+          a document count; a category still holding documents can't be deleted
+          until they're moved or removed, so nothing is silently orphaned.
+        </p>
+
+        <h3>Creating a document</h3>
+        <p>
+          Like correspondence, every document has an
+          <strong>Origin</strong> choice between
+          <code>Internal county office</code> and <code>External source</code>.
+          For example, an external physical file:
+        </p>
+        <table>
+          <tbody>
+            <tr>
+              <th>Title</th>
+              <td>
+                <code class="copyable"
+                  >Physical file for road repair request</code
+                >
+              </td>
+            </tr>
+            <tr>
+              <th>Category</th>
+              <td>Official Letters</td>
+            </tr>
+            <tr>
+              <th>Medium</th>
+              <td>Physical</td>
+            </tr>
+            <tr>
+              <th>Origin</th>
+              <td>External source</td>
+            </tr>
+            <tr>
+              <th>Origin office</th>
+              <td><code class="copyable">Office of the Governor</code></td>
+            </tr>
+            <tr>
+              <th>Brought by</th>
+              <td><code class="copyable">John Courier</code></td>
+            </tr>
+            <tr>
+              <th>Current holder</th>
+              <td>Reviewing Officer / County Secretary</td>
+            </tr>
+            <tr>
+              <th>Current location</th>
+              <td><code class="copyable">OCS-HPS Registry Cabinet A</code></td>
+            </tr>
+            <tr>
+              <th>Status</th>
+              <td>Received</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          A reference number is generated automatically. You can also link a
+          document to the correspondence it relates to — it then shows up under
+          that correspondence's own "Linked documents" section too.
+        </p>
+
+        <h3>Uploads and archiving</h3>
+        <p>
+          Upload supporting files to a document; they open in a new tab.
+          Archiving a document keeps it searchable and readable but makes it
+          read-only. Editing a document lets you update location, holder, and
+          status at any time, including switching the Origin between Internal
+          and External.
+        </p>
+        <div class="callout small">
+          If a PDF specifically fails to load while other file types open fine,
+          that's a known Cloudinary account setting ("Restricted media types"),
+          not something wrong with your upload — mention it to an administrator
+          rather than re-uploading repeatedly.
+        </div>
+        <p class="small">
+          Department users typically get view-only access to documents — create,
+          edit, upload, archive, and "Manage categories" stay available to
+          registry/reviewing/management/admin roles.
         </p>
       </section>
 
       <section class="section" id="s9">
-        <h2>9. Reports</h2>
+        <h2>9. Meetings &amp; Action Points</h2>
+        <h3>Scheduling a meeting</h3>
+        <p>Create a meeting with its agenda, venue, and time, for example:</p>
+        <table>
+          <tbody>
+            <tr>
+              <th>Title</th>
+              <td>
+                <code class="copyable">Monthly departmental heads review</code>
+              </td>
+            </tr>
+            <tr>
+              <th>Agenda</th>
+              <td>
+                <code class="copyable"
+                  >1. Correspondence backlog 2. Road repair follow-up 3.
+                  AOB</code
+                >
+              </td>
+            </tr>
+            <tr>
+              <th>Venue</th>
+              <td>
+                <code class="copyable">County Secretary's Boardroom</code>
+              </td>
+            </tr>
+            <tr>
+              <th>Organizer / Chairperson</th>
+              <td>Reviewing Officer / County Secretary</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Action points</h3>
         <p>
-          Open <strong>Reports</strong> from the sidebar for a summary view: how
-          much correspondence is pending review, pending acknowledgement, or
-          overdue, broken down by status, priority, and department, plus a
-          monthly intake trend. Use the export button to download a print-ready
-          summary.
+          From the meeting detail page, create action points and assign each to
+          a person and/or department with a due date, for example:
+        </p>
+        <ul>
+          <li>
+            <code class="copyable"
+              >Follow up with Transport dept on road repair correspondence
+              status</code
+            >, assigned to a Transport department user and the Department of
+            Transport and Infrastructure, due in 5 days.
+          </li>
+        </ul>
+        <p>
+          The meeting's own status automatically advances to
+          <strong>Action points issued</strong> the first time an action point
+          is added.
+        </p>
+        <div class="callout small">
+          <strong>Updating your own action point:</strong> if an action point is
+          assigned to you or your department, open the meeting and use the
+          update box under it to change its status and add remarks — this works
+          even without a manager role. Only reassigning it to someone else,
+          changing its department, or moving its due date stays manager-only.
+        </div>
+        <p>
+          Every status change and remark is kept in a "Change history" panel
+          under the action point, with who made the change and when.
+        </p>
+        <p class="small">
+          Your own assignments across every meeting are collected under
+          <strong>My action points</strong> in the sidebar.
+        </p>
+
+        <h3>Holding and closing a meeting</h3>
+        <p>
+          Once the meeting happens, edit it to set Status to
+          <code>Held</code> and record a discussion summary and resolutions.
+          Closing a meeting requires recorded resolutions or at least one action
+          point — the form will tell you if that's missing.
+        </p>
+
+        <h3>Printing and linking</h3>
+        <p>
+          "Print meeting summary" opens a clean, standalone page (agenda,
+          discussion, resolutions, decisions, and action points) with a Print
+          button that doesn't itself appear in the printed output. A meeting can
+          also be linked to a specific correspondence, showing up on both
+          records so the two stay connected.
         </p>
       </section>
 
       <section class="section" id="s10">
-        <h2>10. Getting Help</h2>
+        <h2>10. Notifications</h2>
+        <p>
+          The bell icon in the top header alerts you whenever something needs
+          your attention:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Who's notified</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Correspondence awaiting review</td>
+              <td>Review authority only</td>
+            </tr>
+            <tr>
+              <td>Dispatch issued</td>
+              <td>
+                Direct receiving user first, or department fallback if no user
+                is assigned
+              </td>
+            </tr>
+            <tr>
+              <td>Feedback returned</td>
+              <td>Review authority only</td>
+            </tr>
+            <tr>
+              <td>Closed / Cancelled</td>
+              <td>Execution side plus central-office visibility</td>
+            </tr>
+            <tr>
+              <td>Action point assigned</td>
+              <td>
+                Direct assignee first, department fallback if no direct user
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Click a notification to jump straight to the related record. "Mark all
+          as read" clears your unread badges, and an unread-only filter is
+          available in the notification workspace.
+        </p>
+      </section>
+
+      <section class="section" id="s11">
+        <h2>11. Search</h2>
+        <p>
+          Use the search bar in the top header. It understands both keywords and
+          short intents, for example:
+        </p>
+        <ul>
+          <li><code class="copyable">transport</code></li>
+          <li><code class="copyable">urgent</code></li>
+          <li><code class="copyable">add member</code></li>
+          <li><code class="copyable">documents archived</code></li>
+          <li><code class="copyable">my action points</code></li>
+        </ul>
+        <p>
+          Results and quick actions are scoped to what you're allowed to see — a
+          department-level role searching correspondence only gets hits for
+          records assigned to them or their department, not the whole county
+          register.
+        </p>
+      </section>
+
+      <section class="section" id="s12">
+        <h2>12. Dashboard &amp; Reports</h2>
+        <h3>Dashboard</h3>
+        <p>
+          Your dashboard summarizes what needs attention right now — urgent
+          items, pending dispatches, and recent activity, all clickable.
+          Registry, reviewing, management, and admin roles see the full county
+          picture; a department-level role's dashboard is scoped to their own
+          department and assignments.
+        </p>
+        <div class="callout small">
+          A tile reading "0" isn't automatically wrong — each one only counts
+          records that currently match its exact condition (for example,
+          "Pending dispatch" only counts correspondence genuinely mid- dispatch
+          right now). If every item you're tracking has since been closed,
+          several tiles legitimately read 0.
+        </div>
+
+        <h3>Reports</h3>
+        <p>
+          Open <strong>Reports</strong> from the sidebar (visible to
+          admin/reviewing/management roles) for county-wide SLA, workload, and
+          trend analysis: summary cards for pending review, pending
+          acknowledgement, and overdue action points; status/priority/
+          meeting-status breakdown charts; a six-month intake trend; and an
+          export button for a print-ready CSV summary.
+        </p>
+      </section>
+
+      <section class="section" id="s13">
+        <h2>13. Getting Help</h2>
         <p>
           If something in COSEC isn't behaving as this guide describes, or
           you're missing access you believe you should have, contact your
           organization administrator — they can check or adjust your role and
           department from <strong>People &amp; structure</strong>, or escalate
-          it further if it turns out to be a system issue.
+          further if it turns out to be a system issue.
         </p>
       </section>
     </main>
+
+    <script>
+      (function () {
+        document
+          .querySelectorAll(
+            "td code.copyable, li code.copyable, p code.copyable",
+          )
+          .forEach(function (el) {
+            el.title = "Click to copy";
+            el.addEventListener("click", function () {
+              navigator.clipboard
+                .writeText(el.textContent.trim())
+                .then(function () {
+                  el.setAttribute("data-copied", "1");
+                  setTimeout(function () {
+                    el.removeAttribute("data-copied");
+                  }, 900);
+                });
+            });
+          });
+      })();
+    </script>
   </body>
 </html>
