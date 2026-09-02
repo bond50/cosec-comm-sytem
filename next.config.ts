@@ -12,11 +12,15 @@ const nextConfig: NextConfig = {
 
   ...(isWindows ? {} : { output: "standalone" }),
 
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
-  },
+  ...(process.env.NODE_ENV !== "production"
+    ? {
+        logging: {
+          fetches: {
+            fullUrl: true,
+          },
+        },
+      }
+    : {}),
 
   experimental: {
     serverActions: {
