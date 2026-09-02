@@ -89,7 +89,7 @@ export async function uploadDocumentAttachmentAction(
   let actorUserId: string;
 
   try {
-    const access = await requireOrganizationPermission("documents.manage");
+    const access = await requireOrganizationPermission("attachments.upload");
     organizationId = access.organization.id;
     actorUserId = access.userId;
   } catch (error) {

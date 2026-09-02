@@ -83,6 +83,10 @@ export default async function MeetingDetailPage({
     access.organizationRoles,
     "meetings.manage",
   );
+  const canUploadAttachment = hasFoundationPermission(
+    access.organizationRoles,
+    "attachments.upload",
+  );
   const viewerMembership = canManage
     ? null
     : await getActiveMembershipByUserId(access.userId, access.organization.id);
@@ -406,7 +410,7 @@ export default async function MeetingDetailPage({
               </div>
             </CardHeader>
             <CardContent className="space-y-3 px-6 pb-6 text-sm text-slate-600">
-              {canManage ? (
+              {canUploadAttachment ? (
                 <MeetingAttachmentUploadForm meetingId={meeting.id} />
               ) : null}
 

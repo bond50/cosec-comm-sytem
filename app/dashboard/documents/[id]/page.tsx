@@ -45,6 +45,10 @@ export default async function DocumentDetailPage({
     access.organizationRoles,
     "documents.manage",
   );
+  const canUploadAttachment = hasFoundationPermission(
+    access.organizationRoles,
+    "attachments.upload",
+  );
   const editOptions =
     canManage && !document.isArchived
       ? await getDocumentCreateOptions(access.organization.id)
@@ -230,10 +234,10 @@ export default async function DocumentDetailPage({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 px-6 pb-6 text-sm text-slate-600">
-            {canManage && !document.isArchived ? (
+            {canUploadAttachment && !document.isArchived ? (
               <DocumentAttachmentUploadForm documentId={document.id} />
             ) : null}
-            {canManage && document.isArchived ? (
+            {canUploadAttachment && document.isArchived ? (
               <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
                 Archived document records are read-only. Attachments cannot be
                 added after archive.

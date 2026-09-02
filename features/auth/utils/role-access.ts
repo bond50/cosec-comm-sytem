@@ -23,7 +23,8 @@ export type FoundationPermission =
   | "correspondence.review"
   | "correspondence.dispatch"
   | "correspondence.work"
-  | "correspondence.close";
+  | "correspondence.close"
+  | "attachments.upload";
 
 export type RoleDefinition = {
   role: UserRole;
@@ -63,6 +64,8 @@ export const FOUNDATION_PERMISSION_LABELS: Record<
     "Route and dispatch correspondence to receiving offices",
   "correspondence.work": "Acknowledge dispatches and return office feedback",
   "correspondence.close": "Verify feedback and close or cancel correspondence",
+  "attachments.upload":
+    "Upload supporting files to correspondence, documents, and meetings",
 };
 
 export const FOUNDATION_PERMISSION_ROLES: Record<
@@ -162,6 +165,14 @@ export const FOUNDATION_PERMISSION_ROLES: Record<
     UserRole.SUPER_ADMIN,
     UserRole.ORG_ADMIN,
     UserRole.REVIEWING_OFFICER,
+    UserRole.MANAGEMENT,
+  ],
+  "attachments.upload": [
+    UserRole.SUPER_ADMIN,
+    UserRole.ORG_ADMIN,
+    UserRole.REGISTRY_OFFICER,
+    UserRole.REVIEWING_OFFICER,
+    UserRole.DEPARTMENT_USER,
     UserRole.MANAGEMENT,
   ],
 };
@@ -500,8 +511,8 @@ export const FOUNDATION_ACCESS_MAP: AccessMapEntry[] = [
   {
     kind: "action",
     target: "uploadDocumentAttachmentAction",
-    permission: "documents.manage",
-    allowedRoles: FOUNDATION_PERMISSION_ROLES["documents.manage"],
+    permission: "attachments.upload",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["attachments.upload"],
     description:
       "Upload supporting files directly onto a document registry record.",
   },
@@ -526,7 +537,14 @@ export const FOUNDATION_ACCESS_MAP: AccessMapEntry[] = [
     permission: "meetings.manage",
     allowedRoles: FOUNDATION_PERMISSION_ROLES["meetings.manage"],
     description:
-      "Update action point assignee, due date, status, and remarks for the current meeting.",
+      "Update action point assignee, due date, status, and remarks for the current meeting. The assignee or their department may also update status and remarks on their own action point without this permission.",
+  },
+  {
+    kind: "action",
+    target: "uploadMeetingAttachmentAction",
+    permission: "attachments.upload",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["attachments.upload"],
+    description: "Upload supporting files directly onto a meeting record.",
   },
   {
     kind: "action",
@@ -579,8 +597,8 @@ export const FOUNDATION_ACCESS_MAP: AccessMapEntry[] = [
   {
     kind: "action",
     target: "uploadCorrespondenceAttachmentAction",
-    permission: "correspondence.work",
-    allowedRoles: FOUNDATION_PERMISSION_ROLES["correspondence.work"],
+    permission: "attachments.upload",
+    allowedRoles: FOUNDATION_PERMISSION_ROLES["attachments.upload"],
     description:
       "Upload supporting files to a correspondence record without collapsing into the documents module.",
   },

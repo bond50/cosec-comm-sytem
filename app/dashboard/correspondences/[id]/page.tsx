@@ -127,7 +127,7 @@ export default async function CorrespondenceDetailPage({
   );
   const canClose = hasCountySecretaryPath;
   const canUploadCorrespondenceAttachment =
-    canWork &&
+    hasFoundationPermission(access.organizationRoles, "attachments.upload") &&
     correspondence.status !== CorrespondenceStatus.CLOSED &&
     correspondence.status !== CorrespondenceStatus.CANCELLED;
   const departmentOptions = departments

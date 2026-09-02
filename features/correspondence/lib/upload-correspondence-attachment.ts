@@ -94,7 +94,7 @@ export async function uploadCorrespondenceAttachmentAction(
   let actorUserId: string;
 
   try {
-    const access = await requireOrganizationPermission("correspondence.work");
+    const access = await requireOrganizationPermission("attachments.upload");
     organizationId = access.organization.id;
     actorUserId = access.userId;
   } catch (error) {
