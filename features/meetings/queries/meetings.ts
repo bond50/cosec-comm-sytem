@@ -18,20 +18,8 @@ export const meetingRegistrySelect = {
       subject: true,
     },
   },
-  organizerUser: {
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  },
-  chairpersonUser: {
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  },
+  organizer: true,
+  chairperson: true,
   _count: {
     select: {
       actionPoints: true,
@@ -144,20 +132,8 @@ export const meetingDetailSelect = {
       subject: true,
     },
   },
-  organizerUser: {
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  },
-  chairpersonUser: {
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  },
+  organizer: true,
+  chairperson: true,
   attachments: {
     orderBy: [{ createdAt: "desc" }],
     select: {

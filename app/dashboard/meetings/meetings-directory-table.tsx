@@ -101,26 +101,16 @@ export function MeetingsDirectoryTable({
         ),
     },
     {
-      id: "organizerUser.name",
-      accessorFn: (row) =>
-        row.organizerUser?.name || row.organizerUser?.email || "Not assigned",
+      id: "organizer",
+      accessorFn: (row) => row.organizer || "Not assigned",
       header: "Organizer",
-      cell: ({ row }) =>
-        row.original.organizerUser?.name ||
-        row.original.organizerUser?.email ||
-        "Not assigned",
+      cell: ({ row }) => row.original.organizer || "Not assigned",
     },
     {
-      id: "chairpersonUser.name",
-      accessorFn: (row) =>
-        row.chairpersonUser?.name ||
-        row.chairpersonUser?.email ||
-        "Not assigned",
+      id: "chairperson",
+      accessorFn: (row) => row.chairperson || "Not assigned",
       header: "Chairperson",
-      cell: ({ row }) =>
-        row.original.chairpersonUser?.name ||
-        row.original.chairpersonUser?.email ||
-        "Not assigned",
+      cell: ({ row }) => row.original.chairperson || "Not assigned",
     },
     {
       id: "status",
@@ -195,10 +185,8 @@ export function MeetingsDirectoryTable({
         "description",
         "venue",
         "correspondence",
-        "organizerUser.name",
-        "organizerUser.email",
-        "chairpersonUser.name",
-        "chairpersonUser.email",
+        "organizer",
+        "chairperson",
       ]}
       emptyMessage="No meetings have been created yet."
       toolbarLabel="Meetings"

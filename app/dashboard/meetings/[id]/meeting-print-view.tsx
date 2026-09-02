@@ -43,16 +43,11 @@ export function MeetingPrintView({
             <strong>Ends:</strong> {formatDateTime(meeting.endsAt)}
           </div>
           <div>
-            <strong>Organizer:</strong>{" "}
-            {meeting.organizerUser?.name ||
-              meeting.organizerUser?.email ||
-              "Not assigned"}
+            <strong>Organizer:</strong> {meeting.organizer || "Not assigned"}
           </div>
           <div>
             <strong>Chairperson:</strong>{" "}
-            {meeting.chairpersonUser?.name ||
-              meeting.chairpersonUser?.email ||
-              "Not assigned"}
+            {meeting.chairperson || "Not assigned"}
           </div>
         </section>
 

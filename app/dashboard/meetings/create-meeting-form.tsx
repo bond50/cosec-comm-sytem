@@ -41,12 +41,10 @@ function SubmitButton() {
 }
 
 export function CreateMeetingForm({
-  users,
   correspondences,
   mode = "card",
   onSuccess,
 }: {
-  users: { id: string; label: string }[];
   correspondences: { id: string; label: string }[];
   mode?: "card" | "dialog";
   onSuccess?: () => void;
@@ -58,8 +56,6 @@ export function CreateMeetingForm({
   );
   const values = state.values ?? initialMeetingCreateState.values ?? {};
   const fieldErrors = state.fieldErrors ?? {};
-  const organizerInputRef = useRef<HTMLInputElement>(null);
-  const chairpersonInputRef = useRef<HTMLInputElement>(null);
   const correspondenceInputRef = useRef<HTMLInputElement>(null);
   const statusInputRef = useRef<HTMLInputElement>(null);
 
@@ -126,74 +122,24 @@ export function CreateMeetingForm({
       <div className="grid gap-5 xl:grid-cols-3">
         <Field>
           <FieldLabel htmlFor="meeting-organizer">Organizer</FieldLabel>
-          <input
-            ref={organizerInputRef}
-            type="hidden"
-            name="organizerUserId"
-            defaultValue={values.organizerUserId ?? ""}
+          <Input
+            id="meeting-organizer"
+            name="organizer"
+            defaultValue={values.organizer ?? ""}
+            placeholder="Anyone — doesn't need a COSEC account"
           />
-          <Select
-            key={`meeting-organizer-${values.organizerUserId ?? "__empty__"}`}
-            defaultValue={values.organizerUserId || "__none__"}
-            onValueChange={(value) => {
-              if (organizerInputRef.current) {
-                organizerInputRef.current.value =
-                  value === "__none__" ? "" : value;
-              }
-            }}
-          >
-            <SelectTrigger
-              id="meeting-organizer"
-              className="h-12 w-full rounded-[10px] border-slate-200 bg-white text-[15px] shadow-none"
-            >
-              <SelectValue placeholder="Select organizer" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">No organizer</SelectItem>
-              {users.map((user) => (
-                <SelectItem key={user.id} value={user.id}>
-                  {user.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FieldError>{fieldErrors.organizerUserId?.[0]}</FieldError>
+          <FieldError>{fieldErrors.organizer?.[0]}</FieldError>
         </Field>
 
         <Field>
           <FieldLabel htmlFor="meeting-chairperson">Chairperson</FieldLabel>
-          <input
-            ref={chairpersonInputRef}
-            type="hidden"
-            name="chairpersonUserId"
-            defaultValue={values.chairpersonUserId ?? ""}
+          <Input
+            id="meeting-chairperson"
+            name="chairperson"
+            defaultValue={values.chairperson ?? ""}
+            placeholder="Anyone — doesn't need a COSEC account"
           />
-          <Select
-            key={`meeting-chairperson-${values.chairpersonUserId ?? "__empty__"}`}
-            defaultValue={values.chairpersonUserId || "__none__"}
-            onValueChange={(value) => {
-              if (chairpersonInputRef.current) {
-                chairpersonInputRef.current.value =
-                  value === "__none__" ? "" : value;
-              }
-            }}
-          >
-            <SelectTrigger
-              id="meeting-chairperson"
-              className="h-12 w-full rounded-[10px] border-slate-200 bg-white text-[15px] shadow-none"
-            >
-              <SelectValue placeholder="Select chairperson" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">No chairperson</SelectItem>
-              {users.map((user) => (
-                <SelectItem key={user.id} value={user.id}>
-                  {user.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FieldError>{fieldErrors.chairpersonUserId?.[0]}</FieldError>
+          <FieldError>{fieldErrors.chairperson?.[0]}</FieldError>
         </Field>
 
         <Field>

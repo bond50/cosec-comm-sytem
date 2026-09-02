@@ -54,11 +54,9 @@ function SubmitButton() {
 
 export function MeetingEditForm({
   meeting,
-  users,
   correspondences,
 }: {
   meeting: MeetingDetailItem;
-  users: { id: string; label: string }[];
   correspondences: { id: string; label: string }[];
 }) {
   const [state, formAction] = useActionState(
@@ -78,15 +76,13 @@ export function MeetingEditForm({
         venue: meeting.venue ?? "",
         startsAt: toDateTimeLocal(meeting.startsAt),
         endsAt: toDateTimeLocal(meeting.endsAt),
-        organizerUserId: meeting.organizerUser?.id ?? "",
-        chairpersonUserId: meeting.chairpersonUser?.id ?? "",
+        organizer: meeting.organizer ?? "",
+        chairperson: meeting.chairperson ?? "",
         correspondenceId: meeting.correspondence?.id ?? "",
         status: meeting.status,
       };
   const fieldErrors = state.fieldErrors ?? {};
 
-  const organizerInputRef = useRef<HTMLInputElement>(null);
-  const chairpersonInputRef = useRef<HTMLInputElement>(null);
   const correspondenceInputRef = useRef<HTMLInputElement>(null);
   const statusInputRef = useRef<HTMLInputElement>(null);
 
@@ -159,76 +155,26 @@ export function MeetingEditForm({
               <FieldLabel htmlFor="edit-meeting-organizer">
                 Organizer
               </FieldLabel>
-              <input
-                ref={organizerInputRef}
-                type="hidden"
-                name="organizerUserId"
-                defaultValue={values.organizerUserId ?? ""}
+              <Input
+                id="edit-meeting-organizer"
+                name="organizer"
+                defaultValue={values.organizer ?? ""}
+                placeholder="Anyone — doesn't need a COSEC account"
               />
-              <Select
-                key={`edit-meeting-organizer-${values.organizerUserId ?? "__empty__"}`}
-                defaultValue={values.organizerUserId || "__none__"}
-                onValueChange={(value) => {
-                  if (organizerInputRef.current) {
-                    organizerInputRef.current.value =
-                      value === "__none__" ? "" : value;
-                  }
-                }}
-              >
-                <SelectTrigger
-                  id="edit-meeting-organizer"
-                  className="h-12 w-full rounded-[10px] border-slate-200 bg-white text-[15px] shadow-none"
-                >
-                  <SelectValue placeholder="Select organizer" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">No organizer</SelectItem>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldError>{fieldErrors.organizerUserId?.[0]}</FieldError>
+              <FieldError>{fieldErrors.organizer?.[0]}</FieldError>
             </Field>
 
             <Field>
               <FieldLabel htmlFor="edit-meeting-chairperson">
                 Chairperson
               </FieldLabel>
-              <input
-                ref={chairpersonInputRef}
-                type="hidden"
-                name="chairpersonUserId"
-                defaultValue={values.chairpersonUserId ?? ""}
+              <Input
+                id="edit-meeting-chairperson"
+                name="chairperson"
+                defaultValue={values.chairperson ?? ""}
+                placeholder="Anyone — doesn't need a COSEC account"
               />
-              <Select
-                key={`edit-meeting-chairperson-${values.chairpersonUserId ?? "__empty__"}`}
-                defaultValue={values.chairpersonUserId || "__none__"}
-                onValueChange={(value) => {
-                  if (chairpersonInputRef.current) {
-                    chairpersonInputRef.current.value =
-                      value === "__none__" ? "" : value;
-                  }
-                }}
-              >
-                <SelectTrigger
-                  id="edit-meeting-chairperson"
-                  className="h-12 w-full rounded-[10px] border-slate-200 bg-white text-[15px] shadow-none"
-                >
-                  <SelectValue placeholder="Select chairperson" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">No chairperson</SelectItem>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldError>{fieldErrors.chairpersonUserId?.[0]}</FieldError>
+              <FieldError>{fieldErrors.chairperson?.[0]}</FieldError>
             </Field>
 
             <Field>

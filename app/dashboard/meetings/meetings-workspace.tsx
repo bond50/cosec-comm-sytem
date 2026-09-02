@@ -17,14 +17,12 @@ import type { MeetingRegistryItem } from "@/features/meetings/queries/meetings";
 type MeetingsWorkspaceProps = {
   meetings: MeetingRegistryItem[];
   canManage: boolean;
-  users: { id: string; label: string }[];
   correspondences: { id: string; label: string }[];
 };
 
 export function MeetingsWorkspace({
   meetings,
   canManage,
-  users,
   correspondences,
 }: MeetingsWorkspaceProps) {
   const [createOpen, setCreateOpen] = useState(false);
@@ -56,7 +54,6 @@ export function MeetingsWorkspace({
           </DialogHeader>
           <div className="max-h-[80vh] overflow-y-auto px-6 py-5">
             <CreateMeetingForm
-              users={users}
               correspondences={correspondences}
               mode="dialog"
               onSuccess={() => setCreateOpen(false)}

@@ -320,8 +320,6 @@ model User {
   currentHeldDocuments Document[] @relation("DocumentCurrentHolder")
   archivedDocuments    Document[] @relation("DocumentArchivedByUser")
 
-  organizedMeetings      Meeting[]            @relation("MeetingOrganizer")
-  chairedMeetings        Meeting[]            @relation("MeetingChairperson")
   assignedMeetingActions MeetingActionPoint[] @relation("MeetingActionAssignedTo")
   createdMeetingActions  MeetingActionPoint[] @relation("MeetingActionCreatedBy")
 
@@ -666,8 +664,8 @@ model Meeting {
   endsAt   DateTime? @map("ends_at")
   venue    String?
 
-  organizerUserId   String? @map("organizer_user_id")
-  chairpersonUserId String? @map("chairperson_user_id")
+  organizer         String? @map("organizer")
+  chairperson       String? @map("chairperson")
   correspondenceId  String? @map("correspondence_id")
 
   status    MeetingStatus @default(SCHEDULED)
@@ -675,8 +673,6 @@ model Meeting {
   updatedAt DateTime      @updatedAt @map("updated_at")
 
   organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizerUser   User?           @relation("MeetingOrganizer", fields: [organizerUserId], references: [id], onDelete: SetNull)
-  chairpersonUser User?           @relation("MeetingChairperson", fields: [chairpersonUserId], references: [id], onDelete: SetNull)
   correspondence  Correspondence? @relation(fields: [correspondenceId], references: [id], onDelete: SetNull)
 
   actionPoints MeetingActionPoint[]

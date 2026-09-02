@@ -140,15 +140,11 @@ export default async function MeetingDetailPage({
             </div>
             <div>
               <span className="font-medium text-slate-950">Organizer:</span>{" "}
-              {meeting.organizerUser?.name ||
-                meeting.organizerUser?.email ||
-                "Not assigned"}
+              {meeting.organizer || "Not assigned"}
             </div>
             <div>
               <span className="font-medium text-slate-950">Chairperson:</span>{" "}
-              {meeting.chairpersonUser?.name ||
-                meeting.chairpersonUser?.email ||
-                "Not assigned"}
+              {meeting.chairperson || "Not assigned"}
             </div>
             <div>
               <span className="font-medium text-slate-950">
@@ -211,7 +207,6 @@ export default async function MeetingDetailPage({
       {canManage ? (
         <MeetingEditForm
           meeting={meeting}
-          users={createOptions.users}
           correspondences={createOptions.correspondences}
         />
       ) : null}

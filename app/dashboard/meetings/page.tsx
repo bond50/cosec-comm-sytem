@@ -107,7 +107,6 @@ export default async function MeetingsPage() {
       <MeetingsWorkspace
         meetings={meetings}
         canManage={canManage}
-        users={createOptions.users}
         correspondences={createOptions.correspondences}
       />
     </div>

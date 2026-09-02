@@ -74,64 +74,15 @@ export async function updateMeetingAction(
       };
     }
 
-    const [organizer, chairperson, correspondence] = await Promise.all([
-      parsed.data.organizerUserId
-        ? db.organizationMembership.findFirst({
-            where: {
-              organizationId: access.organization.id,
-              userId: parsed.data.organizerUserId,
-              status: "ACTIVE",
-            },
-            select: { userId: true },
-          })
-        : Promise.resolve(null),
-      parsed.data.chairpersonUserId
-        ? db.organizationMembership.findFirst({
-            where: {
-              organizationId: access.organization.id,
-              userId: parsed.data.chairpersonUserId,
-              status: "ACTIVE",
-            },
-            select: { userId: true },
-          })
-        : Promise.resolve(null),
-      parsed.data.correspondenceId
-        ? db.correspondence.findFirst({
-            where: {
-              organizationId: access.organization.id,
-              id: parsed.data.correspondenceId,
-            },
-            select: { id: true, referenceNumber: true },
-          })
-        : Promise.resolve(null),
-    ]);
-
-    if (parsed.data.organizerUserId && !organizer) {
-      return {
-        ok: false,
-        message: "The selected organizer is not an active organization member.",
-        fieldErrors: {
-          organizerUserId: [
-            "The selected organizer is not an active organization member.",
-          ],
-        },
-        values: parsed.data,
-      };
-    }
-
-    if (parsed.data.chairpersonUserId && !chairperson) {
-      return {
-        ok: false,
-        message:
-          "The selected chairperson is not an active organization member.",
-        fieldErrors: {
-          chairpersonUserId: [
-            "The selected chairperson is not an active organization member.",
-          ],
-        },
-        values: parsed.data,
-      };
-    }
+    const correspondence = parsed.data.correspondenceId
+      ? await db.correspondence.findFirst({
+          where: {
+            organizationId: access.organization.id,
+            id: parsed.data.correspondenceId,
+          },
+          select: { id: true, referenceNumber: true },
+        })
+      : null;
 
     if (parsed.data.correspondenceId && !correspondence) {
       return {
@@ -182,8 +133,8 @@ export async function updateMeetingAction(
           venue: parsed.data.venue,
           startsAt: new Date(parsed.data.startsAt),
           endsAt: parsed.data.endsAt ? new Date(parsed.data.endsAt) : null,
-          organizerUserId: parsed.data.organizerUserId,
-          chairpersonUserId: parsed.data.chairpersonUserId,
+          organizer: parsed.data.organizer,
+          chairperson: parsed.data.chairperson,
           correspondenceId: parsed.data.correspondenceId,
           status: parsed.data.status,
         },

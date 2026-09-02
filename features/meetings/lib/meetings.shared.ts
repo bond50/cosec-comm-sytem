@@ -57,8 +57,8 @@ export const meetingCreateSchema = z
       .trim()
       .min(1, { message: "Start date and time are required." }),
     endsAt: z.string().trim().optional(),
-    organizerUserId: optionalCuid("Select a valid organizer."),
-    chairpersonUserId: optionalCuid("Select a valid chairperson."),
+    organizer: optionalTrimmedString(160, "Organizer name is too long."),
+    chairperson: optionalTrimmedString(160, "Chairperson name is too long."),
     correspondenceId: optionalCuid("Select a valid linked correspondence."),
     status: z
       .enum(meetingCreateStatusValues, {
@@ -161,8 +161,8 @@ export const meetingUpdateSchema = z
       .trim()
       .min(1, { message: "Start date and time are required." }),
     endsAt: z.string().trim().optional(),
-    organizerUserId: optionalCuid("Select a valid organizer."),
-    chairpersonUserId: optionalCuid("Select a valid chairperson."),
+    organizer: optionalTrimmedString(160, "Organizer name is too long."),
+    chairperson: optionalTrimmedString(160, "Chairperson name is too long."),
     correspondenceId: optionalCuid("Select a valid linked correspondence."),
     status: z
       .enum(meetingUpdateStatusValues, {
@@ -256,8 +256,8 @@ export type MeetingCreateFormValues = {
   venue: string;
   startsAt: string;
   endsAt: string;
-  organizerUserId: string;
-  chairpersonUserId: string;
+  organizer: string;
+  chairperson: string;
   correspondenceId: string;
   status: string;
 };
@@ -337,8 +337,8 @@ export function getMeetingCreateValuesFromFormData(
     venue: getString(formData, "venue"),
     startsAt: getString(formData, "startsAt").trim(),
     endsAt: getString(formData, "endsAt").trim(),
-    organizerUserId: getString(formData, "organizerUserId").trim(),
-    chairpersonUserId: getString(formData, "chairpersonUserId").trim(),
+    organizer: getString(formData, "organizer").trim(),
+    chairperson: getString(formData, "chairperson").trim(),
     correspondenceId: getString(formData, "correspondenceId").trim(),
     status: getString(formData, "status"),
   };
@@ -374,8 +374,8 @@ export function getMeetingUpdateValuesFromFormData(
     venue: getString(formData, "venue"),
     startsAt: getString(formData, "startsAt").trim(),
     endsAt: getString(formData, "endsAt").trim(),
-    organizerUserId: getString(formData, "organizerUserId").trim(),
-    chairpersonUserId: getString(formData, "chairpersonUserId").trim(),
+    organizer: getString(formData, "organizer").trim(),
+    chairperson: getString(formData, "chairperson").trim(),
     correspondenceId: getString(formData, "correspondenceId").trim(),
     status: getString(formData, "status"),
   };
@@ -419,8 +419,8 @@ export const initialMeetingCreateState: MeetingCreateActionState = {
     venue: "",
     startsAt: "",
     endsAt: "",
-    organizerUserId: "",
-    chairpersonUserId: "",
+    organizer: "",
+    chairperson: "",
     correspondenceId: "",
     status: MeetingStatus.SCHEDULED,
   },
@@ -456,8 +456,8 @@ export const initialMeetingUpdateState: MeetingUpdateActionState = {
     venue: "",
     startsAt: "",
     endsAt: "",
-    organizerUserId: "",
-    chairpersonUserId: "",
+    organizer: "",
+    chairperson: "",
     correspondenceId: "",
     status: MeetingStatus.SCHEDULED,
   },

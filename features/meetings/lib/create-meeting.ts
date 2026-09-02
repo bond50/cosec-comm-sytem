@@ -20,7 +20,6 @@ import { createNotifications } from "@/features/notifications/lib/notifications"
 import {
   excludeActor,
   getDirectUserRecipient,
-  mergeRecipients,
 } from "@/features/notifications/lib/notification-routing";
 
 export async function createMeetingAction(
@@ -42,73 +41,24 @@ export async function createMeetingAction(
   try {
     const access = await requireOrganizationPermission("meetings.manage");
 
-    const [organizer, chairperson, correspondence] = await Promise.all([
-      parsed.data.organizerUserId
-        ? db.organizationMembership.findFirst({
-            where: {
-              organizationId: access.organization.id,
-              userId: parsed.data.organizerUserId,
-              status: "ACTIVE",
-            },
-            select: { userId: true, user: { select: { email: true } } },
-          })
-        : Promise.resolve(null),
-      parsed.data.chairpersonUserId
-        ? db.organizationMembership.findFirst({
-            where: {
-              organizationId: access.organization.id,
-              userId: parsed.data.chairpersonUserId,
-              status: "ACTIVE",
-            },
-            select: { userId: true, user: { select: { email: true } } },
-          })
-        : Promise.resolve(null),
-      parsed.data.correspondenceId
-        ? db.correspondence.findFirst({
-            where: {
-              organizationId: access.organization.id,
-              id: parsed.data.correspondenceId,
-            },
-            select: {
-              id: true,
-              referenceNumber: true,
-              assignedToUserId: true,
-              assignedToUser: {
-                select: {
-                  email: true,
-                },
+    const correspondence = parsed.data.correspondenceId
+      ? await db.correspondence.findFirst({
+          where: {
+            organizationId: access.organization.id,
+            id: parsed.data.correspondenceId,
+          },
+          select: {
+            id: true,
+            referenceNumber: true,
+            assignedToUserId: true,
+            assignedToUser: {
+              select: {
+                email: true,
               },
             },
-          })
-        : Promise.resolve(null),
-    ]);
-
-    if (parsed.data.organizerUserId && !organizer) {
-      return {
-        ok: false,
-        message: "The selected organizer is not an active organization member.",
-        fieldErrors: {
-          organizerUserId: [
-            "The selected organizer is not an active organization member.",
-          ],
-        },
-        values: parsed.data,
-      };
-    }
-
-    if (parsed.data.chairpersonUserId && !chairperson) {
-      return {
-        ok: false,
-        message:
-          "The selected chairperson is not an active organization member.",
-        fieldErrors: {
-          chairpersonUserId: [
-            "The selected chairperson is not an active organization member.",
-          ],
-        },
-        values: parsed.data,
-      };
-    }
+          },
+        })
+      : null;
 
     if (parsed.data.correspondenceId && !correspondence) {
       return {
@@ -134,8 +84,8 @@ export async function createMeetingAction(
           venue: parsed.data.venue,
           startsAt: new Date(parsed.data.startsAt),
           endsAt: parsed.data.endsAt ? new Date(parsed.data.endsAt) : undefined,
-          organizerUserId: parsed.data.organizerUserId,
-          chairpersonUserId: parsed.data.chairpersonUserId,
+          organizer: parsed.data.organizer,
+          chairperson: parsed.data.chairperson,
           correspondenceId: parsed.data.correspondenceId,
           status: parsed.data.status,
         },
@@ -164,19 +114,9 @@ export async function createMeetingAction(
         tx,
         organizationId: access.organization.id,
         recipients: excludeActor(
-          mergeRecipients(
-            await getDirectUserRecipient(
-              { tx, organizationId: access.organization.id },
-              parsed.data.organizerUserId,
-            ),
-            await getDirectUserRecipient(
-              { tx, organizationId: access.organization.id },
-              parsed.data.chairpersonUserId,
-            ),
-            await getDirectUserRecipient(
-              { tx, organizationId: access.organization.id },
-              correspondence?.assignedToUserId,
-            ),
+          await getDirectUserRecipient(
+            { tx, organizationId: access.organization.id },
+            correspondence?.assignedToUserId,
           ),
           access.userId,
         ),
