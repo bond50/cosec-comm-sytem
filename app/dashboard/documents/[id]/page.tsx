@@ -245,7 +245,7 @@ export default async function DocumentDetailPage({
               document.attachments.map((attachment) => (
                 <a
                   key={attachment.id}
-                  href={attachment.storagePath}
+                  href={`/api/attachments/${attachment.id}`}
                   target="_blank"
                   rel="noreferrer"
                   className="block rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:bg-slate-100"

@@ -72,7 +72,7 @@ export async function uploadCorrespondenceAttachmentAction(
   }
 
   if (
-    file.type &&
+    !file.type ||
     !ALLOWED_ATTACHMENT_MIME_TYPES.includes(
       file.type as (typeof ALLOWED_ATTACHMENT_MIME_TYPES)[number],
     )
