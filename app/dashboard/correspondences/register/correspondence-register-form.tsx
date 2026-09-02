@@ -151,7 +151,7 @@ function SenderOfficeCombobox({
               setIsSenderOfficeMenuOpen(false);
             }, 120);
           }}
-          placeholder="County Department of Public Service"
+          placeholder="Office of the Governor"
           className="pr-11"
         />
         <button
