@@ -38,6 +38,10 @@ const MFA_MAX = 30;
 const MFA_WINDOW_SECONDS = 10 * 60;
 const AUTHAPI_MAX = 30;
 const AUTHAPI_WINDOW_SECONDS = 60;
+const EMAIL_ACTION_MAX = 3;
+const EMAIL_ACTION_WINDOW_SECONDS = 10 * 60;
+const EMAIL_ACTION_IP_MAX = 10;
+const EMAIL_ACTION_IP_WINDOW_SECONDS = 10 * 60;
 
 const memLoginAcct = new RateLimiterMemory({
   keyPrefix: "rl:login:acct",
@@ -63,6 +67,18 @@ const memAuthAPI = new RateLimiterMemory({
   duration: AUTHAPI_WINDOW_SECONDS,
 });
 
+const memEmailAction = new RateLimiterMemory({
+  keyPrefix: "rl:emailaction:acct",
+  points: EMAIL_ACTION_MAX,
+  duration: EMAIL_ACTION_WINDOW_SECONDS,
+});
+
+const memEmailActionIP = new RateLimiterMemory({
+  keyPrefix: "rl:emailaction:ip",
+  points: EMAIL_ACTION_IP_MAX,
+  duration: EMAIL_ACTION_IP_WINDOW_SECONDS,
+});
+
 const memLoginLocks = new Map<string, LoginLock>();
 
 let useFallback = true;
@@ -71,6 +87,8 @@ let prismaLoginAcct: RateLimiterClient | null = null;
 let prismaLoginIP: RateLimiterClient | null = null;
 let prisma2FA: RateLimiterClient | null = null;
 let prismaAuthAPI: RateLimiterClient | null = null;
+let prismaEmailAction: RateLimiterClient | null = null;
+let prismaEmailActionIP: RateLimiterClient | null = null;
 
 function computeNextLock(prev: LoginLock | null, now: number): LoginLock {
   const prevStep = prev?.step ?? -1;
@@ -200,6 +218,20 @@ async function ensureInit(): Promise<void> {
       duration: AUTHAPI_WINDOW_SECONDS,
     });
 
+    prismaEmailAction = new RateLimiterPrisma({
+      storeClient: db,
+      keyPrefix: "rl:emailaction:acct",
+      points: EMAIL_ACTION_MAX,
+      duration: EMAIL_ACTION_WINDOW_SECONDS,
+    });
+
+    prismaEmailActionIP = new RateLimiterPrisma({
+      storeClient: db,
+      keyPrefix: "rl:emailaction:ip",
+      points: EMAIL_ACTION_IP_MAX,
+      duration: EMAIL_ACTION_IP_WINDOW_SECONDS,
+    });
+
     useFallback = false;
   } catch {
     useFallback = true;
@@ -208,9 +240,19 @@ async function ensureInit(): Promise<void> {
 
 async function getIPFromHeaders(): Promise<string> {
   const h = await headers();
+  // cf-connecting-ip is set exclusively by Cloudflare at the edge and cannot
+  // be spoofed by the client; x-forwarded-for can have client-supplied
+  // entries prepended, so it is only used as a last-resort fallback.
+  const cfConnectingIp = h.get("cf-connecting-ip");
+  if (cfConnectingIp) return cfConnectingIp.trim();
+
+  const realIp = h.get("x-real-ip");
+  if (realIp) return realIp.trim();
+
   const xff = h.get("x-forwarded-for");
   if (xff) return xff.split(",")[0]!.trim();
-  return h.get("x-real-ip") ?? "ip:unknown";
+
+  return "ip:unknown";
 }
 
 export async function assertNotRateLimitedLogin(email: string): Promise<void> {
@@ -282,6 +324,23 @@ export async function assertNotRateLimitedAuthAPI(
   const limiter = useFallback ? memAuthAPI : prismaAuthAPI!;
   const result = await consume(limiter, keyIP);
   if (!result.ok) throw new Error("rate_limited");
+}
+
+export async function assertNotRateLimitedEmailAction(
+  email: string,
+): Promise<void> {
+  await ensureInit();
+  const ip = await getIPFromHeaders();
+  const acctKey = `acct:${email.toLowerCase()}`;
+  const ipKey = `ip:${ip}`;
+
+  const acctLimiter = useFallback ? memEmailAction : prismaEmailAction!;
+  const acctRes = await consume(acctLimiter, acctKey);
+  if (!acctRes.ok) throw new Error("rate_limited");
+
+  const ipLimiter = useFallback ? memEmailActionIP : prismaEmailActionIP!;
+  const ipRes = await consume(ipLimiter, ipKey);
+  if (!ipRes.ok) throw new Error("rate_limited");
 }
 
 export async function clearLoginLockOnSuccess(email: string): Promise<void> {

@@ -5,6 +5,7 @@ import { resetSchema } from "@/features/auth/schemas/auth";
 import { getUserByEmail } from "@/features/auth/queries/user";
 import { generatePasswordResetToken } from "@/features/auth/queries/tokens";
 import { sendPasswordResetEmail } from "@/features/auth/utils/auth-email";
+import { assertNotRateLimitedEmailAction } from "@/features/auth/utils/rate-limit";
 
 const GENERIC_SUCCESS =
   "If an account exists for that email, a reset link has been sent.";
@@ -35,6 +36,13 @@ export async function requestPasswordReset(
   }
 
   const normalizedEmail = parsed.data.email.toLowerCase();
+
+  try {
+    await assertNotRateLimitedEmailAction(normalizedEmail);
+  } catch {
+    return { success: GENERIC_SUCCESS };
+  }
+
   const user = await getUserByEmail(normalizedEmail);
 
   if (!user?.email) {

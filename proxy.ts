@@ -25,8 +25,9 @@ export const proxy = auth(async (req) => {
 
   if (pathname.startsWith(apiAuthPrefix)) {
     const ip =
+      req.headers.get("cf-connecting-ip")?.trim() ??
+      req.headers.get("x-real-ip")?.trim() ??
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-      req.headers.get("x-real-ip") ??
       "ip:unknown";
     try {
       await assertNotRateLimitedAuthAPI(ip);
