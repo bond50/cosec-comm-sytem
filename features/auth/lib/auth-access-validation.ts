@@ -8,7 +8,7 @@ function isTurnstileBypassed(): boolean {
 
 export type AuthAccessLocalFieldErrors = Partial<
   Record<
-    "email" | "password" | "confirmPassword" | "code" | "turnstile",
+    "name" | "email" | "password" | "confirmPassword" | "code" | "turnstile",
     string
   >
 >;
@@ -43,6 +43,7 @@ export function getAuthAccessFieldErrors(
   stateFieldErrors: AuthAccessActionState["fieldErrors"],
 ) {
   return {
+    name: localErrors.name ?? stateFieldErrors?.name,
     email: localErrors.email ?? stateFieldErrors?.email,
     password: localErrors.password ?? stateFieldErrors?.password,
     confirmPassword:
@@ -102,6 +103,7 @@ export function validateAuthAccessSubmit({
 
   if (mode === "register" && !registrationComplete) {
     const parsed = registerSchema.safeParse({
+      name: String(formData.get("name") ?? ""),
       email: emailValue,
       password: String(formData.get("password") ?? ""),
       confirmPassword: String(formData.get("confirmPassword") ?? ""),
@@ -110,6 +112,7 @@ export function validateAuthAccessSubmit({
     if (!parsed.success) {
       const fields = z.flattenError(parsed.error).fieldErrors;
       return {
+        name: fields.name?.[0],
         email: fields.email?.[0],
         password: fields.password?.[0],
         confirmPassword: fields.confirmPassword?.[0],

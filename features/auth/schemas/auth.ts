@@ -13,6 +13,11 @@ export const resetSchema = z.object({
 
 export const registerSchema = z
   .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, { message: "Full name must be at least 2 characters long" })
+      .max(120, { message: "Full name is too long" }),
     email: z.email().min(1, { message: "Email is required" }),
     password: z
       .string()

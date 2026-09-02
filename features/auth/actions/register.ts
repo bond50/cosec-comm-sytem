@@ -8,20 +8,28 @@ export type RegisterActionState = {
   error?: string;
   success?: string;
   fieldErrors?: Partial<
-    Record<"email" | "password" | "confirmPassword", string>
+    Record<"name" | "email" | "password" | "confirmPassword", string>
   >;
   values?: {
+    name?: string;
     email?: string;
   };
 };
 
 function getRegisterFieldErrors(
   error: z.ZodError<z.infer<typeof registerSchema>>,
-  values?: { email?: string; password?: string; confirmPassword?: string },
+  values?: {
+    name?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  },
 ) {
   const fields = z.flattenError(error).fieldErrors;
 
   return {
+    name:
+      fields.name?.[0] ?? (!values?.name ? "Full name is required" : undefined),
     email:
       fields.email?.[0] ?? (!values?.email ? "Email is required" : undefined),
     password:
@@ -38,6 +46,7 @@ export async function registerAction(
   formData: FormData,
 ): Promise<RegisterActionState> {
   const values = {
+    name: String(formData.get("name") ?? ""),
     email: String(formData.get("email") ?? ""),
     password: String(formData.get("password") ?? ""),
     confirmPassword: String(formData.get("confirmPassword") ?? ""),
@@ -49,6 +58,7 @@ export async function registerAction(
       error: "Please correct the highlighted fields.",
       fieldErrors: getRegisterFieldErrors(parsed.error, values),
       values: {
+        name: values.name,
         email: values.email,
       },
     };
@@ -60,6 +70,7 @@ export async function registerAction(
     error: result?.error,
     success: result?.success,
     values: {
+      name: parsed.data.name,
       email: parsed.data.email,
     },
   };

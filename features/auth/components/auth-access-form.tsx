@@ -186,9 +186,18 @@ export function AuthAccessForm({
             registrationComplete={registrationComplete}
             emailValue={emailValue}
             successMessage={state.success}
+            nameValue={state.values?.name ?? ""}
+            nameError={fieldErrors.name}
             passwordError={fieldErrors.password}
             confirmPasswordError={fieldErrors.confirmPassword}
             inputErrorClass={authInputErrorClass}
+            onNameChange={() => {
+              if (localErrors.name) {
+                setLocalErrors((current) =>
+                  clearAuthAccessErrors(current, ["name"]),
+                );
+              }
+            }}
             onPasswordChange={() => {
               if (localErrors.password || localErrors.confirmPassword) {
                 setLocalErrors((current) =>

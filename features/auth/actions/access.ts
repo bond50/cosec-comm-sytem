@@ -27,11 +27,12 @@ export type AuthAccessActionState = {
   twoFactorRequired?: boolean;
   fieldErrors?: Partial<
     Record<
-      "email" | "password" | "confirmPassword" | "code" | "turnstile",
+      "name" | "email" | "password" | "confirmPassword" | "code" | "turnstile",
       string
     >
   >;
   values?: {
+    name?: string;
     email?: string;
     code?: string;
   };
@@ -63,6 +64,7 @@ function getRegisterFieldErrors(
 ) {
   const fields = z.flattenError(error).fieldErrors;
   return {
+    name: fields.name?.[0],
     email: fields.email?.[0],
     password: fields.password?.[0],
     confirmPassword: fields.confirmPassword?.[0],
@@ -74,11 +76,13 @@ function buildTurnstileFailureState({
   message,
   rawEmail,
   code = "",
+  rawName,
 }: {
   mode: AccessMode;
   message: string;
   rawEmail: string;
   code?: string;
+  rawName?: string;
 }): AuthAccessActionState {
   return {
     mode,
@@ -87,6 +91,7 @@ function buildTurnstileFailureState({
       turnstile: message,
     },
     values: {
+      name: rawName,
       email: rawEmail,
       code,
     },
@@ -235,6 +240,7 @@ export async function authAccessAction(
   }
 
   if (intent === "register") {
+    const rawName = String(formData.get("name") ?? "").trim();
     const hasVerifiedAccess = await hasTurnstileAccess(normalizedEmail);
 
     if (!hasVerifiedAccess) {
@@ -247,6 +253,7 @@ export async function authAccessAction(
           mode: "register",
           message: turnstileResult.message,
           rawEmail,
+          rawName,
         });
       }
 
@@ -254,6 +261,7 @@ export async function authAccessAction(
     }
 
     const values = {
+      name: rawName,
       email: normalizedEmail,
       password: String(formData.get("password") ?? ""),
       confirmPassword: String(formData.get("confirmPassword") ?? ""),
@@ -265,7 +273,7 @@ export async function authAccessAction(
         mode: "register",
         error: "Please correct the highlighted fields.",
         fieldErrors: getRegisterFieldErrors(parsed.error),
-        values: { email: rawEmail, code: "" },
+        values: { name: rawName, email: rawEmail, code: "" },
       };
     }
 
@@ -284,7 +292,7 @@ export async function authAccessAction(
       mode: "register",
       error: result?.error,
       success: result?.success,
-      values: { email: parsed.data.email, code: "" },
+      values: { name: parsed.data.name, email: parsed.data.email, code: "" },
       fieldErrors: initialFieldErrors,
     };
   }

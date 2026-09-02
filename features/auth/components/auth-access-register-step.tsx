@@ -1,16 +1,22 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { AuthCreatePasswordFields } from "@/features/auth/components/auth-create-password-fields";
 import { AuthFeedback } from "@/features/auth/components/auth-feedback";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
+import { cn } from "@/lib/utils";
 
 type AuthAccessRegisterStepProps = {
   registrationComplete: boolean;
   emailValue: string;
   successMessage?: string;
+  nameValue: string;
+  nameError?: string;
   passwordError?: string;
   confirmPasswordError?: string;
   inputErrorClass: string;
+  onNameChange: () => void;
   onPasswordChange: () => void;
   onConfirmPasswordChange: () => void;
   onUseAnotherEmail: () => void;
@@ -20,9 +26,12 @@ export function AuthAccessRegisterStep({
   registrationComplete,
   emailValue,
   successMessage,
+  nameValue,
+  nameError,
   passwordError,
   confirmPasswordError,
   inputErrorClass,
+  onNameChange,
   onPasswordChange,
   onConfirmPasswordChange,
   onUseAnotherEmail,
@@ -62,6 +71,23 @@ export function AuthAccessRegisterStep({
 
   return (
     <div className="space-y-3">
+      <Field className="space-y-4">
+        <FieldLabel htmlFor="name" required>
+          Full name
+        </FieldLabel>
+        <Input
+          id="name"
+          name="name"
+          autoComplete="name"
+          defaultValue={nameValue}
+          placeholder="Jane Doe"
+          className={cn("mt-2", nameError && inputErrorClass)}
+          onChange={onNameChange}
+          required
+        />
+        <FieldError>{nameError}</FieldError>
+      </Field>
+
       <AuthCreatePasswordFields
         passwordError={passwordError}
         confirmPasswordError={confirmPasswordError}

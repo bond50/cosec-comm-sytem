@@ -20,7 +20,7 @@ export async function registerUser(
     return { error: "Invalid fields!" };
   }
 
-  const { email, password } = parsed.data;
+  const { name, email, password } = parsed.data;
   const normalizedEmail = email.toLowerCase();
 
   const existing = await getUserByEmail(normalizedEmail);
@@ -32,6 +32,7 @@ export async function registerUser(
 
   await db.user.create({
     data: {
+      name,
       email: normalizedEmail,
       password: hashedPassword,
     },
