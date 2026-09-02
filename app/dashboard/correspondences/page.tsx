@@ -9,6 +9,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { CorrespondencesWorkspace } from "@/app/dashboard/correspondences/correspondences-workspace";
 import { getDepartmentsByOrganization } from "@/features/application/queries/departments";
+import { getActiveMembershipByUserId } from "@/features/application/queries/memberships";
 import { requireCorrespondenceWorkspaceAccess } from "@/features/auth/utils/require-organization-permission";
 import { hasFoundationPermission } from "@/features/auth/utils/role-access";
 import { getCorrespondenceList } from "@/features/correspondence/queries/correspondence-list";
@@ -44,9 +45,17 @@ export default async function CorrespondencesPage({
 }: CorrespondencesPageProps) {
   const access = await requireCorrespondenceWorkspaceAccess();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const viewerMembership = await getActiveMembershipByUserId(
+    access.userId,
+    access.organization.id,
+  );
   const [correspondences, senderOfficeSuggestions, departments] =
     await Promise.all([
-      getCorrespondenceList(access.organization.id),
+      getCorrespondenceList(access.organization.id, undefined, {
+        userId: access.userId,
+        departmentId: viewerMembership?.departmentId ?? null,
+        roles: access.organizationRoles,
+      }),
       getSenderOfficeSuggestions(access.organization.id),
       getDepartmentsByOrganization(access.organization.id),
     ]);

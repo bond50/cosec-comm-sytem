@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { CorrespondenceStatus } from "@prisma/client";
+import { canViewCorrespondenceConfidentiality } from "@/features/correspondence/lib/correspondence-access";
+import { getActiveMembershipByUserId } from "@/features/application/queries/memberships";
 import { CorrespondenceCurrentStepCard } from "@/app/dashboard/correspondences/[id]/correspondence-current-step-card";
 import { CorrespondenceDetailTabs } from "@/app/dashboard/correspondences/[id]/correspondence-detail-tabs";
 import { CorrespondencePrintView } from "@/app/dashboard/correspondences/[id]/correspondence-print-view";
@@ -67,6 +69,31 @@ export default async function CorrespondenceDetailPage({
   ]);
 
   if (!correspondence) {
+    notFound();
+  }
+
+  const viewerMembership = await getActiveMembershipByUserId(
+    access.userId,
+    access.organization.id,
+  );
+
+  const canViewRecord = canViewCorrespondenceConfidentiality(
+    {
+      userId: access.userId,
+      departmentId: viewerMembership?.departmentId ?? null,
+      roles: access.organizationRoles,
+    },
+    {
+      confidentiality: correspondence.confidentiality,
+      assignedToDepartmentId: correspondence.assignedToDepartment?.id ?? null,
+      assignedToUserId: correspondence.assignedToUser?.id ?? null,
+      receivedByUserId: correspondence.receivedByUser?.id ?? null,
+      reviewedByUserId: correspondence.reviewedByUser?.id ?? null,
+      assignedByUserId: correspondence.assignedByUser?.id ?? null,
+    },
+  );
+
+  if (!canViewRecord) {
     notFound();
   }
 

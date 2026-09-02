@@ -9,6 +9,10 @@ import {
 } from "@prisma/client";
 import { db } from "@/lib/db";
 import { withCorrespondenceSla } from "@/features/correspondence/queries/correspondence-sla";
+import {
+  buildCorrespondenceVisibilityWhere,
+  type CorrespondenceViewerScope,
+} from "@/features/correspondence/lib/correspondence-access";
 
 export type CorrespondenceDateRange = {
   from?: Date | string | null;
@@ -181,11 +185,15 @@ export function buildCorrespondenceListWhere(
 export async function getCorrespondenceList(
   organizationId: string,
   filters: CorrespondenceListFilters = {},
+  viewer?: CorrespondenceViewerScope,
 ): Promise<CorrespondenceListItemWithSla[]> {
   if (!organizationId) return [];
 
+  const baseWhere = buildCorrespondenceListWhere(organizationId, filters);
+  const visibilityWhere = buildCorrespondenceVisibilityWhere(viewer);
+
   const items = await db.correspondence.findMany({
-    where: buildCorrespondenceListWhere(organizationId, filters),
+    where: visibilityWhere ? { AND: [baseWhere, visibilityWhere] } : baseWhere,
     orderBy: [{ receivedAt: "desc" }, { createdAt: "desc" }],
     select: correspondenceListSelect,
   });

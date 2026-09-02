@@ -21,8 +21,8 @@ import {
   hasDocumentWorkspaceAccess,
   hasFoundationPermission,
   hasMeetingWorkspaceAccess,
-  hasOrgWideCorrespondenceVisibility,
 } from "@/features/auth/utils/role-access";
+import { buildCorrespondenceVisibilityWhere } from "@/features/correspondence/lib/correspondence-access";
 
 type WorkspaceSearchArgs = {
   organizationId: string;
@@ -496,20 +496,13 @@ export async function getWorkspaceSearchResults({
       })
     : null;
 
-  const correspondenceOrgWide = hasOrgWideCorrespondenceVisibility(roles);
-  const correspondenceVisibilityFilter: Prisma.CorrespondenceWhereInput | null =
-    correspondenceOrgWide || !userId
-      ? null
-      : {
-          OR: [
-            { assignedToUserId: userId },
-            { receivedByUserId: userId },
-            { reviewedByUserId: userId },
-            ...(membership?.departmentId
-              ? [{ assignedToDepartmentId: membership.departmentId }]
-              : []),
-          ],
-        };
+  const correspondenceVisibilityFilter = userId
+    ? (buildCorrespondenceVisibilityWhere({
+        userId,
+        departmentId: membership?.departmentId ?? null,
+        roles,
+      }) ?? null)
+    : null;
 
   const meetingSearchOrFilters: Prisma.MeetingWhereInput[] = [
     ...buildContainsFilters(searchTerms, (term) => ({

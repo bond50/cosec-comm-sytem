@@ -12,29 +12,15 @@ import {
   FINAL_CORRESPONDENCE_STATUSES,
   getCorrespondenceSla,
 } from "@/features/correspondence/queries/correspondence-sla";
+import { buildCorrespondenceVisibilityWhere } from "@/features/correspondence/lib/correspondence-access";
+import type { MembershipRoleInput } from "@/features/auth/utils/roles";
 
 export type DashboardVisibilityScope = {
   userId: string;
   departmentId: string | null;
   orgWide: boolean;
+  roles: MembershipRoleInput;
 };
-
-function buildCorrespondenceVisibilityWhere(
-  scope: DashboardVisibilityScope | undefined,
-): Prisma.CorrespondenceWhereInput | undefined {
-  if (!scope || scope.orgWide) return undefined;
-
-  const or: Prisma.CorrespondenceWhereInput[] = [
-    { assignedToUserId: scope.userId },
-    { receivedByUserId: scope.userId },
-    { reviewedByUserId: scope.userId },
-  ];
-  if (scope.departmentId) {
-    or.push({ assignedToDepartmentId: scope.departmentId });
-  }
-
-  return { OR: or };
-}
 
 function buildDispatchVisibilityWhere(
   scope: DashboardVisibilityScope | undefined,
@@ -437,7 +423,15 @@ export async function getCorrespondenceDashboardMetrics(
 
   const now = new Date();
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-  const correspondenceVisibility = buildCorrespondenceVisibilityWhere(viewer);
+  const correspondenceVisibility = buildCorrespondenceVisibilityWhere(
+    viewer
+      ? {
+          userId: viewer.userId,
+          departmentId: viewer.departmentId,
+          roles: viewer.roles,
+        }
+      : undefined,
+  );
   const dispatchVisibility = buildDispatchVisibilityWhere(viewer);
   const actionPointVisibility = buildActionPointVisibilityWhere(viewer);
 

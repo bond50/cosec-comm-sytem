@@ -642,6 +642,31 @@ export function hasCountySecretaryAuthority(
   );
 }
 
+/**
+ * Full confidentiality clearance: can see every correspondence record at
+ * every confidentiality tier, org-wide.
+ */
+export function hasFullCorrespondenceClearance(
+  roles: MembershipRoleInput,
+): boolean {
+  return (
+    hasCountySecretaryAuthority(roles) ||
+    hasMembershipRole(roles, UserRole.ORG_ADMIN)
+  );
+}
+
+/**
+ * Intake clearance (Registry Officer): sees every correspondence record
+ * org-wide up to CONFIDENTIAL; HIGHLY_CONFIDENTIAL records are visible only
+ * while still being registered/reviewed or if the officer is a direct
+ * participant on the record.
+ */
+export function hasCorrespondenceIntakeClearance(
+  roles: MembershipRoleInput,
+): boolean {
+  return hasMembershipRole(roles, UserRole.REGISTRY_OFFICER);
+}
+
 export function hasRegistryDispatchCapability(
   roles: MembershipRoleInput,
 ): boolean {

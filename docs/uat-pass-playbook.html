@@ -1400,6 +1400,45 @@
           >. This confirms the source is a real, structured link to a
           department, not just a free-text guess.
         </div>
+        <div class="warning">
+          <strong>Confidentiality enforcement check.</strong> Register one more
+          item with <strong>Confidentiality: Highly Confidential</strong>,
+          assigned to a specific Transport Officer (not just the Transport
+          department in general). Then:
+          <ul>
+            <li>
+              Log in as a <em>different</em> <code>DEPARTMENT_USER</code> in the
+              same Transport department (not the named assignee) and open the
+              record's URL directly. Expected: a normal "not found" page — same
+              as a record that doesn't exist. It must not distinguish "exists
+              but you can't see it" from "doesn't exist."
+            </li>
+            <li>
+              Confirm it also does not appear in that user's correspondence
+              list, dashboard tiles, or search results.
+            </li>
+            <li>
+              Log in as the named Transport Officer: the record opens normally.
+            </li>
+            <li>
+              Log in as Reviewing Officer / County Secretary, Org Admin, or
+              Registry Officer (while the item is still new/under review): each
+              should see it without restriction. Re-check as Registry Officer
+              once the item has moved past intake (routed/dispatched) — at that
+              point Registry Officer should lose visibility unless they are a
+              direct participant (received/reviewed/assigned it).
+            </li>
+            <li>
+              Repeat with Confidentiality set to <strong>Confidential</strong>
+              instead — at that tier, any member of the assigned department (not
+              just the named officer) should be able to see it, unlike Highly
+              Confidential.
+            </li>
+          </ul>
+          Log a defect if any role sees more or less than described here — see
+          <code>features/correspondence/lib/correspondence-access.ts</code>
+          for the canonical policy this should match.
+        </div>
 
         <h3>Step 16: Review As Reviewing Officer / County Secretary</h3>
         <p>Open the new correspondence detail page.</p>

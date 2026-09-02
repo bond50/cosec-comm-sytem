@@ -70,6 +70,7 @@ export default async function DashboardPage({
           userId: user.id,
           departmentId: membership?.departmentId ?? null,
           orgWide,
+          roles: user.organization?.roles ?? null,
         }
       : undefined,
   );
