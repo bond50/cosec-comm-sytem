@@ -1,17 +1,17 @@
 "use server";
 
-import {
-  AttachmentOwnerType,
-  AuditAction,
-  CorrespondenceStatus,
-} from "@prisma/client";
+import { CorrespondenceStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { uploadFileToCloudinary } from "@/lib/cloudinary";
 import {
   type CorrespondenceAttachmentActionState,
   getCorrespondenceAttachmentValuesFromFormData,
 } from "@/features/correspondence/lib/correspondence.shared";
+import {
+  recordCorrespondenceAttachment,
+  uploadCorrespondenceAttachmentFile,
+  validateOptionalAttachmentFile,
+} from "@/features/correspondence/lib/correspondence-attachment";
 import { requireOrganizationPermission } from "@/features/auth/utils/require-organization-permission";
 import {
   ForbiddenError,
@@ -19,26 +19,25 @@ import {
   UnauthorizedError,
 } from "@/features/auth/utils/auth-errors";
 
-const MAX_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024;
-const ALLOWED_ATTACHMENT_MIME_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "image/jpeg",
-  "image/png",
-  "text/plain",
-] as const;
-
 export async function uploadCorrespondenceAttachmentAction(
   _previousState: CorrespondenceAttachmentActionState,
   formData: FormData,
 ): Promise<CorrespondenceAttachmentActionState> {
   const values = getCorrespondenceAttachmentValuesFromFormData(formData);
-  const file = formData.get("file");
+  const validation = validateOptionalAttachmentFile(formData);
 
-  if (!(file instanceof File) || file.size === 0) {
+  if (!validation.ok) {
+    return {
+      ok: false,
+      message: validation.message,
+      fieldErrors: {
+        fileName: [validation.message],
+      },
+      values,
+    };
+  }
+
+  if (!validation.file) {
     return {
       ok: false,
       message: "Select a file to attach.",
@@ -49,42 +48,14 @@ export async function uploadCorrespondenceAttachmentAction(
     };
   }
 
+  const file = validation.file;
+
   if (!values.correspondenceId) {
     return {
       ok: false,
       message: "Invalid correspondence record.",
       fieldErrors: {
         correspondenceId: ["Invalid correspondence record."],
-      },
-      values,
-    };
-  }
-
-  if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
-    return {
-      ok: false,
-      message: "Attachment size must be 10 MB or less.",
-      fieldErrors: {
-        fileName: ["Attachment size must be 10 MB or less."],
-      },
-      values,
-    };
-  }
-
-  if (
-    !file.type ||
-    !ALLOWED_ATTACHMENT_MIME_TYPES.includes(
-      file.type as (typeof ALLOWED_ATTACHMENT_MIME_TYPES)[number],
-    )
-  ) {
-    return {
-      ok: false,
-      message:
-        "That file type is not supported for correspondence attachments.",
-      fieldErrors: {
-        fileName: [
-          "Supported file types are PDF, Word, Excel, JPEG, PNG, and text files.",
-        ],
       },
       values,
     };
@@ -165,43 +136,22 @@ export async function uploadCorrespondenceAttachmentAction(
   }
 
   try {
-    const upload = await uploadFileToCloudinary(file, {
-      folder: `organizations/${organizationId}/correspondence/${correspondence.id}`,
-      publicIdPrefix: "correspondence-attachment",
+    const upload = await uploadCorrespondenceAttachmentFile(file, {
+      organizationId,
+      correspondenceId: correspondence.id,
     });
 
-    const attachment = await db.$transaction(async (tx) => {
-      const created = await tx.attachment.create({
-        data: {
-          organizationId,
-          ownerType: AttachmentOwnerType.CORRESPONDENCE,
-          correspondenceId: correspondence.id,
-          fileName: upload.publicId,
-          originalName: file.name,
-          mimeType: file.type || "application/octet-stream",
-          fileSize: upload.bytes,
-          storagePath: upload.secureUrl,
-          uploadedByUserId: actorUserId,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      await tx.auditLog.create({
-        data: {
-          organizationId,
-          actorUserId,
-          entityType: "Attachment",
-          entityId: created.id,
-          action: AuditAction.UPDATE,
-          message: `Attached file ${file.name} to correspondence ${correspondence.referenceNumber}: ${correspondence.subject}`,
-          correspondenceId: correspondence.id,
-        },
-      });
-
-      return created;
-    });
+    const attachment = await db.$transaction(async (tx) =>
+      recordCorrespondenceAttachment(tx, {
+        organizationId,
+        correspondenceId: correspondence.id,
+        referenceNumber: correspondence.referenceNumber,
+        subject: correspondence.subject,
+        actorUserId,
+        file,
+        upload,
+      }),
+    );
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/correspondences");

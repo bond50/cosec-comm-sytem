@@ -7,6 +7,7 @@ import { useFormStatus } from "react-dom";
 import { Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   initialCorrespondenceDispatchFeedbackState,
@@ -90,6 +91,22 @@ export function CorrespondenceDispatchFeedbackForm({
           placeholder="Capture the response or execution update received from the department or officer."
         />
         <FieldError>{fieldErrors.feedbackNote?.[0]}</FieldError>
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor={`feedback-file-${dispatchId}`}>
+          Supporting file (optional)
+        </FieldLabel>
+        <Input
+          id={`feedback-file-${dispatchId}`}
+          name="file"
+          type="file"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.txt"
+        />
+        <p className="mt-2 text-xs text-slate-500">
+          Supported: PDF, Word, Excel, JPEG, PNG, and text files up to 10 MB.
+        </p>
+        <FieldError>{fieldErrors.fileName?.[0]}</FieldError>
       </Field>
 
       {state.message ? (

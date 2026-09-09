@@ -578,6 +578,22 @@ export function CorrespondenceRegisterForm({
         </Field>
       </div>
 
+      <Field>
+        <FieldLabel htmlFor="correspondence-file">
+          Supporting file (optional)
+        </FieldLabel>
+        <Input
+          id="correspondence-file"
+          name="file"
+          type="file"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.txt"
+        />
+        <p className="mt-2 text-xs text-slate-500">
+          Supported: PDF, Word, Excel, JPEG, PNG, and text files up to 10 MB.
+        </p>
+        <FieldError>{fieldErrors.fileName?.[0]}</FieldError>
+      </Field>
+
       {state.message ? (
         <div
           className={

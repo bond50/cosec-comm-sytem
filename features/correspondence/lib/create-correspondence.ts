@@ -16,6 +16,11 @@ import {
   getCorrespondenceFieldErrors,
 } from "@/features/correspondence/lib/correspondence.shared";
 import { generateCorrespondenceReferenceNumber } from "@/features/correspondence/lib/correspondence-reference";
+import {
+  recordCorrespondenceAttachment,
+  uploadCorrespondenceAttachmentFile,
+  validateOptionalAttachmentFile,
+} from "@/features/correspondence/lib/correspondence-attachment";
 import { normalizeSenderOfficeName } from "@/features/correspondence/queries/sender-offices";
 import { requireOrganizationPermission } from "@/features/auth/utils/require-organization-permission";
 import {
@@ -40,6 +45,19 @@ export async function createCorrespondenceAction(
       values,
     };
   }
+
+  const attachmentValidation = validateOptionalAttachmentFile(formData);
+  if (!attachmentValidation.ok) {
+    return {
+      ok: false,
+      message: attachmentValidation.message,
+      fieldErrors: {
+        fileName: [attachmentValidation.message],
+      },
+      values: parsed.data,
+    };
+  }
+  const attachmentFile = attachmentValidation.file;
 
   let organizationId: string;
   let actorUserId: string;
@@ -237,13 +255,39 @@ export async function createCorrespondenceAction(
       return created;
     });
 
+    let attachmentWarning: string | null = null;
+
+    if (attachmentFile) {
+      try {
+        const upload = await uploadCorrespondenceAttachmentFile(
+          attachmentFile,
+          { organizationId, correspondenceId: correspondence.id },
+        );
+
+        await db.$transaction(async (tx) =>
+          recordCorrespondenceAttachment(tx, {
+            organizationId,
+            correspondenceId: correspondence.id,
+            referenceNumber: correspondence.referenceNumber,
+            subject: correspondence.subject,
+            actorUserId,
+            file: attachmentFile,
+            upload,
+          }),
+        );
+      } catch {
+        attachmentWarning =
+          " The attachment could not be uploaded — attach it from the correspondence detail page.";
+      }
+    }
+
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/correspondences");
     revalidatePath("/dashboard/correspondences/register");
 
     return {
       ok: true,
-      message: `Correspondence registered successfully as ${correspondence.referenceNumber}.`,
+      message: `Correspondence registered successfully as ${correspondence.referenceNumber}.${attachmentWarning ?? ""}`,
       values: {
         ...parsed.data,
         subject: "",

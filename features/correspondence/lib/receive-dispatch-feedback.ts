@@ -13,6 +13,11 @@ import {
   getCorrespondenceDispatchFeedbackValuesFromFormData,
   getCorrespondenceFieldErrors,
 } from "@/features/correspondence/lib/correspondence.shared";
+import {
+  recordCorrespondenceAttachment,
+  uploadCorrespondenceAttachmentFile,
+  validateOptionalAttachmentFile,
+} from "@/features/correspondence/lib/correspondence-attachment";
 import { requireOrganizationPermission } from "@/features/auth/utils/require-organization-permission";
 import {
   ForbiddenError,
@@ -36,6 +41,19 @@ export async function receiveDispatchFeedbackAction(
       values,
     };
   }
+
+  const attachmentValidation = validateOptionalAttachmentFile(formData);
+  if (!attachmentValidation.ok) {
+    return {
+      ok: false,
+      message: attachmentValidation.message,
+      fieldErrors: {
+        fileName: [attachmentValidation.message],
+      },
+      values: parsed.data,
+    };
+  }
+  const attachmentFile = attachmentValidation.file;
 
   let organizationId: string;
   let actorUserId: string;
@@ -182,6 +200,26 @@ export async function receiveDispatchFeedbackAction(
   const feedbackReceivedAt = new Date();
   const feedbackNote = parsed.data.feedbackNote.trim();
 
+  let attachmentUpload: Awaited<
+    ReturnType<typeof uploadCorrespondenceAttachmentFile>
+  > | null = null;
+  let attachmentWarning: string | null = null;
+
+  if (attachmentFile) {
+    try {
+      attachmentUpload = await uploadCorrespondenceAttachmentFile(
+        attachmentFile,
+        {
+          organizationId,
+          correspondenceId: dispatch.correspondence.id,
+        },
+      );
+    } catch {
+      attachmentWarning =
+        " The attachment could not be uploaded — attach it from the correspondence detail page.";
+    }
+  }
+
   await db.$transaction(async (tx) => {
     await tx.correspondenceDispatch.update({
       where: {
@@ -241,6 +279,18 @@ export async function receiveDispatchFeedbackAction(
       actorUserId,
       auditLogId: auditLog.id,
     });
+
+    if (attachmentFile && attachmentUpload) {
+      await recordCorrespondenceAttachment(tx, {
+        organizationId,
+        correspondenceId: dispatch.correspondence.id,
+        referenceNumber: dispatch.correspondence.referenceNumber,
+        subject: dispatch.correspondence.subject,
+        actorUserId,
+        file: attachmentFile,
+        upload: attachmentUpload,
+      });
+    }
   });
 
   revalidatePath("/dashboard");
@@ -249,7 +299,7 @@ export async function receiveDispatchFeedbackAction(
 
   return {
     ok: true,
-    message: "Execution feedback recorded successfully.",
+    message: `Execution feedback recorded successfully.${attachmentWarning ?? ""}`,
     values: {
       ...parsed.data,
       status: DispatchStatus.FEEDBACK_RECEIVED,
