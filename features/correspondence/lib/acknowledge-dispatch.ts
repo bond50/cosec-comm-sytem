@@ -1,10 +1,6 @@
 "use server";
 
-import {
-  AuditAction,
-  CorrespondenceStatus,
-  DispatchStatus,
-} from "@prisma/client";
+import { AuditAction, DispatchStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import {
@@ -21,6 +17,7 @@ import {
 } from "@/features/auth/utils/auth-errors";
 import { notifyCorrespondenceAcknowledged } from "@/features/correspondence/lib/correspondence-notifications";
 import { formatUserLabel } from "@/features/application/lib/user-label";
+import { computeAggregateCorrespondenceStatus } from "@/features/correspondence/lib/correspondence-dispatch-status";
 
 export async function acknowledgeDispatchAction(
   _previousState: CorrespondenceDispatchAcknowledgeActionState,
@@ -189,12 +186,20 @@ export async function acknowledgeDispatchAction(
       },
     });
 
+    const siblingDispatches = await tx.correspondenceDispatch.findMany({
+      where: { correspondenceId: dispatch.correspondence.id },
+      select: { status: true },
+    });
+    const aggregateStatus = computeAggregateCorrespondenceStatus(
+      siblingDispatches.map((d) => d.status),
+    );
+
     await tx.correspondence.update({
       where: {
         id: dispatch.correspondence.id,
       },
       data: {
-        status: CorrespondenceStatus.IN_PROGRESS,
+        status: aggregateStatus,
       },
     });
 
@@ -206,7 +211,7 @@ export async function acknowledgeDispatchAction(
         fromUserId: dispatch.dispatchedToUserId,
         toDepartmentId: dispatch.dispatchedToDepartmentId,
         toUserId: acknowledgedByUserId,
-        status: CorrespondenceStatus.IN_PROGRESS,
+        status: aggregateStatus,
         note: `${noteTarget} acknowledged dispatch for correspondence ${dispatch.correspondence.referenceNumber}.`,
         createdByUserId: actorUserId,
       },

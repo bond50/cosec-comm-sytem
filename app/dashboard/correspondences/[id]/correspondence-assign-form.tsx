@@ -58,7 +58,9 @@ function AssignSubmitButton() {
 
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? "Saving routing decision..." : "Save routing decision"}
+      {pending
+        ? "Saving routing decision..."
+        : "Save & dispatch routing decision"}
     </Button>
   );
 }
@@ -72,18 +74,27 @@ export function CorrespondenceAssignForm({
   assigneeOptions,
 }: CorrespondenceAssignFormProps) {
   const router = useRouter();
-  const initialDepartmentId = assignedToDepartmentId ?? "";
-  const initialUserId = assignedToUserId ?? "";
-  const [selectedDepartmentId, setSelectedDepartmentId] =
-    useState(initialDepartmentId);
-  const [selectedUserId, setSelectedUserId] = useState(initialUserId);
+  const initialDepartmentIds = assignedToDepartmentId
+    ? [assignedToDepartmentId]
+    : [];
+  const [selectedDepartmentIds, setSelectedDepartmentIds] =
+    useState<string[]>(initialDepartmentIds);
+  const [selectedUserIds, setSelectedUserIds] = useState<
+    Record<string, string>
+  >(
+    assignedToDepartmentId && assignedToUserId
+      ? { [assignedToDepartmentId]: assignedToUserId }
+      : {},
+  );
 
   const initialState: CorrespondenceAssignActionState = {
     ...initialCorrespondenceAssignState,
     values: {
       correspondenceId,
-      assignedToDepartmentId: assignedToDepartmentId ?? "",
-      assignedToUserId: assignedToUserId ?? "",
+      targets: initialDepartmentIds.map((departmentId) => ({
+        departmentId,
+        userId: assignedToUserId ?? "",
+      })),
       dueDate: toDateTimeLocalValue(dueDate),
       status: "DISPATCHED",
     },
@@ -102,9 +113,22 @@ export function CorrespondenceAssignForm({
 
   const values = state.values ?? initialState.values!;
   const fieldErrors = state.fieldErrors ?? {};
-  const filteredAssignees = assigneeOptions.filter(
-    (assignee) => assignee.departmentId === selectedDepartmentId,
-  );
+
+  function toggleDepartment(departmentId: string, checked: boolean) {
+    setSelectedDepartmentIds((current) =>
+      checked
+        ? [...current, departmentId]
+        : current.filter((id) => id !== departmentId),
+    );
+
+    if (!checked) {
+      setSelectedUserIds((current) => {
+        const next = { ...current };
+        delete next[departmentId];
+        return next;
+      });
+    }
+  }
 
   return (
     <form
@@ -113,93 +137,79 @@ export function CorrespondenceAssignForm({
     >
       <input type="hidden" name="correspondenceId" value={correspondenceId} />
       <input type="hidden" name="status" value="DISPATCHED" />
-      <input
-        type="hidden"
-        name="assignedToDepartmentId"
-        value={selectedDepartmentId}
-        readOnly
-      />
-      <input
-        type="hidden"
-        name="assignedToUserId"
-        value={selectedUserId}
-        readOnly
-      />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field>
-          <FieldLabel
-            htmlFor={`assign-department-${correspondenceId}`}
-            required
-          >
-            Destination department
-          </FieldLabel>
-          <Select
-            value={selectedDepartmentId || undefined}
-            onValueChange={(value) => {
-              setSelectedDepartmentId(value);
-              if (
-                !assigneeOptions.some(
-                  (assignee) =>
-                    assignee.departmentId === value &&
-                    assignee.id === selectedUserId,
-                )
-              ) {
-                setSelectedUserId("");
-              }
-            }}
-          >
-            <SelectTrigger
-              id={`assign-department-${correspondenceId}`}
-              className="h-11 w-full rounded-[10px] border-slate-200 bg-white text-[15px] shadow-none"
-            >
-              <SelectValue placeholder="Select department" />
-            </SelectTrigger>
-            <SelectContent>
-              {departmentOptions.map((department) => (
-                <SelectItem key={department.id} value={department.id}>
+      <Field>
+        <FieldLabel>Destination departments</FieldLabel>
+        <p className="mb-2 text-xs text-slate-500">
+          Select one or more departments to route this correspondence to
+          simultaneously.
+        </p>
+        <div className="space-y-3 rounded-[10px] border border-slate-200 bg-white p-3">
+          {departmentOptions.map((department) => {
+            const checked = selectedDepartmentIds.includes(department.id);
+            const filteredAssignees = assigneeOptions.filter(
+              (assignee) => assignee.departmentId === department.id,
+            );
+
+            return (
+              <div key={department.id} className="space-y-2">
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(event) =>
+                      toggleDepartment(department.id, event.target.checked)
+                    }
+                    className="h-4 w-4 rounded border-slate-300 text-[#1868a6] focus:ring-[#1868a6]"
+                  />
+                  {checked ? (
+                    <input
+                      type="hidden"
+                      name="assignedToDepartmentIds"
+                      value={department.id}
+                    />
+                  ) : null}
                   {department.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FieldError>{fieldErrors.assignedToDepartmentId?.[0]}</FieldError>
-        </Field>
+                </label>
 
-        <Field>
-          <FieldLabel htmlFor={`assign-user-${correspondenceId}`}>
-            Receiving officer
-          </FieldLabel>
-          <Select
-            value={selectedUserId || "__none__"}
-            onValueChange={(value) => {
-              setSelectedUserId(value === "__none__" ? "" : value);
-            }}
-          >
-            <SelectTrigger
-              id={`assign-user-${correspondenceId}`}
-              className="h-11 w-full rounded-[10px] border-slate-200 bg-white text-[15px] shadow-none"
-            >
-              <SelectValue placeholder="No named receiving officer" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">
-                No named receiving officer
-              </SelectItem>
-              {filteredAssignees.map((assignee) => (
-                <SelectItem key={assignee.id} value={assignee.id}>
-                  {assignee.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="mt-2 text-xs text-slate-500">
-            Optional. Only active members of the receiving department are
-            offered.
-          </p>
-          <FieldError>{fieldErrors.assignedToUserId?.[0]}</FieldError>
-        </Field>
-      </div>
+                {checked ? (
+                  <div className="ml-6">
+                    <Select
+                      value={selectedUserIds[department.id] || "__none__"}
+                      onValueChange={(value) =>
+                        setSelectedUserIds((current) => ({
+                          ...current,
+                          [department.id]: value === "__none__" ? "" : value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="h-10 w-full rounded-[10px] border-slate-200 bg-white text-sm shadow-none">
+                        <SelectValue placeholder="No named receiving officer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">
+                          No named receiving officer
+                        </SelectItem>
+                        {filteredAssignees.map((assignee) => (
+                          <SelectItem key={assignee.id} value={assignee.id}>
+                            {assignee.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <input
+                      type="hidden"
+                      name={`assignedToUserId__${department.id}`}
+                      value={selectedUserIds[department.id] || ""}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+        <FieldError>{fieldErrors.targets?.[0]}</FieldError>
+      </Field>
 
       <Field>
         <FieldLabel htmlFor={`assign-due-date-${correspondenceId}`} required>
@@ -212,7 +222,7 @@ export function CorrespondenceAssignForm({
           defaultValue={values.dueDate || ""}
         />
         <p className="mt-2 text-xs text-slate-500">
-          Required before the central office can dispatch this item.
+          Applies to every department this item is routed to.
         </p>
         <FieldError>{fieldErrors.dueDate?.[0]}</FieldError>
       </Field>

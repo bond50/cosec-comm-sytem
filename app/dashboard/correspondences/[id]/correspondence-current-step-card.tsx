@@ -11,6 +11,7 @@ import { CorrespondenceDispatchForm } from "@/app/dashboard/correspondences/[id]
 import { CorrespondenceCloseForm } from "@/app/dashboard/correspondences/[id]/correspondence-close-form";
 import { CorrespondenceReopenForm } from "@/app/dashboard/correspondences/[id]/correspondence-reopen-form";
 import { CorrespondenceReviewForm } from "@/app/dashboard/correspondences/[id]/correspondence-review-form";
+import { getDispatchActionState } from "@/features/correspondence/lib/correspondence-dispatch-actions";
 import type { CorrespondenceDetailWithSla } from "@/features/correspondence/queries/correspondence-detail";
 import type { CorrespondenceDispatchItem } from "@/features/correspondence/queries/correspondence-dispatches";
 
@@ -65,59 +66,6 @@ function ViewOnlyNotice({ children }: { children: ReactNode }) {
   );
 }
 
-function getDispatchActionState({
-  correspondence,
-  dispatches,
-  canDispatch,
-  canWork,
-  currentUserId,
-  currentUserDepartmentId,
-}: {
-  correspondence: CorrespondenceDetailWithSla;
-  dispatches: CorrespondenceDispatchItem[];
-  canDispatch: boolean;
-  canWork: boolean;
-  currentUserId: string;
-  currentUserDepartmentId: string | null;
-}) {
-  const latestDispatch = dispatches[0] ?? null;
-  const latestDispatchIsComplete =
-    latestDispatch === null ||
-    latestDispatch.status === "CLOSED" ||
-    latestDispatch.feedbackReceivedAt !== null;
-  const isReceivingTarget =
-    latestDispatch !== null &&
-    (latestDispatch.dispatchedToUser?.id === currentUserId ||
-      (!!latestDispatch.dispatchedToDepartment?.id &&
-        latestDispatch.dispatchedToDepartment.id === currentUserDepartmentId));
-  const canCreateDispatch =
-    canDispatch &&
-    correspondence.status === "DISPATCHED" &&
-    latestDispatchIsComplete;
-  const canAcknowledge =
-    canWork &&
-    isReceivingTarget &&
-    correspondence.status === "DISPATCHED" &&
-    latestDispatch !== null &&
-    (latestDispatch.status === "SENT" || latestDispatch.status === "OVERDUE");
-  const canRecordFeedback =
-    canWork &&
-    isReceivingTarget &&
-    (correspondence.status === "IN_PROGRESS" ||
-      correspondence.status === "AWAITING_FEEDBACK") &&
-    latestDispatch !== null &&
-    (latestDispatch.status === "ACKNOWLEDGED" ||
-      latestDispatch.status === "IN_PROGRESS" ||
-      latestDispatch.status === "FEEDBACK_RECEIVED");
-
-  return {
-    latestDispatch,
-    canCreateDispatch,
-    canAcknowledge,
-    canRecordFeedback,
-  };
-}
-
 function formatUserLabel(
   user:
     | { name: string | null; email: string | null; designation?: string | null }
@@ -153,13 +101,11 @@ function formatDispatchTargetLabel(
 
 function getCurrentStatusClue(
   correspondence: CorrespondenceDetailWithSla,
-  latestDispatch: CorrespondenceDispatchItem | null,
+  openDispatches: CorrespondenceDispatchItem[],
 ) {
   const reviewer = formatUserLabel(correspondence.reviewedByUser);
   const assignee = formatUserLabel(correspondence.assignedToUser);
   const department = correspondence.assignedToDepartment?.name;
-  const dispatchTarget = formatDispatchTargetLabel(latestDispatch);
-  const owner = dispatchTarget || formatAssignmentLabel(correspondence);
 
   switch (correspondence.status) {
     case "NEW":
@@ -169,15 +115,46 @@ function getCurrentStatusClue(
         ? `Under central-office review by ${reviewer}; routing is the next decision.`
         : "Waiting for the County Secretary review path to record instructions.";
     case "DISPATCHED":
-      if (latestDispatch && !latestDispatch.acknowledgedAt) {
-        return `Waiting for acknowledgement by ${owner}.`;
+    case "IN_PROGRESS":
+    case "AWAITING_FEEDBACK": {
+      if (openDispatches.length === 0) {
+        return `Routed to ${formatAssignmentLabel(correspondence)}; dispatch handling is in progress.`;
       }
 
-      return `Routed to ${owner}; dispatch handling is in progress.`;
-    case "IN_PROGRESS":
-      return `With ${owner} for action and execution feedback.`;
-    case "AWAITING_FEEDBACK":
-      return `Feedback received from ${department || assignee || owner || "the receiving office"}; ready for central-office verification and closure.`;
+      const pendingAck = openDispatches.filter((d) => !d.acknowledgedAt);
+      const pendingFeedback = openDispatches.filter(
+        (d) => d.acknowledgedAt && !d.feedbackReceivedAt,
+      );
+      const returned = openDispatches.filter((d) => d.feedbackReceivedAt);
+      const clauses: string[] = [];
+
+      if (pendingAck.length) {
+        clauses.push(
+          `awaiting acknowledgement from ${pendingAck
+            .map((d) => formatDispatchTargetLabel(d))
+            .join(", ")}`,
+        );
+      }
+      if (pendingFeedback.length) {
+        clauses.push(
+          `in progress with ${pendingFeedback
+            .map((d) => formatDispatchTargetLabel(d))
+            .join(", ")}`,
+        );
+      }
+      if (returned.length) {
+        clauses.push(
+          `feedback returned from ${returned
+            .map((d) => formatDispatchTargetLabel(d))
+            .join(", ")}`,
+        );
+      }
+
+      const departmentCount = openDispatches.length;
+      return `Routed to ${departmentCount} department${departmentCount > 1 ? "s" : ""}${
+        clauses.length ? `: ${clauses.join("; ")}` : ""
+      }.`;
+    }
     case "COMPLETED":
       return `Completed by ${department || assignee || "the receiving office"}; ready for closure.`;
     case "CANCELLED":
@@ -211,7 +188,7 @@ export function CorrespondenceCurrentStepCard({
   });
   const statusClue = getCurrentStatusClue(
     correspondence,
-    dispatchAction.latestDispatch,
+    dispatchAction.openDispatches,
   );
   const canReviewNow =
     canReview &&
@@ -282,90 +259,130 @@ export function CorrespondenceCurrentStepCard({
         View only - routing is restricted to central-office roles.
       </ViewOnlyNotice>
     );
-  } else if (correspondence.status === "DISPATCHED") {
-    if (dispatchAction.canCreateDispatch) {
-      title = "Issue dispatch";
-      description = "Send the routed correspondence to the receiving office.";
-      nextStep = "After dispatch, the receiving office acknowledges it.";
-      action = (
-        <CorrespondenceCurrentStepAction
-          actionLabel="Dispatch"
-          summary="Open dispatch only when the record is ready to leave central office."
-        >
-          <CorrespondenceDispatchForm
-            correspondenceId={correspondence.id}
-            defaultDispatchDate={new Date()}
-          />
-        </CorrespondenceCurrentStepAction>
-      );
-    } else if (dispatchAction.canAcknowledge && dispatchAction.latestDispatch) {
-      title = "Acknowledge dispatch";
-      description =
-        "Confirm that the receiving office has accepted the dispatch.";
-      nextStep = "After acknowledgement, execution feedback can be recorded.";
-      action = (
-        <CorrespondenceCurrentStepAction
-          actionLabel="Acknowledge"
-          summary="Open acknowledgement when the receiving office has the dispatch."
-        >
-          <CorrespondenceDispatchAcknowledgeForm
-            dispatchId={dispatchAction.latestDispatch.id}
-            acknowledgedAt={dispatchAction.latestDispatch.acknowledgedAt}
-          />
-        </CorrespondenceCurrentStepAction>
-      );
-    } else {
-      title = "Await acknowledgement";
-      description =
-        "The dispatch has been issued and is waiting for receiving-office acknowledgement.";
-      nextStep = "Once acknowledged, feedback can be recorded.";
-      action = (
-        <ViewOnlyNotice>
-          No action is available to your role at this step.
-        </ViewOnlyNotice>
-      );
-    }
-  } else if (correspondence.status === "IN_PROGRESS") {
-    title = "Record feedback";
-    description = "Capture execution feedback from the receiving office.";
-    nextStep = "After feedback, central office can verify and close the file.";
-    action =
-      dispatchAction.canRecordFeedback && dispatchAction.latestDispatch ? (
-        <CorrespondenceCurrentStepAction
-          actionLabel="Record feedback"
-          summary="Open feedback when execution details are ready to submit."
-        >
-          <CorrespondenceDispatchFeedbackForm
-            dispatchId={dispatchAction.latestDispatch.id}
-            feedbackReceivedAt={
-              dispatchAction.latestDispatch.feedbackReceivedAt
-            }
-            feedbackNote={dispatchAction.latestDispatch.feedbackNote}
-          />
-        </CorrespondenceCurrentStepAction>
-      ) : (
-        <ViewOnlyNotice>
-          Feedback is available only to the assigned receiving office.
-        </ViewOnlyNotice>
-      );
+  } else if (
+    correspondence.status === "DISPATCHED" ||
+    correspondence.status === "IN_PROGRESS"
+  ) {
+    const pendingAcknowledgements = dispatchAction.actionable.filter(
+      (item) => item.canAcknowledge,
+    );
+    const pendingFeedback = dispatchAction.actionable.filter(
+      (item) => item.canRecordFeedback,
+    );
+    const hasAnyAction =
+      pendingAcknowledgements.length > 0 ||
+      pendingFeedback.length > 0 ||
+      dispatchAction.canCreateDispatch;
+
+    title =
+      dispatchAction.openDispatches.length > 1
+        ? "Manage routed departments"
+        : correspondence.status === "DISPATCHED"
+          ? "Await acknowledgement"
+          : "Record feedback";
+    description =
+      "Acknowledge receipt, record execution feedback, or route to another department.";
+    nextStep =
+      "Once every routed department has returned feedback, the file becomes ready to close.";
+
+    action = hasAnyAction ? (
+      <div className="space-y-4">
+        {pendingAcknowledgements.map(({ dispatch }) => (
+          <CorrespondenceCurrentStepAction
+            key={dispatch.id}
+            actionLabel={`Acknowledge — ${formatDispatchTargetLabel(dispatch)}`}
+            summary="Open acknowledgement when the receiving office has the dispatch."
+          >
+            <CorrespondenceDispatchAcknowledgeForm
+              dispatchId={dispatch.id}
+              acknowledgedAt={dispatch.acknowledgedAt}
+            />
+          </CorrespondenceCurrentStepAction>
+        ))}
+        {pendingFeedback.map(({ dispatch }) => (
+          <CorrespondenceCurrentStepAction
+            key={dispatch.id}
+            actionLabel={`Record feedback — ${formatDispatchTargetLabel(dispatch)}`}
+            summary="Open feedback when execution details are ready to submit."
+          >
+            <CorrespondenceDispatchFeedbackForm
+              dispatchId={dispatch.id}
+              feedbackReceivedAt={dispatch.feedbackReceivedAt}
+              feedbackNote={dispatch.feedbackNote}
+            />
+          </CorrespondenceCurrentStepAction>
+        ))}
+        {dispatchAction.canCreateDispatch ? (
+          <CorrespondenceCurrentStepAction
+            actionLabel="Route to another department"
+            summary="Send this correspondence to an additional department in parallel."
+          >
+            <CorrespondenceDispatchForm
+              correspondenceId={correspondence.id}
+              defaultDispatchDate={new Date()}
+              departmentOptions={departmentOptions}
+              assigneeOptions={assigneeOptions}
+            />
+          </CorrespondenceCurrentStepAction>
+        ) : null}
+      </div>
+    ) : (
+      <ViewOnlyNotice>
+        No action is available to your role at this step.
+      </ViewOnlyNotice>
+    );
   } else if (
     correspondence.status === "AWAITING_FEEDBACK" ||
     correspondence.status === "COMPLETED"
   ) {
+    const pendingFeedback = dispatchAction.actionable.filter(
+      (item) => item.canRecordFeedback,
+    );
+
     title = "Close correspondence";
     description = "Verify completion and close the correspondence file.";
     nextStep = "After closure, the file becomes final unless reopened.";
-    action = canCloseNow ? (
-      <CorrespondenceCurrentStepAction
-        actionLabel="Close"
-        summary="Open closure when completion has been verified."
-      >
-        <CorrespondenceCloseForm correspondenceId={correspondence.id} />
-      </CorrespondenceCurrentStepAction>
-    ) : (
-      <ViewOnlyNotice>
-        View only - closure is restricted to central-office roles.
-      </ViewOnlyNotice>
+    action = (
+      <div className="space-y-4">
+        {pendingFeedback.map(({ dispatch }) => (
+          <CorrespondenceCurrentStepAction
+            key={dispatch.id}
+            actionLabel={`Record feedback — ${formatDispatchTargetLabel(dispatch)}`}
+            summary="Open feedback when execution details are ready to submit."
+          >
+            <CorrespondenceDispatchFeedbackForm
+              dispatchId={dispatch.id}
+              feedbackReceivedAt={dispatch.feedbackReceivedAt}
+              feedbackNote={dispatch.feedbackNote}
+            />
+          </CorrespondenceCurrentStepAction>
+        ))}
+        {dispatchAction.canCreateDispatch ? (
+          <CorrespondenceCurrentStepAction
+            actionLabel="Route to another department"
+            summary="Send this correspondence to an additional department in parallel."
+          >
+            <CorrespondenceDispatchForm
+              correspondenceId={correspondence.id}
+              defaultDispatchDate={new Date()}
+              departmentOptions={departmentOptions}
+              assigneeOptions={assigneeOptions}
+            />
+          </CorrespondenceCurrentStepAction>
+        ) : null}
+        {canCloseNow ? (
+          <CorrespondenceCurrentStepAction
+            actionLabel="Close"
+            summary="Open closure when completion has been verified."
+          >
+            <CorrespondenceCloseForm correspondenceId={correspondence.id} />
+          </CorrespondenceCurrentStepAction>
+        ) : (
+          <ViewOnlyNotice>
+            View only - closure is restricted to central-office roles.
+          </ViewOnlyNotice>
+        )}
+      </div>
     );
   } else if (
     correspondence.status === "CLOSED" ||

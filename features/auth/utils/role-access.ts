@@ -568,7 +568,7 @@ export const FOUNDATION_ACCESS_MAP: AccessMapEntry[] = [
     permission: "correspondence.dispatch",
     allowedRoles: FOUNDATION_PERMISSION_ROLES["correspondence.dispatch"],
     description:
-      "Record the central-office routing decision, receiving office, optional receiving officer, and mandatory due date.",
+      "Record the central-office routing decision — one or more receiving departments, optional receiving officers, and a mandatory due date — and dispatch to every selected department at once.",
   },
   {
     kind: "action",
@@ -576,7 +576,7 @@ export const FOUNDATION_ACCESS_MAP: AccessMapEntry[] = [
     permission: "correspondence.dispatch",
     allowedRoles: FOUNDATION_PERMISSION_ROLES["correspondence.dispatch"],
     description:
-      "Create an explicit central-office dispatch record after routing so the movement chain stays traceable.",
+      "Route an already-dispatched correspondence to an additional department in parallel, once its previous routing decision has been recorded.",
   },
   {
     kind: "action",

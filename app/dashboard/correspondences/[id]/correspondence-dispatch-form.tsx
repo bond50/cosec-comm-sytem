@@ -1,18 +1,36 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   initialCorrespondenceDispatchState,
   type CorrespondenceDispatchActionState,
 } from "@/features/correspondence/lib/correspondence.shared";
 import { createDispatchAction } from "@/features/correspondence/lib/create-dispatch";
+
+type DepartmentOption = {
+  id: string;
+  label: string;
+};
+
+type AssigneeOption = {
+  id: string;
+  label: string;
+  departmentId: string | null;
+};
 
 function toDateTimeLocalValue(value: Date | null) {
   if (!value) return "";
@@ -32,7 +50,7 @@ function DispatchSubmitButton() {
 
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? "Issuing dispatch..." : "Issue dispatch"}
+      {pending ? "Routing..." : "Route to department"}
     </Button>
   );
 }
@@ -40,17 +58,26 @@ function DispatchSubmitButton() {
 type CorrespondenceDispatchFormProps = {
   correspondenceId: string;
   defaultDispatchDate: Date | null;
+  departmentOptions: DepartmentOption[];
+  assigneeOptions: AssigneeOption[];
 };
 
 export function CorrespondenceDispatchForm({
   correspondenceId,
   defaultDispatchDate,
+  departmentOptions,
+  assigneeOptions,
 }: CorrespondenceDispatchFormProps) {
   const router = useRouter();
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
+
   const initialState: CorrespondenceDispatchActionState = {
     ...initialCorrespondenceDispatchState,
     values: {
       correspondenceId,
+      departmentId: "",
+      userId: "",
       dispatchDate: toDateTimeLocalValue(defaultDispatchDate ?? new Date()),
       note: "",
       status: "SENT",
@@ -70,6 +97,9 @@ export function CorrespondenceDispatchForm({
 
   const values = state.values ?? initialState.values!;
   const fieldErrors = state.fieldErrors ?? {};
+  const filteredAssignees = assigneeOptions.filter(
+    (assignee) => assignee.departmentId === selectedDepartmentId,
+  );
 
   return (
     <form
@@ -78,6 +108,84 @@ export function CorrespondenceDispatchForm({
     >
       <input type="hidden" name="correspondenceId" value={correspondenceId} />
       <input type="hidden" name="status" value="SENT" />
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field>
+          <FieldLabel
+            htmlFor={`dispatch-department-${correspondenceId}`}
+            required
+          >
+            Additional department
+          </FieldLabel>
+          <Select
+            value={selectedDepartmentId || undefined}
+            onValueChange={(value) => {
+              setSelectedDepartmentId(value);
+              if (
+                !assigneeOptions.some(
+                  (assignee) =>
+                    assignee.departmentId === value &&
+                    assignee.id === selectedUserId,
+                )
+              ) {
+                setSelectedUserId("");
+              }
+            }}
+          >
+            <SelectTrigger
+              id={`dispatch-department-${correspondenceId}`}
+              className="h-11 w-full rounded-[10px] border-slate-200 bg-white text-[15px] shadow-none"
+            >
+              <SelectValue placeholder="Select department" />
+            </SelectTrigger>
+            <SelectContent>
+              {departmentOptions.map((department) => (
+                <SelectItem key={department.id} value={department.id}>
+                  {department.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <input
+            type="hidden"
+            name="departmentId"
+            value={selectedDepartmentId}
+            readOnly
+          />
+          <FieldError>{fieldErrors.departmentId?.[0]}</FieldError>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor={`dispatch-user-${correspondenceId}`}>
+            Receiving officer
+          </FieldLabel>
+          <Select
+            value={selectedUserId || "__none__"}
+            onValueChange={(value) =>
+              setSelectedUserId(value === "__none__" ? "" : value)
+            }
+          >
+            <SelectTrigger
+              id={`dispatch-user-${correspondenceId}`}
+              className="h-11 w-full rounded-[10px] border-slate-200 bg-white text-[15px] shadow-none"
+            >
+              <SelectValue placeholder="No named receiving officer" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">
+                No named receiving officer
+              </SelectItem>
+              {filteredAssignees.map((assignee) => (
+                <SelectItem key={assignee.id} value={assignee.id}>
+                  {assignee.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <input type="hidden" name="userId" value={selectedUserId} readOnly />
+          <FieldError>{fieldErrors.userId?.[0]}</FieldError>
+        </Field>
+      </div>
 
       <Field>
         <FieldLabel htmlFor={`dispatch-date-${correspondenceId}`} required>

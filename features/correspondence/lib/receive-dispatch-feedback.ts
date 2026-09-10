@@ -1,10 +1,6 @@
 "use server";
 
-import {
-  AuditAction,
-  CorrespondenceStatus,
-  DispatchStatus,
-} from "@prisma/client";
+import { AuditAction, DispatchStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import {
@@ -25,6 +21,7 @@ import {
   UnauthorizedError,
 } from "@/features/auth/utils/auth-errors";
 import { notifyCorrespondenceFeedbackReturned } from "@/features/correspondence/lib/correspondence-notifications";
+import { computeAggregateCorrespondenceStatus } from "@/features/correspondence/lib/correspondence-dispatch-status";
 
 export async function receiveDispatchFeedbackAction(
   _previousState: CorrespondenceDispatchFeedbackActionState,
@@ -232,12 +229,20 @@ export async function receiveDispatchFeedbackAction(
       },
     });
 
+    const siblingDispatches = await tx.correspondenceDispatch.findMany({
+      where: { correspondenceId: dispatch.correspondence.id },
+      select: { status: true },
+    });
+    const aggregateStatus = computeAggregateCorrespondenceStatus(
+      siblingDispatches.map((d) => d.status),
+    );
+
     await tx.correspondence.update({
       where: {
         id: dispatch.correspondence.id,
       },
       data: {
-        status: CorrespondenceStatus.AWAITING_FEEDBACK,
+        status: aggregateStatus,
       },
     });
 
@@ -249,7 +254,7 @@ export async function receiveDispatchFeedbackAction(
         fromUserId: dispatch.dispatchedToUserId,
         toDepartmentId: null,
         toUserId: null,
-        status: CorrespondenceStatus.AWAITING_FEEDBACK,
+        status: aggregateStatus,
         note: feedbackNote,
         createdByUserId: actorUserId,
         movedAt: feedbackReceivedAt,

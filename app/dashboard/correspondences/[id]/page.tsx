@@ -285,6 +285,8 @@ export default async function CorrespondenceDetailPage({
                             currentUserId={access.userId}
                             currentUserDepartmentId={currentUserDepartmentId}
                             registryDispatchGranted={registryDispatchGranted}
+                            departmentOptions={departmentOptions}
+                            assigneeOptions={assigneeOptions}
                           />
                         ),
                       },

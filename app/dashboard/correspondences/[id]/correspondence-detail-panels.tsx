@@ -36,6 +36,7 @@ import { CorrespondenceDispatchForm } from "@/app/dashboard/correspondences/[id]
 import { CorrespondenceCloseForm } from "@/app/dashboard/correspondences/[id]/correspondence-close-form";
 import { CorrespondenceReopenForm } from "@/app/dashboard/correspondences/[id]/correspondence-reopen-form";
 import { CorrespondenceReviewForm } from "@/app/dashboard/correspondences/[id]/correspondence-review-form";
+import { getDispatchActionState } from "@/features/correspondence/lib/correspondence-dispatch-actions";
 import type { CorrespondenceAuditItem } from "@/features/correspondence/queries/correspondence-audit";
 import type {
   CorrespondenceAttachmentItem,
@@ -102,6 +103,15 @@ type CorrespondenceDispatchCardProps = {
   currentUserId: string;
   currentUserDepartmentId: string | null;
   registryDispatchGranted: boolean;
+  departmentOptions: {
+    id: string;
+    label: string;
+  }[];
+  assigneeOptions: {
+    id: string;
+    label: string;
+    departmentId: string | null;
+  }[];
 };
 
 type CorrespondenceMovementCardProps = {
@@ -215,11 +225,13 @@ function getCorrespondenceStatusClue(
   dispatches: CorrespondenceDispatchItem[],
 ) {
   const latestDispatch = dispatches[0] ?? null;
+  const openDispatches = dispatches.filter((d) => d.status !== "CLOSED");
   const reviewer = formatUserLabel(correspondence.reviewedByUser);
   const assignee = formatUserLabel(correspondence.assignedToUser);
   const department = correspondence.assignedToDepartment?.name;
   const dispatchTarget = formatDispatchTargetLabel(latestDispatch);
   const owner = dispatchTarget || formatAssignmentLabel(correspondence);
+  const multiDepartment = openDispatches.length > 1;
 
   switch (correspondence.status) {
     case "NEW":
@@ -229,15 +241,22 @@ function getCorrespondenceStatusClue(
         ? `Under central-office review by ${reviewer}; routing is the next decision.`
         : "Waiting for the County Secretary review path to record instructions.";
     case "DISPATCHED":
+      if (multiDepartment) {
+        return `Routed to ${openDispatches.length} departments; at least one is still awaiting acknowledgement.`;
+      }
       if (latestDispatch && !latestDispatch.acknowledgedAt) {
         return `Waiting for acknowledgement by ${owner}.`;
       }
 
       return `Routed to ${owner}; dispatch handling is in progress.`;
     case "IN_PROGRESS":
-      return `With ${owner} for action and execution feedback.`;
+      return multiDepartment
+        ? `With ${openDispatches.length} departments for action and execution feedback.`
+        : `With ${owner} for action and execution feedback.`;
     case "AWAITING_FEEDBACK":
-      return `Waiting for feedback from ${owner}.`;
+      return multiDepartment
+        ? `Feedback returned from every routed department; ready for central-office verification and closure.`
+        : `Waiting for feedback from ${owner}.`;
     case "COMPLETED":
       return `Completed by ${department || assignee || "the receiving office"}; ready for closure.`;
     case "CANCELLED":
@@ -405,59 +424,6 @@ function getPriorityDueTone(correspondence: CorrespondenceDetailWithSla) {
   return "border-[#bde5cf] bg-[#f0fbf5] text-[#0f6b3a]";
 }
 
-function getDispatchActionState({
-  correspondence,
-  dispatches,
-  canDispatch,
-  canWork,
-  currentUserId,
-  currentUserDepartmentId,
-}: {
-  correspondence: CorrespondenceDetailWithSla;
-  dispatches: CorrespondenceDispatchItem[];
-  canDispatch: boolean;
-  canWork: boolean;
-  currentUserId: string;
-  currentUserDepartmentId: string | null;
-}) {
-  const latestDispatch = dispatches[0] ?? null;
-  const latestDispatchIsComplete =
-    latestDispatch === null ||
-    latestDispatch.status === "CLOSED" ||
-    latestDispatch.feedbackReceivedAt !== null;
-  const isReceivingTarget =
-    latestDispatch !== null &&
-    (latestDispatch.dispatchedToUser?.id === currentUserId ||
-      (!!latestDispatch.dispatchedToDepartment?.id &&
-        latestDispatch.dispatchedToDepartment.id === currentUserDepartmentId));
-  const canCreateDispatch =
-    canDispatch &&
-    correspondence.status === "DISPATCHED" &&
-    latestDispatchIsComplete;
-  const canAcknowledge =
-    canWork &&
-    isReceivingTarget &&
-    correspondence.status === "DISPATCHED" &&
-    latestDispatch !== null &&
-    (latestDispatch.status === "SENT" || latestDispatch.status === "OVERDUE");
-  const canRecordFeedback =
-    canWork &&
-    isReceivingTarget &&
-    (correspondence.status === "IN_PROGRESS" ||
-      correspondence.status === "AWAITING_FEEDBACK") &&
-    latestDispatch !== null &&
-    (latestDispatch.status === "ACKNOWLEDGED" ||
-      latestDispatch.status === "IN_PROGRESS" ||
-      latestDispatch.status === "FEEDBACK_RECEIVED");
-
-  return {
-    latestDispatch,
-    canCreateDispatch,
-    canAcknowledge,
-    canRecordFeedback,
-  };
-}
-
 function getMovementTargetLabel(movement: CorrespondenceMovementItem) {
   const department = movement.toDepartment?.name;
   const user = formatUserLabelWithDesignation(movement.toUser, null);
@@ -518,9 +484,7 @@ function getMovementStepLabel(
   if (movement.note?.startsWith("Reopened correspondence")) return "Reopened";
   if (movement.status === "UNDER_REVIEW") return "Review";
   if (movement.status === "DISPATCHED") {
-    if (
-      movement.note?.toLowerCase().includes("explicit central-office dispatch")
-    ) {
+    if (movement.note?.toLowerCase().includes("additional department")) {
       return "Dispatch issued";
     }
 
@@ -1150,13 +1114,10 @@ export function CorrespondenceDispatchCard({
   currentUserId,
   currentUserDepartmentId,
   registryDispatchGranted,
+  departmentOptions,
+  assigneeOptions,
 }: CorrespondenceDispatchCardProps) {
-  const {
-    latestDispatch,
-    canCreateDispatch,
-    canAcknowledge,
-    canRecordFeedback,
-  } = getDispatchActionState({
+  const { actionable, canCreateDispatch } = getDispatchActionState({
     correspondence,
     dispatches,
     canDispatch,
@@ -1164,6 +1125,10 @@ export function CorrespondenceDispatchCard({
     currentUserId,
     currentUserDepartmentId,
   });
+  const pendingAcknowledgements = actionable.filter(
+    (item) => item.canAcknowledge,
+  );
+  const pendingFeedback = actionable.filter((item) => item.canRecordFeedback);
 
   return (
     <Card className="rounded-2xl border-[#c7ddea] bg-[#fbfdff] shadow-sm">
@@ -1258,30 +1223,36 @@ export function CorrespondenceDispatchCard({
               <CorrespondenceDispatchForm
                 correspondenceId={correspondence.id}
                 defaultDispatchDate={new Date()}
+                departmentOptions={departmentOptions}
+                assigneeOptions={assigneeOptions}
               />
             ) : null}
 
-            {canAcknowledge && latestDispatch ? (
+            {pendingAcknowledgements.map(({ dispatch }) => (
               <CorrespondenceDispatchAcknowledgeForm
-                dispatchId={latestDispatch.id}
-                acknowledgedAt={latestDispatch.acknowledgedAt}
+                key={dispatch.id}
+                dispatchId={dispatch.id}
+                acknowledgedAt={dispatch.acknowledgedAt}
               />
-            ) : null}
+            ))}
 
-            {canRecordFeedback && latestDispatch ? (
+            {pendingFeedback.map(({ dispatch }) => (
               <CorrespondenceDispatchFeedbackForm
-                dispatchId={latestDispatch.id}
-                feedbackReceivedAt={latestDispatch.feedbackReceivedAt}
-                feedbackNote={latestDispatch.feedbackNote}
+                key={dispatch.id}
+                dispatchId={dispatch.id}
+                feedbackReceivedAt={dispatch.feedbackReceivedAt}
+                feedbackNote={dispatch.feedbackNote}
               />
-            ) : null}
+            ))}
 
-            {!canCreateDispatch && !canAcknowledge && !canRecordFeedback ? (
+            {!canCreateDispatch &&
+            pendingAcknowledgements.length === 0 &&
+            pendingFeedback.length === 0 ? (
               <ViewOnlyNotice>
                 {!canDispatch && !canWork
                   ? "View only - dispatch, acknowledgement, and feedback are role-restricted."
-                  : latestDispatch
-                    ? "No further action available on the latest dispatch."
+                  : dispatches.length > 0
+                    ? "No further action available on the current dispatches."
                     : "Available once routing is saved."}
               </ViewOnlyNotice>
             ) : null}

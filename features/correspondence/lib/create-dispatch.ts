@@ -21,6 +21,13 @@ import {
 } from "@/features/auth/utils/auth-errors";
 import { notifyCorrespondenceDispatchIssued } from "@/features/correspondence/lib/correspondence-notifications";
 import { formatUserLabel } from "@/features/application/lib/user-label";
+import { isOpenDispatchStatus } from "@/features/correspondence/lib/correspondence-dispatch-status";
+
+const ROUTABLE_CORRESPONDENCE_STATUSES = [
+  CorrespondenceStatus.DISPATCHED,
+  CorrespondenceStatus.IN_PROGRESS,
+  CorrespondenceStatus.AWAITING_FEEDBACK,
+] as const;
 
 export async function createDispatchAction(
   _previousState: CorrespondenceDispatchActionState,
@@ -82,47 +89,50 @@ export async function createDispatchAction(
     };
   }
 
-  const correspondence = await db.correspondence.findFirst({
-    where: {
-      id: parsed.data.correspondenceId,
-      organizationId,
-    },
-    select: {
-      id: true,
-      referenceNumber: true,
-      subject: true,
-      status: true,
-      assignedToDepartmentId: true,
-      assignedToUserId: true,
-      dueDate: true,
-      assignedToDepartment: {
-        select: {
-          id: true,
-          name: true,
-          code: true,
-          status: true,
+  const [correspondence, targetDepartment, targetUser] = await Promise.all([
+    db.correspondence.findFirst({
+      where: {
+        id: parsed.data.correspondenceId,
+        organizationId,
+      },
+      select: {
+        id: true,
+        referenceNumber: true,
+        subject: true,
+        status: true,
+        dueDate: true,
+        dispatches: {
+          select: {
+            id: true,
+            status: true,
+            dispatchedToDepartmentId: true,
+          },
         },
       },
-      assignedToUser: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          designation: true,
-          isActive: true,
-        },
+    }),
+    db.department.findFirst({
+      where: {
+        id: parsed.data.departmentId,
+        organizationId,
+        status: "ACTIVE",
       },
-      dispatches: {
-        orderBy: [{ dispatchDate: "desc" }, { createdAt: "desc" }],
-        take: 1,
-        select: {
-          id: true,
-          status: true,
-          feedbackReceivedAt: true,
-        },
+      select: {
+        id: true,
+        name: true,
       },
-    },
-  });
+    }),
+    parsed.data.userId
+      ? db.user.findFirst({
+          where: { id: parsed.data.userId },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            designation: true,
+          },
+        })
+      : Promise.resolve(null),
+  ]);
 
   if (!correspondence) {
     return {
@@ -132,7 +142,11 @@ export async function createDispatchAction(
     };
   }
 
-  if (correspondence.status !== CorrespondenceStatus.DISPATCHED) {
+  if (
+    !ROUTABLE_CORRESPONDENCE_STATUSES.includes(
+      correspondence.status as (typeof ROUTABLE_CORRESPONDENCE_STATUSES)[number],
+    )
+  ) {
     return {
       ok: false,
       message:
@@ -146,18 +160,14 @@ export async function createDispatchAction(
     };
   }
 
-  if (
-    !correspondence.assignedToDepartmentId ||
-    !correspondence.assignedToDepartment ||
-    correspondence.assignedToDepartment.status !== "ACTIVE"
-  ) {
+  if (!targetDepartment) {
     return {
       ok: false,
       message:
-        "Set an active destination department before creating a dispatch record.",
+        "The selected department must be active and belong to the current organization.",
       fieldErrors: {
-        correspondenceId: [
-          "The correspondence must have an active assigned department before dispatch.",
+        departmentId: [
+          "The selected department must be active and belong to the current organization.",
         ],
       },
       values: parsed.data,
@@ -176,16 +186,48 @@ export async function createDispatchAction(
     };
   }
 
-  const latestDispatch = correspondence.dispatches[0];
-  if (
-    latestDispatch &&
-    latestDispatch.status !== DispatchStatus.CLOSED &&
-    !latestDispatch.feedbackReceivedAt
-  ) {
+  if (parsed.data.userId) {
+    const membership = await db.organizationMembership.findFirst({
+      where: {
+        organizationId,
+        userId: parsed.data.userId,
+        departmentId: parsed.data.departmentId,
+        status: "ACTIVE",
+      },
+      select: { userId: true },
+    });
+
+    if (!membership) {
+      return {
+        ok: false,
+        message:
+          "The selected user must be an active member of the chosen department.",
+        fieldErrors: {
+          userId: [
+            "The selected user must be an active member of the chosen department.",
+          ],
+        },
+        values: parsed.data,
+      };
+    }
+  }
+
+  const departmentAlreadyOpen = correspondence.dispatches.some(
+    (d) =>
+      d.dispatchedToDepartmentId === parsed.data.departmentId &&
+      isOpenDispatchStatus(d.status),
+  );
+
+  if (departmentAlreadyOpen) {
     return {
       ok: false,
       message:
-        "This correspondence already has an open dispatch record awaiting acknowledgement or feedback.",
+        "This correspondence already has an open dispatch record for that department awaiting acknowledgement or feedback.",
+      fieldErrors: {
+        departmentId: [
+          "This department already has an open dispatch for this correspondence.",
+        ],
+      },
       values: parsed.data,
     };
   }
@@ -193,9 +235,9 @@ export async function createDispatchAction(
   const dispatchDate = new Date(parsed.data.dispatchDate);
   const dispatchNote =
     parsed.data.note?.trim() ||
-    `Central office dispatch sent to ${correspondence.assignedToDepartment.name}${
-      correspondence.assignedToUser
-        ? ` and ${formatUserLabel(correspondence.assignedToUser, "the selected user")}`
+    `Central office dispatch sent to ${targetDepartment.name}${
+      targetUser
+        ? ` and ${formatUserLabel(targetUser, "the selected user")}`
         : ""
     }.`;
 
@@ -204,8 +246,8 @@ export async function createDispatchAction(
       data: {
         organizationId,
         correspondenceId: correspondence.id,
-        dispatchedToDepartmentId: correspondence.assignedToDepartmentId,
-        dispatchedToUserId: correspondence.assignedToUserId,
+        dispatchedToDepartmentId: targetDepartment.id,
+        dispatchedToUserId: targetUser?.id ?? null,
         dispatchDate,
         note: dispatchNote,
         status: DispatchStatus.SENT,
@@ -222,10 +264,10 @@ export async function createDispatchAction(
         correspondenceId: correspondence.id,
         fromDepartmentId: null,
         fromUserId: actorUserId,
-        toDepartmentId: correspondence.assignedToDepartmentId,
-        toUserId: correspondence.assignedToUserId,
+        toDepartmentId: targetDepartment.id,
+        toUserId: targetUser?.id ?? null,
         status: CorrespondenceStatus.DISPATCHED,
-        note: `Created explicit central-office dispatch record for correspondence ${correspondence.referenceNumber}.`,
+        note: `Routed correspondence ${correspondence.referenceNumber} to an additional department: ${targetDepartment.name}.`,
         createdByUserId: actorUserId,
       },
     });
@@ -252,13 +294,18 @@ export async function createDispatchAction(
       referenceNumber: correspondence.referenceNumber,
       actorUserId,
       auditLogId: auditLog.id,
-      dispatchedToUserId: correspondence.assignedToUser?.id,
-      dispatchedToUserEmail: correspondence.assignedToUser?.email,
-      dispatchedToDepartmentId: correspondence.assignedToDepartment?.id,
-      departmentName: correspondence.assignedToDepartment?.name,
+      dispatchedToUserId: targetUser?.id,
+      dispatchedToUserEmail: targetUser?.email,
+      dispatchedToDepartmentId: targetDepartment.id,
+      departmentName: targetDepartment.name,
       dueDateLabel: new Intl.DateTimeFormat("en-KE", {
         dateStyle: "medium",
       }).format(correspondence.dueDate ?? undefined),
+    });
+
+    await tx.correspondence.update({
+      where: { id: correspondence.id },
+      data: { status: CorrespondenceStatus.DISPATCHED },
     });
 
     return createdDispatch;
@@ -270,7 +317,7 @@ export async function createDispatchAction(
 
   return {
     ok: true,
-    message: "Dispatch record created successfully.",
+    message: `Correspondence routed to ${targetDepartment.name} successfully.`,
     values: {
       ...parsed.data,
       dispatchDate: parsed.data.dispatchDate,

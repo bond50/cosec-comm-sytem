@@ -220,25 +220,48 @@ export const correspondenceReviewSchema = z.object({
     .default(CorrespondenceStatus.UNDER_REVIEW),
 });
 
-export const correspondenceAssignSchema = z.object({
-  correspondenceId: requiredRecordId("Invalid correspondence identifier."),
-  assignedToDepartmentId: requiredRecordId("Select a valid department."),
-  assignedToUserId: optionalRecordId(),
-  dueDate: requiredDateString(
-    "Due date is required before dispatching correspondence.",
-  ),
-  status: z
-    .enum(assignStatusValues, {
-      message: "Assignment must dispatch the record.",
-    })
-    .default(CorrespondenceStatus.DISPATCHED),
+const correspondenceAssignTargetSchema = z.object({
+  departmentId: requiredRecordId("Select a valid department."),
+  userId: optionalRecordId(),
 });
+
+export const correspondenceAssignSchema = z
+  .object({
+    correspondenceId: requiredRecordId("Invalid correspondence identifier."),
+    targets: z
+      .array(correspondenceAssignTargetSchema)
+      .min(1, { message: "Select at least one destination department." }),
+    dueDate: requiredDateString(
+      "Due date is required before dispatching correspondence.",
+    ),
+    status: z
+      .enum(assignStatusValues, {
+        message: "Assignment must dispatch the record.",
+      })
+      .default(CorrespondenceStatus.DISPATCHED),
+  })
+  .check((ctx) => {
+    const seen = new Set<string>();
+    for (const target of ctx.value.targets) {
+      if (seen.has(target.departmentId)) {
+        ctx.issues.push({
+          code: "custom",
+          message: "Each department can only be selected once.",
+          path: ["targets"],
+          input: target.departmentId,
+        });
+      }
+      seen.add(target.departmentId);
+    }
+  });
 
 export const correspondenceDispatchSchema = z.object({
   correspondenceId: z
     .string()
     .trim()
     .cuid({ message: "Invalid correspondence identifier." }),
+  departmentId: requiredRecordId("Select a valid department."),
+  userId: optionalRecordId(),
   dispatchDate: requiredDateString("Dispatch date and time is required."),
   note: optionalTrimmedString(4000, "Dispatch note is too long."),
   status: z
@@ -388,10 +411,14 @@ export type CorrespondenceReviewFormValues = {
   status: string;
 };
 
+export type CorrespondenceAssignTargetFormValue = {
+  departmentId: string;
+  userId: string | undefined;
+};
+
 export type CorrespondenceAssignFormValues = {
   correspondenceId: string;
-  assignedToDepartmentId: string;
-  assignedToUserId: string;
+  targets: CorrespondenceAssignTargetFormValue[];
   dueDate: string;
   status: string;
 };
@@ -403,6 +430,8 @@ export type CorrespondenceAttachmentFormValues = {
 
 export type CorrespondenceDispatchFormValues = {
   correspondenceId: string;
+  departmentId: string;
+  userId: string;
   dispatchDate: string;
   note: string;
   status: string;
@@ -553,13 +582,19 @@ export function getCorrespondenceReviewValuesFromFormData(
 export function getCorrespondenceAssignValuesFromFormData(
   formData: FormData,
 ): CorrespondenceAssignFormValues {
+  const departmentIds = formData
+    .getAll("assignedToDepartmentIds")
+    .map((value) => String(value).trim())
+    .filter(Boolean);
+
+  const targets = departmentIds.map((departmentId) => ({
+    departmentId,
+    userId: getString(formData, `assignedToUserId__${departmentId}`).trim(),
+  }));
+
   return {
     correspondenceId: getString(formData, "correspondenceId").trim(),
-    assignedToDepartmentId: getString(
-      formData,
-      "assignedToDepartmentId",
-    ).trim(),
-    assignedToUserId: getString(formData, "assignedToUserId").trim(),
+    targets,
     dueDate: getString(formData, "dueDate"),
     status: getString(formData, "status"),
   };
@@ -570,6 +605,8 @@ export function getCorrespondenceDispatchValuesFromFormData(
 ): CorrespondenceDispatchFormValues {
   return {
     correspondenceId: getString(formData, "correspondenceId").trim(),
+    departmentId: getString(formData, "departmentId").trim(),
+    userId: getString(formData, "userId").trim(),
     dispatchDate: getString(formData, "dispatchDate"),
     note: getString(formData, "note"),
     status: getString(formData, "status"),
@@ -677,8 +714,7 @@ export const initialCorrespondenceAssignState: CorrespondenceAssignActionState =
     fieldErrors: {},
     values: {
       correspondenceId: "",
-      assignedToDepartmentId: "",
-      assignedToUserId: "",
+      targets: [],
       dueDate: "",
       status: CorrespondenceStatus.DISPATCHED,
     },
@@ -691,6 +727,8 @@ export const initialCorrespondenceDispatchState: CorrespondenceDispatchActionSta
     fieldErrors: {},
     values: {
       correspondenceId: "",
+      departmentId: "",
+      userId: "",
       dispatchDate: "",
       note: "",
       status: DispatchStatus.SENT,
