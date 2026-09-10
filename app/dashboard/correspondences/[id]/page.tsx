@@ -91,6 +91,10 @@ export default async function CorrespondenceDetailPage({
       receivedByUserId: correspondence.receivedByUser?.id ?? null,
       reviewedByUserId: correspondence.reviewedByUser?.id ?? null,
       assignedByUserId: correspondence.assignedByUser?.id ?? null,
+      dispatches: dispatches.map((dispatch) => ({
+        dispatchedToDepartmentId: dispatch.dispatchedToDepartmentId,
+        dispatchedToUserId: dispatch.dispatchedToUserId,
+      })),
     },
   );
 

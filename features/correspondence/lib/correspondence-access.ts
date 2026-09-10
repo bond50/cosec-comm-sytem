@@ -20,6 +20,15 @@ export type CorrespondenceConfidentialityRecord = {
   receivedByUserId: string | null;
   reviewedByUserId: string | null;
   assignedByUserId?: string | null;
+  /**
+   * Every open dispatch target for this correspondence, so a department
+   * routed to in parallel (not just the primary assignedToDepartmentId) can
+   * still see and act on its own dispatch.
+   */
+  dispatches?: {
+    dispatchedToDepartmentId: string | null;
+    dispatchedToUserId: string | null;
+  }[];
 };
 
 /**
@@ -46,7 +55,10 @@ export function canViewCorrespondenceConfidentiality(
     record.assignedToUserId === viewer.userId ||
     record.receivedByUserId === viewer.userId ||
     record.reviewedByUserId === viewer.userId ||
-    record.assignedByUserId === viewer.userId;
+    record.assignedByUserId === viewer.userId ||
+    (record.dispatches ?? []).some(
+      (dispatch) => dispatch.dispatchedToUserId === viewer.userId,
+    );
 
   if (hasCorrespondenceIntakeClearance(viewer.roles)) {
     if (
@@ -65,8 +77,12 @@ export function canViewCorrespondenceConfidentiality(
   }
 
   const isOwnDepartment =
-    !!record.assignedToDepartmentId &&
-    record.assignedToDepartmentId === viewer.departmentId;
+    (!!record.assignedToDepartmentId &&
+      record.assignedToDepartmentId === viewer.departmentId) ||
+    (!!viewer.departmentId &&
+      (record.dispatches ?? []).some(
+        (dispatch) => dispatch.dispatchedToDepartmentId === viewer.departmentId,
+      ));
 
   return isDirectParticipant || isOwnDepartment;
 }
@@ -87,6 +103,7 @@ export function buildCorrespondenceVisibilityWhere(
     { receivedByUserId: viewer.userId },
     { reviewedByUserId: viewer.userId },
     { assignedByUserId: viewer.userId },
+    { dispatches: { some: { dispatchedToUserId: viewer.userId } } },
   ];
 
   if (hasCorrespondenceIntakeClearance(viewer.roles)) {
@@ -106,7 +123,15 @@ export function buildCorrespondenceVisibilityWhere(
   }
 
   const deptOr: Prisma.CorrespondenceWhereInput[] = viewer.departmentId
-    ? [...participantOr, { assignedToDepartmentId: viewer.departmentId }]
+    ? [
+        ...participantOr,
+        { assignedToDepartmentId: viewer.departmentId },
+        {
+          dispatches: {
+            some: { dispatchedToDepartmentId: viewer.departmentId },
+          },
+        },
+      ]
     : participantOr;
 
   return {
