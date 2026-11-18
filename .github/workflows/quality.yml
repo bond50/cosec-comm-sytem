@@ -1,0 +1,136 @@
+name: Quality gate
+
+# Same gate as the county sites (vihiga-frontend-public). Must pass before the image is built
+# (build-image.yml lists this job in `needs`).
+# BLOCKS:  secret scan (whole history), lint, TypeScript, tests,
+#          moderate-or-worse known-vulnerable production dependencies (pnpm audit),
+#          and NEW problems in new code (SonarQube quality gate; a SonarQube outage only warns).
+on:
+  workflow_call:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # Prisma generate (postinstall) needs a syntactically valid URL; nothing connects to it.
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Secret scan (gitleaks, whole history)
+        shell: bash
+        run: |
+          set -euo pipefail
+          V=8.30.1
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${V}"
+          curl -fsSL -o gl.tgz "${base}/gitleaks_${V}_linux_x64.tar.gz"
+          curl -fsSL -o gl.sums "${base}/gitleaks_${V}_checksums.txt"
+          grep " gitleaks_${V}_linux_x64.tar.gz$" gl.sums | sed 's/ .*/  gl.tgz/' | sha256sum -c -
+          tar -xzf gl.tgz gitleaks
+          ./gitleaks detect --source . --redact --no-banner --exit-code 1
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Generate Next.js types (next-env.d.ts is not in git)
+        run: pnpm exec next typegen
+
+      - name: TypeScript
+        run: pnpm ts-check
+
+      - name: Tests
+        run: pnpm run --if-present test
+
+      # Blocks on MODERATE, HIGH and CRITICAL. No exceptions for this app.
+      - name: Dependency audit - moderate, high and critical vulnerabilities block
+        run: pnpm audit --prod --audit-level=moderate
+
+      # Never blocks: lists EVERY known advisory (any severity) on the run page so nothing goes silent.
+      - name: Vulnerable packages report - production, all severities (non-blocking)
+        if: always()
+        continue-on-error: true
+        shell: bash
+        run: pnpm audit --prod --json | node .github/scripts/audit-summary.mjs "production" || true
+
+      - name: Vulnerable packages report - dev only (non-blocking)
+        if: always()
+        continue-on-error: true
+        shell: bash
+        run: pnpm audit --dev --json | node .github/scripts/audit-summary.mjs "dev only" || true
+
+      # The scan only uploads; the next step decides. New problems in new code block; SonarQube being
+      # down, slow or dropping the connection only warns.
+      - name: SonarQube scan (upload only)
+        if: ${{ env.SONAR_TOKEN != '' }}
+        continue-on-error: true
+        uses: SonarSource/sonarqube-scan-action@v5
+        with:
+          args: -Dsonar.qualitygate.wait=false
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+
+      - name: SonarQube quality gate - blocks on NEW problems; a SonarQube outage only warns
+        if: ${{ env.SONAR_TOKEN != '' }}
+        shell: bash
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        run: |
+          set -uo pipefail
+          warn() { echo "::warning title=SonarQube not reachable::$1 The build continues; the next push is checked again."; exit 0; }
+          api() { curl -sf -m 30 --retry 3 --retry-delay 10 --retry-all-errors -H "Authorization: Bearer ${SONAR_TOKEN}" "${SONAR_HOST_URL%/}/api/$1"; }
+          report=.scannerwork/report-task.txt
+          [ -f "$report" ] || warn "The scan could not upload (SonarQube down or the connection dropped)."
+          task=$(sed -n 's/^ceTaskId=//p' "$report")
+          dashboard=$(sed -n 's/^dashboardUrl=//p' "$report")
+          status=""
+          for _ in $(seq 1 60); do
+            json=$(api "ce/task?id=${task}") || warn "SonarQube did not answer while processing the scan."
+            status=$(jq -r '.task.status' <<<"$json")
+            case "$status" in
+              SUCCESS) break ;;
+              FAILED|CANCELED) warn "SonarQube could not process the scan (${status})." ;;
+            esac
+            sleep 5
+          done
+          [ "$status" = "SUCCESS" ] || warn "SonarQube took more than 5 minutes to process the scan."
+          analysis=$(jq -r '.task.analysisId' <<<"$json")
+          gate=$(api "qualitygates/project_status?analysisId=${analysis}") || warn "SonarQube did not return the quality gate."
+          result=$(jq -r '.projectStatus.status' <<<"$gate")
+          if [ "$result" = "ERROR" ]; then
+            echo "::error title=Quality gate failed::New problems in new code. Details: ${dashboard}"
+            jq -r '.projectStatus.conditions[] | select(.status == "ERROR") | "  \(.metricKey): \(.actualValue) (allowed: \(.errorThreshold))"' <<<"$gate"
+            exit 1
+          fi
+          echo "Quality gate: ${result} (${dashboard})"
+
+      - name: SonarQube not configured
+        if: ${{ env.SONAR_TOKEN == '' }}
+        run: echo "::warning title=SonarQube skipped::Repository secret SONAR_TOKEN is not set, so the SonarQube gate did not run."

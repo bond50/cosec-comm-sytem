@@ -18,7 +18,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  quality:
+    name: Quality gate
+    uses: ./.github/workflows/quality.yml
+    secrets: inherit   # the SonarQube scan needs SONAR_TOKEN; without this it is skipped
+
   build:
+    needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -54,7 +60,57 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Summary
+  scan_image:
+    name: Image scan (Trivy)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+    env:
+      IMAGE: ghcr.io/bond50/cosec-comm-system:${{ github.sha }}
+    steps:
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Blocks on CRITICAL vulnerabilities that already have a fix (nothing anyone can do about the rest).
+      - name: Scan the built image - CRITICAL with a fix blocks
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          vuln-type: os,library
+          exit-code: "1"
+          format: table
+
+      - name: Scan the built image - HIGH (report only)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE }}
+          severity: HIGH
+          ignore-unfixed: true
+          vuln-type: os,library
+          exit-code: "0"
+          format: table
+          output: trivy-high.txt
+
+      - name: Summary (only a scanned image may be deployed)
+        if: always()
+        shell: bash
         run: |
-          echo "Image: ghcr.io/bond50/cosec-comm-system:${GITHUB_SHA}" >> "$GITHUB_STEP_SUMMARY"
-          echo "Deploy: infra-siscom-v1 -> Actions -> 14k - Deploy COSEC (image_tag = ${GITHUB_SHA})" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "Image: ${IMAGE}"
+            echo
+            echo "Deploy (only if this job is green): infra-siscom-v1 -> Actions -> 14k - Deploy COSEC (image_tag = ${GITHUB_SHA})"
+            echo
+            echo '### Image scan - HIGH vulnerabilities with a fix (report only)'
+            echo '```'
+            cat trivy-high.txt 2>/dev/null || echo 'No report produced.'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
