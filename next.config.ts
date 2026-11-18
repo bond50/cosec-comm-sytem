@@ -4,6 +4,7 @@ import type { NextConfig } from "next";
 const isWindows = process.platform === "win32";
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   allowedDevOrigins: ["192.168.131.6"],
 
   turbopack: {
