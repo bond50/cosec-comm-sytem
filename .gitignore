@@ -72,3 +72,9 @@ extra/
 
 
 /prisma/src/generated/prisma
+
+# Office documents and their lock files never go into the code repo (18 Nov 2026)
+*.xlsx
+*.xls
+*.docx
+~$*
